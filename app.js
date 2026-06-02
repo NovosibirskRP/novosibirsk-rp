@@ -74,5 +74,21 @@ function updateAuthZone() {
     const zone = document.getElementById('auth-zone');
     if (currentUser && zone) {
         zone.innerHTML = `<span>${currentUser.username} (${currentUser.role})</span> <button onclick="handleLogout()">Выйти</button>`;
+        <!-- Контейнер для админ-панели в профиле -->
+<div id="admin-news-panel" class="hidden mt-8 p-6 bg-slate-900 rounded-xl border border-red-500/20">
+    <h2 class="text-white font-bold mb-4">Администрирование пользователей</h2>
+    <table class="w-full text-left">
+        <thead>
+            <tr class="text-slate-500 text-sm border-b border-slate-800">
+                <th class="py-2">Ник</th>
+                <th class="py-2">Роль</th>
+                <th class="py-2">Действия</th>
+            </tr>
+        </thead>
+        <tbody id="users-table-body">
+            <!-- Сюда JS вставит пользователей -->
+        </tbody>
+    </table>
+</div>
     }
 }
