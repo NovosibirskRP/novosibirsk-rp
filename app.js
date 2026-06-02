@@ -2,16 +2,16 @@ const SUPABASE_URL = "https://aygqlldisjyeljgmwmec.supabase.co";
 const SUPABASE_KEY = "sb_publishable_fioN5iOmz3L-T8OurGPdYA_3IRN9K8n";
 const headers = { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json" };
 
-// 1. АВТОРИЗАЦИЯ
+// Логин
 window.handleAuthLogin = async function(e) {
-    if(e) e.preventDefault();
+    if (e) e.preventDefault();
     const u = document.getElementById('login-username').value.trim();
     const p = document.getElementById('login-password').value.trim();
     
     const res = await fetch(`${SUPABASE_URL}/rest/v1/users?username=eq.${u}&password=eq.${p}`, { headers });
     const users = await res.json();
     
-    if (users.length === 1) {
+    if (users.length > 0) {
         localStorage.setItem('currentUser', JSON.stringify(users[0]));
         alert('Успешный вход!');
         location.reload();
@@ -20,43 +20,42 @@ window.handleAuthLogin = async function(e) {
     }
 };
 
-// 2. АДМИН-ПАНЕЛЬ (Загрузка данных)
+// Выход
+window.handleLogout = function() {
+    localStorage.removeItem('currentUser');
+    location.reload();
+};
+
+// Загрузка таблицы админа
 window.loadUsersTable = async function() {
     const user = JSON.parse(localStorage.getItem('currentUser'));
-    const panel = document.getElementById('management-panel');
     const tbody = document.getElementById('users-table-body');
+    const panel = document.getElementById('management-panel');
 
-    // Если нет пользователя или он не "Разработчик", скрываем админку
-    if (!user || user.role !== 'Разработчик' || !panel) {
+    if (!user || user.role !== 'Разработчик') {
         if (panel) panel.classList.add('hidden');
         return;
     }
 
-    // Если админ — показываем
-    panel.classList.remove('hidden');
+    if (panel) panel.classList.remove('hidden');
     if (!tbody) return;
 
     const res = await fetch(`${SUPABASE_URL}/rest/v1/users?order=username.asc`, { headers });
     const users = await res.json();
     
     tbody.innerHTML = users.map(u => `
-        <tr class="border-b border-slate-800 text-white">
-            <td class="py-3 px-2">${u.username}</td>
-            <td class="py-3 px-2">${u.role}</td>
-            <td class="py-3 px-2 text-right">
-                <button onclick="deleteUser(${u.id})" class="text-red-500 hover:text-red-400">Удалить</button>
-            </td>
+        <tr class="border-b border-slate-800">
+            <td class="p-3">${u.username}</td>
+            <td class="p-3">${u.role}</td>
+            <td class="p-3"><button onclick="deleteUser(${u.id})" class="text-red-500">Удалить</button></td>
         </tr>
     `).join('');
 };
 
 window.deleteUser = async function(id) {
-    if(!confirm('Удалить игрока?')) return;
+    if(!confirm('Удалить пользователя?')) return;
     await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${id}`, { method: 'DELETE', headers });
     loadUsersTable();
 };
 
-// 3. ЗАПУСК
-document.addEventListener('DOMContentLoaded', () => {
-    loadUsersTable();
-});
+document.addEventListener('DOMContentLoaded', loadUsersTable);
