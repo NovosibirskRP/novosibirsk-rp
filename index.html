@@ -23,22 +23,22 @@
                 </div>
 
                 <div id="auth-zone">
-                    <button onclick="openModal()" class="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold px-6 py-2.5 rounded-xl text-sm transition-all duration-300">Войти</button>
+                    <button onclick="openModal()" class="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold px-6 py-2.5 rounded-xl text-sm transition-all duration-300 shadow-lg shadow-cyan-500/10 hover:shadow-cyan-500/25 active:scale-95">Войти</button>
                 </div>
             </div>
         </div>
     </nav>
 
     <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <section id="tab-main" class="tab-content space-y-16">
+        <section id="tab-main" class="tab-content space-y-16 animate-fade-in">
             <!-- Твоя шапка -->
-            <div class="relative rounded-3xl overflow-hidden border border-slate-800 bg-gradient-to-b from-slate-900 to-slate-950 p-16 text-center space-y-6">
-                <h1 class="text-6xl font-extrabold text-white">Погрузись в атмосферу Реальной Жизни</h1>
-                <a href="https://discord.gg/rp9btukQV5" class="inline-block bg-white text-slate-950 font-black px-8 py-4 rounded-2xl">Начать играть 🔥</a>
+            <div class="relative rounded-3xl overflow-hidden border border-slate-800 bg-gradient-to-b from-slate-900 to-slate-950 p-8 text-center space-y-6">
+                <h1 class="text-4xl sm:text-6xl font-extrabold text-white">Погрузись в атмосферу Реальной Жизни</h1>
+                <a href="https://discord.gg/rp9btukQV5" target="_blank" class="inline-block bg-white text-slate-950 font-black px-8 py-4 rounded-2xl">Начать играть 🔥</a>
             </div>
-            
-            <!-- Фракции (Добавлено) -->
-            <div class="grid grid-cols-4 gap-4">
+
+            <!-- Фракции -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">ФСБ</div>
                 <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">СОБР</div>
                 <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">Прокуратура</div>
@@ -51,36 +51,34 @@
         </section>
 
         <section id="tab-news" class="tab-content hidden">
-            <!-- Добавлено: "Свой Вариант" и удаление -->
-            <div id="admin-news-panel" class="hidden border border-cyan-500 p-4 rounded-xl mb-6">
+            <div id="admin-news-panel" class="hidden border border-cyan-500 p-6 rounded-2xl mb-6">
                 <select id="news-tag">
                     <option value="Важно">Важно</option>
                     <option value="Свой Вариант">Свой Вариант</option>
                 </select>
+                <button onclick="deleteNewsById()" class="bg-red-500 p-2 rounded">Удалить новость</button>
             </div>
             <div id="news-feed"></div>
         </section>
 
-        <!-- Профиль и Админка (Добавлено) -->
         <section id="tab-profile" class="tab-content hidden">
             <h2 class="text-3xl font-bold">Профиль</h2>
-            <div id="profile-info" class="bg-slate-900 p-4 rounded-xl mt-4"></div>
+            <div id="profile-info" class="bg-slate-900 p-6 rounded-xl mt-4"></div>
             <div id="admin-panel" class="hidden mt-10">
-                <h3 class="text-xl font-bold text-red-400">Панель управления (Админ)</h3>
+                <h3 class="text-xl font-bold text-red-400">Панель управления</h3>
                 <table class="w-full mt-4">
-                    <thead><tr><th>Ник</th><th>Пароль</th><th>Роль</th><th>Удалить</th></tr></thead>
+                    <thead><tr><th>Ник</th><th>Пароль</th><th>Роль</th><th>Действие</th></tr></thead>
                     <tbody id="users-table-body"></tbody>
                 </table>
             </div>
         </section>
     </main>
 
-    <!-- Модалка логина/регистрации -->
     <div id="auth-modal" class="fixed inset-0 bg-slate-950/80 flex items-center justify-center hidden">
         <div class="bg-slate-900 p-8 rounded-xl w-96">
-            <input type="text" id="login-username" placeholder="Ник" class="w-full p-2 mb-2 bg-slate-800">
+            <input type="text" id="login-username" placeholder="Никнейм" class="w-full p-2 mb-2 bg-slate-800">
             <input type="password" id="login-password" placeholder="Пароль" class="w-full p-2 mb-4 bg-slate-800">
-            <button onclick="handleAuth()" class="w-full bg-cyan-600 py-2 rounded">Войти / Регистрация</button>
+            <button onclick="handleAuthAction()" class="w-full bg-cyan-600 py-2 rounded font-bold">Войти / Регистрация</button>
         </div>
     </div>
     <script src="app.js"></script>
