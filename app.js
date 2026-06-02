@@ -2,54 +2,75 @@ const SUPABASE_URL = "https://aygqlldisjyeljgmwmec.supabase.co";
 const SUPABASE_KEY = "sb_publishable_fioN5iOmz3L-T8OurGPdYA_3IRN9K8n";
 const headers = { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json" };
 
-let currentUser = null;
-
 // Инициализация
 document.addEventListener('DOMContentLoaded', () => {
-    const saved = localStorage.getItem('currentUser');
-    if (saved) {
-        currentUser = JSON.parse(saved);
-        window.updateAuthZone();
-    }
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+    if (user) updateAuthZone(user);
+    loadNews();
 });
 
-window.switchTab = (tab) => {
+// Переключение вкладок
+window.switchTab = (id) => {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-    document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
-    document.getElementById(`tab-${tab}`).classList.remove('hidden');
-    document.getElementById(`nav-${tab}`).classList.add('active');
+    document.getElementById('tab-' + id).classList.remove('hidden');
 };
 
+// Модальное окно
 window.openModal = () => document.getElementById('auth-modal').classList.remove('hidden');
 window.closeModal = () => document.getElementById('auth-modal').classList.add('hidden');
 
+// Логин
 window.handleAuthLogin = async (e) => {
     e.preventDefault();
     const u = document.getElementById('login-username').value.trim();
     const p = document.getElementById('login-password').value;
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/users?username=eq.${encodeURIComponent(u)}&password=eq.${encodeURIComponent(p)}`, { headers });
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/users?username=eq.${u}&password=eq.${p}`, { headers });
     const users = await res.json();
-    
     if (users.length === 1) {
-        currentUser = users[0];
-        localStorage.setItem('currentUser', JSON.stringify(currentUser));
-        window.closeModal();
-        window.updateAuthZone();
-        alert('Вход выполнен!');
-    } else {
-        alert('Ошибка: неверный ник или пароль!');
+        localStorage.setItem('currentUser', JSON.stringify(users[0]));
+        location.reload();
+    } else { alert('Неверно!'); }
+};
+
+// Обновление интерфейса
+window.updateAuthZone = (user) => {
+    document.getElementById('auth-zone').innerHTML = `<button onclick="localStorage.removeItem('currentUser');location.reload();" class="bg-red-600 px-6 py-2 rounded">Выйти</button>`;
+    if (user.role === 'Разработчик') {
+        document.getElementById('management-panel').classList.remove('hidden');
+        loadUsers();
     }
 };
 
-window.updateAuthZone = () => {
-    const zone = document.getElementById('auth-zone');
-    if (currentUser) {
-        zone.innerHTML = `<button onclick="window.handleLogout()" class="bg-red-600 px-6 py-2 rounded text-white font-bold">Выйти</button>`;
-        document.getElementById('nav-profile')?.classList.remove('hidden');
-    }
+// Админка
+async function loadUsers() {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/users`, { headers });
+    const users = await res.json();
+    document.getElementById('users-table-body').innerHTML = users.map(u => `
+        <tr class="border-b border-slate-800">
+            <td class="p-3">${u.username}</td>
+            <td class="p-3">
+                <select onchange="changeRole(${u.id}, this.value)" class="bg-slate-800 p-1 rounded">
+                    <option ${u.role==='Пользователь'?'selected':''}>Пользователь</option>
+                    <option ${u.role==='Разработчик'?'selected':''}>Разработчик</option>
+                </select>
+            </td>
+            <td class="p-3"><button onclick="deleteUser(${u.id})" class="text-red-500">Удалить</button></td>
+        </tr>
+    `).join('');
+}
+
+window.changeRole = async (id, role) => {
+    await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${id}`, { method: 'PATCH', headers, body: JSON.stringify({role}) });
+    alert('Роль изменена!');
 };
 
-window.handleLogout = () => {
-    localStorage.removeItem('currentUser');
+window.deleteUser = async (id) => {
+    await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${id}`, { method: 'DELETE', headers });
     location.reload();
 };
+
+async function loadNews() {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/news`, { headers });
+    const news = await res.json();
+    document.getElementById('news-container').innerHTML = news.map(n => `<div class="bg-slate-900 p-4 rounded">${n.title}</div>`).join('');
+}
