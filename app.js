@@ -48,7 +48,6 @@ async function handleAuthRegister(e) {
 
     if(!username || !password) return alert('Заполните все поля!');
 
-    // Проверяем, нет ли уже такого игрока на сервере
     const checkRes = await fetch(`${SUPABASE_URL}/rest/v1/users?username=eq.${encodeURIComponent(username)}`, { headers });
     const existingUsers = await checkRes.json();
 
@@ -56,7 +55,6 @@ async function handleAuthRegister(e) {
         return alert('Этот никнейм уже занят другим игроком!');
     }
 
-    // Сохраняем нового игрока в общую базу данных
     const regRes = await fetch(`${SUPABASE_URL}/rest/v1/users`, {
         method: 'POST',
         headers: headers,
@@ -76,7 +74,6 @@ async function handleAuthLogin(e) {
     const username = document.getElementById('login-username').value.trim();
     const password = document.getElementById('login-password').value;
 
-    // Запрашиваем игрока из базы данных
     const res = await fetch(`${SUPABASE_URL}/rest/v1/users?username=eq.${encodeURIComponent(username)}&password=eq.${encodeURIComponent(password)}`, { headers });
     const users = await res.json();
 
@@ -170,7 +167,6 @@ async function loadNewsFromServer() {
         const card = document.createElement('div');
         card.className = "bg-slate-900 border border-slate-800 p-6 rounded-2xl space-y-4 hover:border-slate-700 transition-all relative";
         
-        // Кнопка удаления новости для admin-ов
         let deleteBtn = '';
         if (currentUser && (currentUser.role === 'Разработчик' || currentUser.role === 'Администратор')) {
             deleteBtn = `<button onclick="deleteNews(${item.id})" class="absolute top-4 right-4 text-xs text-red-500 hover:text-red-400">Удалить</button>`;
@@ -194,7 +190,7 @@ async function deleteNews(id) {
     loadNewsFromServer();
 }
 
-// УПРАВЛЕНИЕ ПОЛЬЗОВАТЕЛЯМИ (БАЗА ДАННЫХ)
+// УПРАВЛЕНИЕ ПОЛЬЗОВАТЕЛЯМИ
 async function loadUsersTable() {
     if (!currentUser || currentUser.role !== 'Разработчик') return;
 
