@@ -4,64 +4,32 @@ const headers = { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${SUPABASE_KE
 
 let currentUser = JSON.parse(localStorage.getItem('currentUser'));
 
-// 1. ИНИЦИАЛИЗАЦИЯ
-document.addEventListener('DOMContentLoaded', () => {
-    updateAuthZone();
-    if (currentUser && (currentUser.role === 'Разработчик')) {
-        loadUsersTable();
-    }
-});
-
-// 2. АВТОРИЗАЦИЯ
-async function handleAuthLogin(e) {
-    e.preventDefault();
-    const u = document.getElementById('login-username').value.trim();
-    const p = document.getElementById('login-password').value;
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/users?username=eq.${u}&password=eq.${p}`, { headers });
-    const users = await res.json();
-    if (users.length === 1) {
-        localStorage.setItem('currentUser', JSON.stringify(users[0]));
-        location.reload();
-    } else {
-        alert('Неверный логин или пароль!');
-    }
-}
-
-function handleLogout() {
-    localStorage.removeItem('currentUser');
-    location.reload();
-}
-
-// 3. ТАБЛИЦА ПОЛЬЗОВАТЕЛЕЙ (ТО, ЧТО ТЫ ИСКАЛ!)
+// Функция загрузки таблицы (вызывается при входе в профиль)
 async function loadUsersTable() {
     const tbody = document.getElementById('users-table-body');
-    if (!tbody) return; // Если на странице нет этой таблицы, код не падает
+    const adminPanel = document.getElementById('admin-news-panel');
+
+    // Проверка прав
+    if (!currentUser || (currentUser.role !== 'Разработчик' && currentUser.role !== 'Администратор')) {
+        if (adminPanel) adminPanel.classList.add('hidden');
+        return;
+    }
+
+    if (adminPanel) adminPanel.classList.remove('hidden');
+    if (!tbody) return;
 
     const res = await fetch(`${SUPABASE_URL}/rest/v1/users?order=username.asc`, { headers });
     const users = await res.json();
 
     tbody.innerHTML = users.map(user => `
         <tr class="border-b border-slate-800">
-            <td class="py-2">${user.username}</td>
-            <td class="py-2">${user.role}</td>
+            <td class="py-2 text-white">${user.username}</td>
+            <td class="py-2 text-slate-400">${user.role}</td>
             <td class="py-2">
-                <select onchange="changeRole(${user.id}, this.value)">
-                    <option value="Пользователь" ${user.role === 'Пользователь' ? 'selected' : ''}>Пользователь</option>
-                    <option value="Разработчик" ${user.role === 'Разработчик' ? 'selected' : ''}>Разработчик</option>
-                </select>
+                <button onclick="deleteUser(${user.id})" class="text-red-500 hover:text-red-400 text-xs">Удалить</button>
             </td>
-            <td class="py-2"><button onclick="deleteUser(${user.id})" class="text-red-500">Удалить</button></td>
         </tr>
     `).join('');
-}
-
-async function changeRole(id, newRole) {
-    await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${id}`, {
-        method: 'PATCH',
-        headers: headers,
-        body: JSON.stringify({ role: newRole })
-    });
-    loadUsersTable();
 }
 
 async function deleteUser(id) {
@@ -70,25 +38,12 @@ async function deleteUser(id) {
     loadUsersTable();
 }
 
-function updateAuthZone() {
-    const zone = document.getElementById('auth-zone');
-    if (currentUser && zone) {
-        zone.innerHTML = `<span>${currentUser.username} (${currentUser.role})</span> <button onclick="handleLogout()">Выйти</button>`;
-        <!-- Контейнер для админ-панели в профиле -->
-<div id="admin-news-panel" class="hidden mt-8 p-6 bg-slate-900 rounded-xl border border-red-500/20">
-    <h2 class="text-white font-bold mb-4">Администрирование пользователей</h2>
-    <table class="w-full text-left">
-        <thead>
-            <tr class="text-slate-500 text-sm border-b border-slate-800">
-                <th class="py-2">Ник</th>
-                <th class="py-2">Роль</th>
-                <th class="py-2">Действия</th>
-            </tr>
-        </thead>
-        <tbody id="users-table-body">
-            <!-- Сюда JS вставит пользователей -->
-        </tbody>
-    </table>
-</div>
+// При переключении вкладок
+function switchTab(tabName) {
+    // ... твой код переключения ...
+    
+    // Если переключились на профиль — грузим админку
+    if (tabName === 'profile') {
+        loadUsersTable();
     }
 }
