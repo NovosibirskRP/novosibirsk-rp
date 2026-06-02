@@ -2,37 +2,48 @@ const SUPABASE_URL = "https://aygqlldisjyeljgmwmec.supabase.co";
 const SUPABASE_KEY = "sb_publishable_fioN5iOmz3L-T8OurGPdYA_3IRN9K8n";
 const headers = { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json" };
 
-// 1. Логин
-window.handleAuthLogin = async function() {
+// 1. АВТОРИЗАЦИЯ
+window.handleAuthLogin = async function(e) {
+    if(e) e.preventDefault();
     const u = document.getElementById('login-username').value.trim();
     const p = document.getElementById('login-password').value.trim();
+    
     const res = await fetch(`${SUPABASE_URL}/rest/v1/users?username=eq.${u}&password=eq.${p}`, { headers });
     const users = await res.json();
+    
     if (users.length === 1) {
         localStorage.setItem('currentUser', JSON.stringify(users[0]));
-        alert('Вход выполнен!');
+        alert('Успешный вход!');
         location.reload();
-    } else { alert('Неверно!'); }
+    } else {
+        alert('Ошибка: неверный ник или пароль!');
+    }
 };
 
-// 2. Универсальный загрузчик таблицы (вызывай его при открытии профиля)
+// 2. АДМИН-ПАНЕЛЬ (Загрузка данных)
 window.loadUsersTable = async function() {
     const user = JSON.parse(localStorage.getItem('currentUser'));
+    const panel = document.getElementById('management-panel');
     const tbody = document.getElementById('users-table-body');
-    
-    // Если пользователя нет, не админ или нет таблицы — выходим
-    if (!user || user.role !== 'Разработчик' || !tbody) {
+
+    // Если нет пользователя или он не "Разработчик", скрываем админку
+    if (!user || user.role !== 'Разработчик' || !panel) {
+        if (panel) panel.classList.add('hidden');
         return;
     }
+
+    // Если админ — показываем
+    panel.classList.remove('hidden');
+    if (!tbody) return;
 
     const res = await fetch(`${SUPABASE_URL}/rest/v1/users?order=username.asc`, { headers });
     const users = await res.json();
     
     tbody.innerHTML = users.map(u => `
-        <tr class="border-b border-slate-800">
+        <tr class="border-b border-slate-800 text-white">
             <td class="py-3 px-2">${u.username}</td>
             <td class="py-3 px-2">${u.role}</td>
-            <td class="py-3 px-2">
+            <td class="py-3 px-2 text-right">
                 <button onclick="deleteUser(${u.id})" class="text-red-500 hover:text-red-400">Удалить</button>
             </td>
         </tr>
@@ -40,19 +51,12 @@ window.loadUsersTable = async function() {
 };
 
 window.deleteUser = async function(id) {
-    if(!confirm('Точно удалить?')) return;
+    if(!confirm('Удалить игрока?')) return;
     await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${id}`, { method: 'DELETE', headers });
-    loadUsersTable(); // Обновляем таблицу после удаления
+    loadUsersTable();
 };
 
-// 3. ПЕРЕКЛЮЧАТЕЛЬ ВКЛАДОК (Связующее звено)
-// Найди в своем старом коде функцию switchTab и добавь туда вызов loadUsersTable()
-window.switchTab = function(tabName) {
-    // ... твой код переключения вкладок ...
-    if (tabName === 'profile') {
-        loadUsersTable();
-    }
-};
-
-// Запуск при загрузке
-document.addEventListener('DOMContentLoaded', loadUsersTable);
+// 3. ЗАПУСК
+document.addEventListener('DOMContentLoaded', () => {
+    loadUsersTable();
+});
