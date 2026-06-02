@@ -1,75 +1,54 @@
+// НАСТРОЙКИ
 const SUPABASE_URL = "https://aygqlldisjyeljgmwmec.supabase.co";
 const SUPABASE_KEY = "sb_publishable_fioN5iOmz3L-T8OurGPdYA_3IRN9K8n";
 const headers = { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json" };
 
-let currentUser = null;
+let currentUser = JSON.parse(localStorage.getItem('currentUser'));
 
-// При загрузке страницы пробуем найти сохраненного юзера
-window.onload = async () => {
-    const saved = localStorage.getItem('currentUser');
-    if (saved) {
-        currentUser = JSON.parse(saved);
-        updateAuthZone();
-        loadNewsFromServer();
-    }
-};
-
-async function handleAuthLogin(e) {
-    if (e) e.preventDefault();
-    const u = document.getElementById('login-username').value.trim();
-    const p = document.getElementById('login-password').value;
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/users?username=eq.${encodeURIComponent(u)}&password=eq.${encodeURIComponent(p)}`, { headers });
+// 1. АВТОРИЗАЦИЯ
+async function login(username, password) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/users?username=eq.${username}&password=eq.${password}`, { headers });
     const users = await res.json();
     if (users.length === 1) {
-        currentUser = users[0];
-        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        localStorage.setItem('currentUser', JSON.stringify(users[0]));
         location.reload();
     } else {
-        alert('Неверный логин или пароль!');
+        alert('Ошибка: неверный ник или пароль!');
     }
 }
 
-function updateAuthZone() {
-    const zone = document.getElementById('auth-zone');
-    if (currentUser) {
-        zone.innerHTML = `<span class="text-cyan-400 font-bold">👤 ${currentUser.username}</span> <button onclick="handleLogout()" class="text-red-400">Выйти</button>`;
-        if (currentUser.role === 'Разработчик') {
-            document.getElementById('admin-news-panel')?.classList.remove('hidden');
-            loadUsersTable();
-        }
-    }
-}
-
-function handleLogout() {
+function logout() {
     localStorage.removeItem('currentUser');
     location.reload();
 }
 
-async function loadNewsFromServer() {
+// 2. АДМИН-ПАНЕЛЬ И НОВОСТИ
+async function loadEverything() {
+    // Если юзер админ - показываем панель
+    if (currentUser && currentUser.role === 'Разработчик') {
+        const adminPanel = document.createElement('div');
+        adminPanel.id = 'admin-news-panel';
+        adminPanel.className = 'bg-red-900 p-4 mb-4';
+        adminPanel.innerHTML = `<h3>Панель управления</h3><input id="n-title" placeholder="Заголовок"><button onclick="addNews()">Опубликовать</button>`;
+        document.body.prepend(adminPanel);
+    }
+    
+    // Загружаем новости
     const res = await fetch(`${SUPABASE_URL}/rest/v1/news?order=created_at.desc`, { headers });
     const news = await res.json();
     const feed = document.getElementById('news-feed');
-    if (feed) {
-        feed.innerHTML = news.map(n => `<div class="bg-slate-900 p-4 rounded mb-2"><h3>${n.title}</h3><p>${n.text}</p></div>`).join('');
-    }
+    if (feed) feed.innerHTML = news.map(n => `<div><h3>${n.title}</h3><p>${n.text}</p></div>`).join('');
 }
 
-async function loadUsersTable() {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/users?order=username.asc`, { headers });
-    const users = await res.json();
-    const tbody = document.getElementById('users-table-body');
-    if (tbody) {
-        tbody.innerHTML = users.map(u => `
-            <tr>
-                <td>${u.username}</td>
-                <td>${u.role}</td>
-                <td><button onclick="deleteUser(${u.id})">Удалить</button></td>
-            </tr>
-        `).join('');
-    }
+async function addNews() {
+    const title = document.getElementById('n-title').value;
+    await fetch(`${SUPABASE_URL}/rest/v1/news`, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({ title, text: '...', tag: 'Общее' })
+    });
+    location.reload();
 }
 
-async function deleteUser(id) {
-    await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${id}`, { method: 'DELETE', headers });
-    loadUsersTable();
-}
+// ЗАПУСК
+document.addEventListener('DOMContentLoaded', loadEverything);
