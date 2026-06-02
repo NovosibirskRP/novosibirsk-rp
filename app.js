@@ -1,399 +1,263 @@
-// Официальный список должностей на проекте Novosibirsk RP
-const PROJECT_ROLES = [
-    "Игрок",
-    "Патрульная Полиция (ДПС)",
-    "ФСБ",
-    "СОБР",
-    "Верховный Суд",
-    "Прокуратура",
-    "Адвокатура",
-    "ГТРК «Новосибирск»",
-    "МЧС",
-    "ОПГ",
-    "ВИЦЕ МЭР",
-    "МЭР",
-    "Модерация",
-    "Администрация",
-    "Команда технического администрирования",
-    "Секретарь",
-    "Ассистент Главного Владельца",
-    "Заместитель Главного Владельца",
-    "Главный Владелец"
-];
+// НАСТРОЙКА ПОДКЛЮЧЕНИЯ К СЕРВЕРУ SUPABASE
+const SUPABASE_URL = "https://aygqlldisjyeljgmwmec.supabase.co"; 
+const SUPABASE_KEY = "sb_publishable_fioN5iOmz3L-T8OurGPdYA_3IRN9K8n"; 
 
-// 1. НАСТРОЙКА БАЗЫ ДАННЫХ ПОЛЬЗОВАТЕЛЕЙ
-let appUsers = JSON.parse(localStorage.getItem('rp_users')) || [];
-const userIndex = appUsers.findIndex(u => u.username.toUpperCase() === "RUBERS_SQ");
+// Базовые заголовки для запросов к серверу
+const headers = {
+    "apikey": SUPABASE_KEY,
+    "Authorization": `Bearer ${SUPABASE_KEY}`,
+    "Content-Type": "application/json"
+};
 
-if (userIndex === -1) {
-    appUsers.push({ username: "RUBERS_SQ", role: "Главный Владелец", password: "123" });
-} else {
-    appUsers[userIndex].role = "Главный Владелец";
-}
-localStorage.setItem('rp_users', JSON.stringify(appUsers));
-
-// 2. ОБНОВЛЕНИЕ ДАННЫХ ТЕКУЩЕЙ СЕССИИ
-let sessionUser = JSON.parse(sessionStorage.getItem('rp_current_session')) || null;
-
-if (sessionUser && sessionUser.username.toUpperCase() === "RUBERS_SQ") {
-    sessionUser.role = "Главный Владелец";
-    sessionStorage.setItem('rp_current_session', JSON.stringify(sessionUser));
-}
-
-// НАЧАЛЬНЫЕ НОВОСТИ (ЕСЛИ ПУСТО)
-if (!localStorage.getItem('rp_news')) {
-    const defaultNews = [
-        {
-            id: 1,
-            title: "Официальный запуск сайта Novosibirsk RP!",
-            date: "02.06.2026",
-            author: "RUBERS_SQ (Главный Владелец)",
-            tag: "Важно",
-            text: "Приветствуем игроков! Сайт успешно обновлен. Все панели управления и вкладки работают в штатном режиме."
-        }
-    ];
-    localStorage.setItem('rp_news', JSON.stringify(defaultNews));
-}
-
-let appNews = JSON.parse(localStorage.getItem('rp_news'));
-
-// Инициализация при загрузке страницы
-document.addEventListener("DOMContentLoaded", () => {
-    renderNews();
-    updateNavbar();
-    checkPermissions();
-});
-
-// ГЛОБАЛЬНАЯ ПРОВЕРКА АДМИН-ПРАВ
-function hasAdminAccess() {
-    if (!sessionUser) return false;
-    const currentRole = sessionUser.role.toUpperCase();
-    
-    if (currentRole.includes("ГЛАВНЫЙ ВЛАДЕЛЕЦ") || currentRole === "ГЛАВНЫЙ ВЛАДЕЛЕЦ") {
-        return true;
-    }
-    if (currentRole.includes("ЗАМЕСТИТЕЛЬ ГЛАВНОГО ВЛАДЕЛЕЦА") || currentRole.includes("ЗАМ")) {
-        return true;
-    }
-
-    const altAdminRoles = ["АДМИНИСТРАЦИЯ", "МОДЕРАЦИЯ", "КОМАНДА ТЕХНИЧЕСКОГО АДМИНИСТРИРОВАНИЯ", "МЭР"];
-    return altAdminRoles.some(r => currentRole.includes(r));
-}
-
-// Переключение вкладок сайта
+// Переключение вкладок на сайте
 function switchTab(tabName) {
-    const contents = document.querySelectorAll('.tab-content');
-    contents.forEach(tab => tab.classList.add('hidden'));
-
-    const links = document.querySelectorAll('.nav-link');
-    links.forEach(link => link.classList.remove('active'));
-
-    const targetTab = document.getElementById(`tab-${tabName}`);
-    const targetLink = document.getElementById(`nav-${tabName}`);
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
     
-    if (targetTab) targetTab.classList.remove('hidden');
-    if (targetLink) targetLink.classList.add('active');
-}
-
-// Показ кастомного тега в админке новостей
-function toggleCustomTagInput() {
-    const select = document.getElementById('news-tag-select');
-    const customInput = document.getElementById('news-tag-custom');
-    if (select && select.value === 'CUSTOM') {
-        customInput.classList.remove('hidden');
-    } else if (customInput) {
-        customInput.classList.add('hidden');
+    const activeTab = document.getElementById(`tab-${tabName}`);
+    const activeNav = document.getElementById(`nav-${tabName}`);
+    
+    if (activeTab) activeTab.classList.remove('hidden');
+    if (activeNav) activeNav.classList.add('active');
+    
+    if (tabName === 'news') {
+        loadNewsFromServer();
     }
 }
 
-// Управление модальным окном авторизации
-function openModal() {
-    const modal = document.getElementById('auth-modal');
-    if (modal) {
-        modal.classList.remove('hidden');
+// МОДАЛЬНОЕ ОКНО
+function openModal() { document.getElementById('auth-modal').classList.remove('hidden'); }
+function closeModal() { document.getElementById('auth-modal').classList.add('hidden'); }
+
+function toggleAuthForm(type) {
+    const isLogin = type === 'login';
+    document.getElementById('form-login').classList.toggle('hidden', !isLogin);
+    document.getElementById('form-register').classList.toggle('hidden', isLogin);
+    
+    document.getElementById('tab-btn-login').className = isLogin ? 'flex-1 text-center py-2 text-sm font-bold rounded-lg text-cyan-400 bg-slate-900' : 'flex-1 text-center py-2 text-sm font-bold rounded-lg text-slate-400 hover:text-white';
+    document.getElementById('tab-btn-register').className = !isLogin ? 'flex-1 text-center py-2 text-sm font-bold rounded-lg text-cyan-400 bg-slate-900' : 'flex-1 text-center py-2 text-sm font-bold rounded-lg text-slate-400 hover:text-white';
+}
+
+// СЕРВЕРНАЯ АВТОРИЗАЦИЯ И РЕГИСТРАЦИЯ
+let currentUser = null;
+
+async function handleAuthRegister(e) {
+    e.preventDefault();
+    const username = document.getElementById('reg-username').value.trim();
+    const password = document.getElementById('reg-password').value;
+
+    if(!username || !password) return alert('Заполните все поля!');
+
+    // Проверяем, нет ли уже такого игрока на сервере
+    const checkRes = await fetch(`${SUPABASE_URL}/rest/v1/users?username=eq.${encodeURIComponent(username)}`, { headers });
+    const existingUsers = await checkRes.json();
+
+    if (existingUsers.length > 0) {
+        return alert('Этот никнейм уже занят другим игроком!');
+    }
+
+    // Сохраняем нового игрока в общую базу данных
+    const regRes = await fetch(`${SUPABASE_URL}/rest/v1/users`, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({ username, password, role: 'Пользователь' })
+    });
+
+    if (regRes.ok) {
+        alert('Аккаунт успешно создан! Теперь войдите.');
         toggleAuthForm('login');
-    }
-}
-
-function closeModal() {
-    const modal = document.getElementById('auth-modal');
-    if (modal) modal.classList.add('hidden');
-}
-
-// Вход / Регистрация переключатель формы
-function toggleAuthForm(mode) {
-    const formLogin = document.getElementById('form-login');
-    const formRegister = document.getElementById('form-register');
-    const btnLogin = document.getElementById('tab-btn-login');
-    const btnRegister = document.getElementById('tab-btn-register');
-
-    if (mode === 'login') {
-        if(formLogin) formLogin.classList.remove('hidden');
-        if(formRegister) formRegister.classList.add('hidden');
-        if(btnLogin) btnLogin.className = "flex-1 text-center py-2 text-sm font-bold rounded-lg text-cyan-400 bg-slate-900";
-        if(btnRegister) btnRegister.className = "flex-1 text-center py-2 text-sm font-bold rounded-lg text-slate-400 hover:text-white";
     } else {
-        if(formLogin) formLogin.classList.add('hidden');
-        if(formRegister) formRegister.classList.remove('hidden');
-        if(btnRegister) btnRegister.className = "flex-1 text-center py-2 text-sm font-bold rounded-lg text-cyan-400 bg-slate-900";
-        if(btnLogin) btnLogin.className = "flex-1 text-center py-2 text-sm font-bold rounded-lg text-slate-400 hover:text-white";
+        alert('Ошибка при регистрации на сервере.');
     }
 }
 
-// Регистрация аккаунта
-function handleAuthRegister(event) {
-    event.preventDefault();
-    const name = document.getElementById('reg-username').value.trim();
-    const pass = document.getElementById('reg-password').value;
+async function handleAuthLogin(e) {
+    e.preventDefault();
+    const username = document.getElementById('login-username').value.trim();
+    const password = document.getElementById('login-password').value;
 
-    if (appUsers.some(u => u.username.toLowerCase() === name.toLowerCase())) {
-        alert("Этот никнейм занят!");
-        return;
+    // Запрашиваем игрока из базы данных
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/users?username=eq.${encodeURIComponent(username)}&password=eq.${encodeURIComponent(password)}`, { headers });
+    const users = await res.json();
+
+    if (users.length === 1) {
+        currentUser = users[0];
+        alert(`Добро пожаловать, ${currentUser.username}! Ваша роль: ${currentUser.role}`);
+        closeModal();
+        updateAuthZone();
+    } else {
+        alert('Неверный никнейм или пароль!');
     }
-
-    appUsers.push({ username: name, role: "Игрок", password: pass });
-    localStorage.setItem('rp_users', JSON.stringify(appUsers));
-    alert("Регистрация успешна!");
-    toggleAuthForm('login');
 }
 
-// Логин в аккаунт
-function handleAuthLogin(event) {
-    event.preventDefault();
-    const name = document.getElementById('login-username').value.trim();
-    const pass = document.getElementById('login-password').value;
-
-    const user = appUsers.find(u => u.username.toLowerCase() === name.toLowerCase() && u.password === pass);
-
-    if (!user) {
-        alert("Неверный никнейм или пароль!");
-        return;
+function updateAuthZone() {
+    const zone = document.getElementById('auth-zone');
+    if (currentUser) {
+        zone.innerHTML = `
+            <div class="flex items-center space-x-4">
+                <span class="text-sm font-bold bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700 text-cyan-400 cursor-pointer" onclick="switchTab('profile')">
+                    👤 ${currentUser.username} (${currentUser.role})
+                </span>
+                <button onclick="handleLogout()" class="text-xs text-red-400 hover:text-red-300 transition">Выйти</button>
+            </div>
+        `;
+        document.getElementById('nav-profile').classList.remove('hidden');
+        if (currentUser.role === 'Разработчик' || currentUser.role === 'Администратор') {
+            document.getElementById('admin-news-panel').classList.remove('hidden');
+            loadUsersTable();
+        }
+    } else {
+        zone.innerHTML = `<button onclick="openModal()" class="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold px-6 py-2.5 rounded-xl text-sm transition-all duration-300 shadow-lg">Войти</button>`;
+        document.getElementById('nav-profile').classList.add('hidden');
+        document.getElementById('admin-news-panel').classList.add('hidden');
     }
-
-    sessionUser = { username: user.username, role: user.role };
-    sessionStorage.setItem('rp_current_session', JSON.stringify(sessionUser));
-
-    updateNavbar();
-    checkPermissions();
-    closeModal();
 }
 
-// Выход из аккаунта
 function handleLogout() {
-    sessionUser = null;
-    sessionStorage.removeItem('rp_current_session');
-    updateNavbar();
-    checkPermissions();
+    currentUser = null;
+    updateAuthZone();
     switchTab('main');
 }
 
-// Смена собственного пароля
-function changeOwnPassword() {
-    const newPass = document.getElementById('profile-new-password').value;
-    if(!newPass) return alert("Введите пароль!");
+// СЕРВЕРНЫЕ НОВОСТИ
+function toggleCustomTagInput() {
+    const select = document.getElementById('news-tag-select');
+    const customInput = document.getElementById('news-tag-custom');
+    customInput.classList.toggle('hidden', select.value !== 'CUSTOM');
+}
 
-    appUsers = appUsers.map(u => {
-        if(u.username.toLowerCase() === sessionUser.username.toLowerCase()) u.password = newPass;
-        return u;
+async function createNews() {
+    if (!currentUser || (currentUser.role !== 'Разработчик' && currentUser.role !== 'Администратор')) return;
+
+    const title = document.getElementById('news-title').value.trim();
+    const text = document.getElementById('news-text').value.trim();
+    const selectTag = document.getElementById('news-tag-select').value;
+    const customTag = document.getElementById('news-tag-custom').value.trim();
+    
+    const tag = selectTag === 'CUSTOM' ? customTag : selectTag;
+
+    if (!title || !text || !tag) return alert('Заполните все поля новости!');
+
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/news`, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({ title, text, tag })
     });
-    localStorage.setItem('rp_users', JSON.stringify(appUsers));
-    document.getElementById('profile-new-password').value = '';
-    alert("Пароль успешно изменен!");
-    if(hasAdminAccess()) renderUsersTable();
+
+    if (res.ok) {
+        document.getElementById('news-title').value = '';
+        document.getElementById('news-text').value = '';
+        document.getElementById('news-tag-custom').value = '';
+        loadNewsFromServer();
+    } else {
+        alert('Ошибка при публикации новости.');
+    }
 }
 
-// Динамический навбар
-function updateNavbar() {
-    const authZone = document.getElementById('auth-zone');
-    const profileLink = document.getElementById('nav-profile');
+async function loadNewsFromServer() {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/news?order=created_at.desc`, { headers });
+    const newsList = await res.json();
 
-    if (!authZone) return;
+    const feed = document.getElementById('news-feed');
+    feed.innerHTML = '';
 
-    if (sessionUser) {
-        if (profileLink) profileLink.classList.remove('hidden');
+    if (newsList.length === 0) {
+        feed.innerHTML = `<p class="text-slate-500 col-span-2 text-center py-8">Новостей пока нет.</p>`;
+        return;
+    }
+
+    newsList.forEach(item => {
+        const card = document.createElement('div');
+        card.className = "bg-slate-900 border border-slate-800 p-6 rounded-2xl space-y-4 hover:border-slate-700 transition-all relative";
         
-        authZone.innerHTML = `
-            <div class="flex items-center space-x-3 bg-slate-900 border border-slate-800 rounded-2xl p-2 pr-4 shadow-md">
-                <img src="photo_2026-05-26_23-01-05.jpg" alt="Аватар" class="w-9 h-9 rounded-xl object-cover border border-slate-700">
-                <div class="flex flex-col text-left">
-                    <span class="text-sm font-bold text-white leading-none">${sessionUser.username}</span>
-                    <span class="text-[10px] text-blue-400 font-extrabold mt-1.5 uppercase tracking-wider bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">${sessionUser.role}</span>
-                </div>
-                <button onclick="handleLogout()" class="text-slate-500 hover:text-red-400 pl-3 text-xs transition-colors font-medium">Выйти</button>
+        // Кнопка удаления новости для admin-ов
+        let deleteBtn = '';
+        if (currentUser && (currentUser.role === 'Разработчик' || currentUser.role === 'Администратор')) {
+            deleteBtn = `<button onclick="deleteNews(${item.id})" class="absolute top-4 right-4 text-xs text-red-500 hover:text-red-400">Удалить</button>`;
+        }
+
+        card.innerHTML = `
+            ${deleteBtn}
+            <div class="flex items-center space-x-2">
+                <span class="text-xs font-bold px-2.5 py-1 rounded-md bg-slate-950 border border-slate-800 text-slate-300">${item.tag}</span>
             </div>
+            <h3 class="text-xl font-bold text-white">${item.title}</h3>
+            <p class="text-slate-400 text-sm leading-relaxed whitespace-pre-wrap">${item.text}</p>
         `;
-    } else {
-        if (profileLink) profileLink.classList.add('hidden');
-        authZone.innerHTML = `
-            <button onclick="openModal()" class="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold px-6 py-2.5 rounded-xl text-sm transition-all duration-300 shadow-lg">
-                Войти
-            </button>
-        `;
-    }
+        feed.appendChild(card);
+    });
 }
 
-// Проверка прав на отображение админ-панелей
-function checkPermissions() {
-    const adminPanel = document.getElementById('admin-news-panel');
-    const managementPanel = document.getElementById('management-panel');
-
-    if (hasAdminAccess()) {
-        if(adminPanel) adminPanel.classList.remove('hidden');
-        if(managementPanel) managementPanel.classList.remove('hidden');
-        renderUsersTable();
-    } else {
-        if(adminPanel) adminPanel.classList.add('hidden');
-        if(managementPanel) managementPanel.classList.add('hidden');
-    }
-    // Перерисуем новости, чтобы кнопка "Удалить" появилась/исчезла вовремя
-    renderNews();
+async function deleteNews(id) {
+    if (!confirm('Удалить эту новость для всех игроков?')) return;
+    await fetch(`${SUPABASE_URL}/rest/v1/news?id=eq.${id}`, { method: 'DELETE', headers });
+    loadNewsFromServer();
 }
 
-// Рендеринг таблицы пользователей базы данных с кнопкой удаления
-function renderUsersTable() {
+// УПРАВЛЕНИЕ ПОЛЬЗОВАТЕЛЯМИ (БАЗА ДАННЫХ)
+async function loadUsersTable() {
+    if (!currentUser || currentUser.role !== 'Разработчик') return;
+
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/users?order=username.asc`, { headers });
+    const users = await res.json();
+
     const tbody = document.getElementById('users-table-body');
-    if(!tbody) return;
     tbody.innerHTML = '';
 
-    appUsers.forEach(user => {
+    users.forEach(user => {
         const tr = document.createElement('tr');
-        tr.className = "border-b border-slate-850 text-slate-300 text-sm";
-
-        let optionsHtml = '';
-        PROJECT_ROLES.forEach(role => {
-            const selected = user.role.toUpperCase() === role.toUpperCase() ? 'selected' : '';
-            optionsHtml += `<option value="${role}" ${selected}>${role}</option>`;
-        });
-
+        tr.className = "border-b border-slate-800 text-slate-300 hover:bg-slate-850/50";
+        
         tr.innerHTML = `
-            <td class="py-3 px-2 font-bold text-white">${user.username}</td>
-            <td class="py-3 px-2 text-cyan-400 font-mono select-all">${user.password}</td>
-            <td class="py-3 px-2">
-                <span class="px-2 py-0.5 rounded text-xs bg-slate-800 text-slate-300">${user.role}</span>
+            <td class="py-3.5 px-2 font-semibold text-white">${user.username}</td>
+            <td class="py-3.5 px-2 text-slate-500 text-xs font-mono">${user.password}</td>
+            <td class="py-3.5 px-2">
+                <span class="px-2 py-0.5 text-xs rounded font-bold ${user.role === 'Разработчик' ? 'bg-red-500/10 text-red-400 border border-red-500/20' : user.role === 'Администратор' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-slate-950 text-slate-400'}">${user.role}</span>
             </td>
-            <td class="py-3 px-2">
-                <select onchange="updateUserRole('${user.username}', this.value)" class="bg-slate-950 border border-slate-800 text-xs rounded-lg px-2 py-1 text-slate-300 outline-none">
-                    ${optionsHtml}
+            <td class="py-3.5 px-2">
+                <select onchange="changeUserRole(${user.id}, this.value)" class="bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs focus:outline-none text-white ${user.username === 'RUBERS_SQ' ? 'hidden' : ''}">
+                    <option value="Пользователь" ${user.role === 'Пользователь' ? 'selected' : ''}>Пользователь</option>
+                    <option value="Администратор" ${user.role === 'Администратор' ? 'selected' : ''}>Администратор</option>
                 </select>
             </td>
-            <td class="py-3 px-2 text-right">
-                <button onclick="deleteUser('${user.username}')" class="bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-slate-950 border border-red-500/20 text-xs font-bold px-3 py-1 rounded-lg transition-all">
-                    Удалить аккаунт
-                </button>
+            <td class="py-3.5 px-2 text-right">
+                <button onclick="deleteUser(${user.id}, '${user.username}')" class="text-xs text-red-500 hover:text-red-400 font-medium ${user.username === 'RUBERS_SQ' ? 'hidden' : ''}">Удалить</button>
             </td>
         `;
         tbody.appendChild(tr);
     });
 }
 
-// Функция удаления пользователя из базы данных
-function deleteUser(username) {
-    if (username.toUpperCase() === "RUBERS_SQ") {
-        return alert("Нельзя удалить аккаунт Главного Владельца проекта!");
-    }
-    
-    if (!confirm(`Вы действительно хотите навсегда удалить аккаунт ${username} из базы данных?`)) return;
-
-    appUsers = appUsers.filter(u => u.username !== username);
-    localStorage.setItem('rp_users', JSON.stringify(appUsers));
-
-    if (sessionUser && sessionUser.username === username) {
-        handleLogout();
-    } else {
-        renderUsersTable();
-    }
-    alert(`Аккаунт ${username} успешно удален!`);
-}
-
-// Обновление роли пользователя администратором
-function updateUserRole(username, newRole) {
-    appUsers = appUsers.map(u => {
-        if(u.username === username) u.role = newRole;
-        return u;
+async function changeUserRole(id, newRole) {
+    await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${id}`, {
+        method: 'PATCH',
+        headers: headers,
+        body: JSON.stringify({ role: newRole })
     });
-    localStorage.setItem('rp_users', JSON.stringify(appUsers));
-    
-    if(sessionUser && sessionUser.username.toLowerCase() === username.toLowerCase()) {
-        sessionUser.role = newRole;
-        sessionStorage.setItem('rp_current_session', JSON.stringify(sessionUser));
-        updateNavbar();
-    }
-    
-    checkPermissions();
+    alert('Роль игрока успешно обновлена на сервере!');
+    loadUsersTable();
 }
 
-// ОТОБРАЖЕНИЕ ЛЕНТЫ НОВОСТЕЙ (Исправлено: Кнопка «Удалить» железно возвращена администраторам)
-function renderNews() {
-    const feed = document.getElementById('news-feed');
-    if(!feed) return;
-    feed.innerHTML = '';
-
-    appNews.forEach(news => {
-        const card = document.createElement('div');
-        card.className = "bg-slate-900 border border-slate-800 p-6 rounded-2xl space-y-4";
-        
-        // Проверяем, имеет ли текущий пользователь право удалять новости
-        const deleteButtonHtml = hasAdminAccess() 
-            ? `<button onclick="deleteNews(${news.id})" class="text-red-500 hover:text-red-400 font-bold transition-colors">Удалить</button>` 
-            : '';
-
-        card.innerHTML = `
-            <div class="flex items-center justify-between">
-                <span class="border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 px-2.5 py-0.5 rounded-lg text-xs font-bold">${news.tag}</span>
-                <span class="text-xs text-slate-500">${news.date}</span>
-            </div>
-            <div class="space-y-2">
-                <h3 class="text-xl font-bold text-white">${news.title}</h3>
-                <p class="text-slate-400 text-sm leading-relaxed">${news.text}</p>
-            </div>
-            <div class="border-t border-slate-850 pt-3 text-xs text-slate-500 flex items-center justify-between">
-                <div>Автор: <span class="text-slate-400 font-semibold">${news.author}</span></div>
-                ${deleteButtonHtml}
-            </div>
-        `;
-        feed.appendChild(card);
-    });
+async function deleteUser(id, name) {
+    if (!confirm(`Вы действительно хотите НАВСЕГДА удалить аккаунт игрока ${name}?`)) return;
+    await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${id}`, { method: 'DELETE', headers });
+    loadUsersTable();
 }
 
-// Создание новости администрацией
-function createNews() {
-    const title = document.getElementById('news-title').value.trim();
-    const selectTag = document.getElementById('news-tag-select').value;
-    const customTag = document.getElementById('news-tag-custom').value.trim();
-    const text = document.getElementById('news-text').value.trim();
+async function changeOwnPassword() {
+    const newPass = document.getElementById('profile-new-password').value;
+    if (!newPass) return alert('Введите новый пароль!');
 
-    if (!title || !text) return alert("Заполните заголовок и текст публикации!");
-
-    let finalTag = selectTag === 'CUSTOM' ? customTag : selectTag;
-    if (!finalTag) return alert("Выберите или введите категорию!");
-
-    const today = new Date();
-    const formattedDate = String(today.getDate()).padStart(2, '0') + '.' + String(today.getMonth() + 1).padStart(2, '0') + '.' + today.getFullYear();
-
-    appNews.unshift({
-        id: Date.now(),
-        title: title,
-        date: formattedDate,
-        author: sessionUser ? `${sessionUser.username} (${sessionUser.role})` : "Администрация",
-        tag: finalTag,
-        text: text
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${currentUser.id}`, {
+        method: 'PATCH',
+        headers: headers,
+        body: JSON.stringify({ password: newPass })
     });
 
-    localStorage.setItem('rp_news', JSON.stringify(appNews));
-
-    document.getElementById('news-title').value = '';
-    document.getElementById('news-text').value = '';
-    document.getElementById('news-tag-custom').value = '';
-    document.getElementById('news-tag-select').value = 'Важно';
-    toggleCustomTagInput();
-
-    renderNews();
-}
-
-// Удаление постов
-function deleteNews(id) {
-    if(!confirm("Вы действительно хотите удалить выбранную новость?")) return;
-    appNews = appNews.filter(n => n.id !== id);
-    localStorage.setItem('rp_news', JSON.stringify(appNews));
-    renderNews();
+    if (res.ok) {
+        currentUser.password = newPass;
+        document.getElementById('profile-new-password').value = '';
+        alert('Ваш пароль успешно изменен в базе данных!');
+        loadUsersTable();
+    }
 }
