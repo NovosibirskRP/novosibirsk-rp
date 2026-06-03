@@ -5,82 +5,316 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Novosibirsk RP | Официальный сайт</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rubik:wght@400;500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <style>
+        body { font-family: 'Rubik', sans-serif; }
+        .logo-font { font-family: 'Bebas Neue', sans-serif; }
+        .nav-link { color: #94a3b8; }
+        .nav-link:hover, .nav-link.active { color: #fff; background: rgba(6,182,212,0.1); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .faction-card:hover { transform: translateY(-4px); }
+        .faction-card { transition: all 0.3s; }
+        .animate-fade-in { animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+        .modal-overlay { transition: opacity 0.3s; }
+        .tag-important { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+        .tag-update { background: rgba(6,182,212,0.15); color: #22d3ee; border: 1px solid rgba(6,182,212,0.3); }
+        .tag-event { background: rgba(168,85,247,0.15); color: #c084fc; border: 1px solid rgba(168,85,247,0.3); }
+        .tag-custom { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); }
+        .auth-tab-btn.active { background: rgba(6,182,212,0.15); color: #22d3ee; border-bottom: 2px solid #22d3ee; }
+        input, select, textarea { color: white !important; }
+        input::placeholder, textarea::placeholder { color: #64748b !important; }
+        table th { color: #94a3b8; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        table td { color: #e2e8f0; }
+        tr:hover td { background: rgba(255,255,255,0.03); }
+    </style>
 </head>
-<body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col selection:bg-cyan-500 selection:text-slate-950">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col">
 
-    <nav class="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40 transition-all duration-300">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-20">
-                <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('main')">
-                    <span class="text-2xl font-black tracking-wider bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">NOVOSIBIRSK <span class="text-white">RP</span></span>
-                </div>
-                
-                <div class="hidden md:flex space-x-2">
-                    <button onclick="switchTab('main')" id="nav-main" class="nav-link active px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200">Главная</button>
-                    <button onclick="switchTab('news')" id="nav-news" class="nav-link px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200">Новости</button>
-                    <button onclick="switchTab('profile')" id="nav-profile" class="nav-link px-4 py-2 rounded-lg text-sm font-medium">Профиль</button>
-                </div>
-
-                <div id="auth-zone">
-                    <button onclick="openModal()" class="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold px-6 py-2.5 rounded-xl text-sm transition-all duration-300 shadow-lg shadow-cyan-500/10 hover:shadow-cyan-500/25 active:scale-95">Войти</button>
-                </div>
+<!-- NAV -->
+<nav class="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-20">
+            <div class="cursor-pointer" onclick="switchTab('main')">
+                <span class="logo-font text-3xl tracking-widest bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">NOVOSIBIRSK</span>
+                <span class="logo-font text-3xl tracking-widest text-white"> RP</span>
             </div>
-        </div>
-    </nav>
-
-    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <section id="tab-main" class="tab-content space-y-16 animate-fade-in">
-            <!-- Твоя шапка -->
-            <div class="relative rounded-3xl overflow-hidden border border-slate-800 bg-gradient-to-b from-slate-900 to-slate-950 p-8 text-center space-y-6">
-                <h1 class="text-4xl sm:text-6xl font-extrabold text-white">Погрузись в атмосферу Реальной Жизни</h1>
-                <a href="https://discord.gg/rp9btukQV5" target="_blank" class="inline-block bg-white text-slate-950 font-black px-8 py-4 rounded-2xl">Начать играть 🔥</a>
+            <div class="hidden md:flex space-x-1">
+                <button onclick="switchTab('main')" id="nav-main" class="nav-link active px-4 py-2 rounded-lg text-sm font-medium transition-all">Главная</button>
+                <button onclick="switchTab('news')" id="nav-news" class="nav-link px-4 py-2 rounded-lg text-sm font-medium transition-all">Новости</button>
+                <button onclick="switchTab('profile')" id="nav-profile" class="nav-link px-4 py-2 rounded-lg text-sm font-medium transition-all">Профиль</button>
             </div>
-
-            <!-- Фракции -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">ФСБ</div>
-                <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">СОБР</div>
-                <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">Прокуратура</div>
-                <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">Адвокатура</div>
-                <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">Верховный Суд</div>
-                <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">ГТРК</div>
-                <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">ОПГ (RUCH)</div>
-                <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">Патрульная Полиция (ДПС)</div>
+            <div id="auth-zone">
+                <button onclick="openModal()" id="auth-btn" class="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold px-6 py-2.5 rounded-xl text-sm transition-all shadow-lg active:scale-95">
+                    Войти
+                </button>
             </div>
-        </section>
-
-        <section id="tab-news" class="tab-content hidden">
-            <div id="admin-news-panel" class="hidden border border-cyan-500 p-6 rounded-2xl mb-6">
-                <select id="news-tag">
-                    <option value="Важно">Важно</option>
-                    <option value="Свой Вариант">Свой Вариант</option>
-                </select>
-                <button onclick="deleteNewsById()" class="bg-red-500 p-2 rounded">Удалить новость</button>
-            </div>
-            <div id="news-feed"></div>
-        </section>
-
-        <section id="tab-profile" class="tab-content hidden">
-            <h2 class="text-3xl font-bold">Профиль</h2>
-            <div id="profile-info" class="bg-slate-900 p-6 rounded-xl mt-4"></div>
-            <div id="admin-panel" class="hidden mt-10">
-                <h3 class="text-xl font-bold text-red-400">Панель управления</h3>
-                <table class="w-full mt-4">
-                    <thead><tr><th>Ник</th><th>Пароль</th><th>Роль</th><th>Действие</th></tr></thead>
-                    <tbody id="users-table-body"></tbody>
-                </table>
-            </div>
-        </section>
-    </main>
-
-    <div id="auth-modal" class="fixed inset-0 bg-slate-950/80 flex items-center justify-center hidden">
-        <div class="bg-slate-900 p-8 rounded-xl w-96">
-            <input type="text" id="login-username" placeholder="Никнейм" class="w-full p-2 mb-2 bg-slate-800">
-            <input type="password" id="login-password" placeholder="Пароль" class="w-full p-2 mb-4 bg-slate-800">
-            <button onclick="handleAuthAction()" class="w-full bg-cyan-600 py-2 rounded font-bold">Войти / Регистрация</button>
         </div>
     </div>
-    <script src="app.js"></script>
+</nav>
+
+<main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+    <!-- ГЛАВНАЯ -->
+    <section id="tab-main" class="tab-content active animate-fade-in space-y-16">
+        <div class="relative rounded-3xl overflow-hidden border border-slate-800 bg-gradient-to-b from-slate-900 to-slate-950 p-8 sm:p-12 lg:p-16 text-center space-y-6 shadow-2xl">
+            <div class="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-cyan-500/10 via-transparent to-transparent pointer-events-none"></div>
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-cyan-500/30 bg-cyan-500/5 text-cyan-400 text-xs font-semibold uppercase tracking-wider">
+                🚀 Сибирь на усиленном режиме
+            </div>
+            <h1 class="text-4xl sm:text-6xl font-black tracking-tight text-white max-w-3xl mx-auto leading-tight">
+                Погрузись в атмосферу <span class="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">Реальной Жизни</span>
+            </h1>
+            <p class="text-slate-400 text-lg max-w-2xl mx-auto">
+                Суровый климат, проработанные фракции, круглосуточные патрули и полная свобода выбора. Кем станешь ты в этом мегаполисе?
+            </p>
+            <div class="pt-4">
+                <a href="https://discord.gg/rp9btukQV5" target="_blank" class="inline-block bg-white text-slate-950 font-black px-8 py-4 rounded-2xl text-base hover:bg-slate-200 transition-all shadow-xl active:scale-95">
+                    Начать играть 🔥
+                </a>
+            </div>
+        </div>
+
+        <div class="space-y-6">
+            <div>
+                <h2 class="text-2xl sm:text-3xl font-bold text-white">Государственные Фракции</h2>
+                <p class="text-slate-400 mt-1">Выберите свой путь развития в структурах министерств</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+                <div class="faction-card bg-slate-900 border border-slate-800 p-6 rounded-2xl flex flex-col justify-between space-y-4 hover:border-cyan-500/40 group">
+                    <div class="space-y-3">
+                        <div class="w-12 h-12 rounded-xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">🕵️</div>
+                        <h3 class="text-xl font-bold text-white">ФСБ</h3>
+                        <p class="text-slate-400 text-sm leading-relaxed">Федеральная служба безопасности. Контрразведка, оперативная работа, надзор за государственной безопасностью.</p>
+                    </div>
+                    <button class="w-full bg-slate-800 hover:bg-cyan-500 hover:text-slate-950 text-slate-300 font-semibold py-2.5 rounded-xl text-sm transition-all">Подать заявление</button>
+                </div>
+
+                <div class="faction-card bg-slate-900 border border-slate-800 p-6 rounded-2xl flex flex-col justify-between space-y-4 hover:border-cyan-500/40 group">
+                    <div class="space-y-3">
+                        <div class="w-12 h-12 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">🪖</div>
+                        <h3 class="text-xl font-bold text-white">СОБР</h3>
+                        <p class="text-slate-400 text-sm leading-relaxed">Специальный отряд быстрого реагирования. Штурмы, захват преступников, поддержка силовых операций.</p>
+                    </div>
+                    <button class="w-full bg-slate-800 hover:bg-cyan-500 hover:text-slate-950 text-slate-300 font-semibold py-2.5 rounded-xl text-sm transition-all">Подать заявление</button>
+                </div>
+
+                <div class="faction-card bg-slate-900 border border-slate-800 p-6 rounded-2xl flex flex-col justify-between space-y-4 hover:border-cyan-500/40 group">
+                    <div class="space-y-3">
+                        <div class="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">⚖️</div>
+                        <h3 class="text-xl font-bold text-white">Прокуратура</h3>
+                        <p class="text-slate-400 text-sm leading-relaxed">Надзор за законностью, возбуждение уголовных дел, представление обвинения в суде.</p>
+                    </div>
+                    <button class="w-full bg-slate-800 hover:bg-cyan-500 hover:text-slate-950 text-slate-300 font-semibold py-2.5 rounded-xl text-sm transition-all">Подать заявление</button>
+                </div>
+
+                <div class="faction-card bg-slate-900 border border-slate-800 p-6 rounded-2xl flex flex-col justify-between space-y-4 hover:border-cyan-500/40 group">
+                    <div class="space-y-3">
+                        <div class="w-12 h-12 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">👨‍⚖️</div>
+                        <h3 class="text-xl font-bold text-white">Адвокатура</h3>
+                        <p class="text-slate-400 text-sm leading-relaxed">Защита прав граждан, юридическая помощь, представление интересов подзащитных в суде.</p>
+                    </div>
+                    <button class="w-full bg-slate-800 hover:bg-cyan-500 hover:text-slate-950 text-slate-300 font-semibold py-2.5 rounded-xl text-sm transition-all">Подать заявление</button>
+                </div>
+
+                <div class="faction-card bg-slate-900 border border-slate-800 p-6 rounded-2xl flex flex-col justify-between space-y-4 hover:border-cyan-500/40 group">
+                    <div class="space-y-3">
+                        <div class="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">🏛️</div>
+                        <h3 class="text-xl font-bold text-white">Верховный Суд</h3>
+                        <p class="text-slate-400 text-sm leading-relaxed">Высшая судебная инстанция. Рассмотрение уголовных и гражданских дел, вынесение приговоров.</p>
+                    </div>
+                    <button class="w-full bg-slate-800 hover:bg-cyan-500 hover:text-slate-950 text-slate-300 font-semibold py-2.5 rounded-xl text-sm transition-all">Подать заявление</button>
+                </div>
+
+                <div class="faction-card bg-slate-900 border border-slate-800 p-6 rounded-2xl flex flex-col justify-between space-y-4 hover:border-cyan-500/40 group">
+                    <div class="space-y-3">
+                        <div class="w-12 h-12 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">📺</div>
+                        <h3 class="text-xl font-bold text-white">Государственная Телерадиокомпания</h3>
+                        <p class="text-slate-400 text-sm leading-relaxed">Освещение событий города, ведение прямых эфиров, журналистские расследования и репортажи.</p>
+                    </div>
+                    <button class="w-full bg-slate-800 hover:bg-cyan-500 hover:text-slate-950 text-slate-300 font-semibold py-2.5 rounded-xl text-sm transition-all">Подать заявление</button>
+                </div>
+
+                <div class="faction-card bg-slate-900 border border-slate-800 p-6 rounded-2xl flex flex-col justify-between space-y-4 hover:border-red-500/40 group">
+                    <div class="space-y-3">
+                        <div class="w-12 h-12 rounded-xl bg-red-900/20 border border-red-800/40 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">💀</div>
+                        <h3 class="text-xl font-bold text-white">ОПГ <span class="text-red-400">(RUCH)</span></h3>
+                        <p class="text-slate-400 text-sm leading-relaxed">Организованная преступная группировка. Теневой бизнес, уличный контроль, криминальные операции.</p>
+                    </div>
+                    <button class="w-full bg-slate-800 hover:bg-red-500 hover:text-white text-slate-300 font-semibold py-2.5 rounded-xl text-sm transition-all">Вступить</button>
+                </div>
+
+                <div class="faction-card bg-slate-900 border border-slate-800 p-6 rounded-2xl flex flex-col justify-between space-y-4 hover:border-cyan-500/40 group">
+                    <div class="space-y-3">
+                        <div class="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">🚔</div>
+                        <h3 class="text-xl font-bold text-white">Патрульная Полиция <span class="text-cyan-400">(ДПС)</span></h3>
+                        <p class="text-slate-400 text-sm leading-relaxed">Обеспечение правопорядка, патрулирование, перехват нарушителей, обыски и организация блокпостов.</p>
+                    </div>
+                    <button class="w-full bg-slate-800 hover:bg-cyan-500 hover:text-slate-950 text-slate-300 font-semibold py-2.5 rounded-xl text-sm transition-all">Подать заявление</button>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- НОВОСТИ -->
+    <section id="tab-news" class="tab-content animate-fade-in space-y-8">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-6">
+            <div>
+                <h2 class="text-3xl font-extrabold text-white">Новости Сервера</h2>
+                <p class="text-slate-400 mt-1">Официальные объявления, патчи и события</p>
+            </div>
+        </div>
+
+        <div id="admin-news-panel" class="hidden bg-slate-900 border-2 border-dashed border-cyan-500/30 p-6 rounded-2xl space-y-4">
+            <div class="flex items-center gap-2 text-cyan-400 font-bold text-lg">🛠️ Панель администратора: Опубликовать новость</div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <input type="text" id="news-title" placeholder="Заголовок новости" class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500">
+                <select id="news-tag" class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500">
+                    <option value="Важно">🔴 Важно</option>
+                    <option value="Обновление">⚙️ Обновление</option>
+                    <option value="Мероприятие">🎉 Мероприятие</option>
+                    <option value="Свой Вариант">✏️ Свой Вариант</option>
+                </select>
+            </div>
+            <textarea id="news-text" rows="4" placeholder="Текст публикации..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500 resize-none"></textarea>
+            <div class="flex justify-end">
+                <button onclick="createNews()" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-6 py-2.5 rounded-xl text-sm transition-all">Опубликовать</button>
+            </div>
+        </div>
+
+        <div id="news-feed" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+    </section>
+
+    <!-- ПРОФИЛЬ -->
+    <section id="tab-profile" class="tab-content animate-fade-in space-y-8">
+        <div class="border-b border-slate-800 pb-6">
+            <h2 class="text-3xl font-extrabold text-white">Профиль</h2>
+            <p class="text-slate-400 mt-1">Управление аккаунтом</p>
+        </div>
+
+        <div id="profile-guest" class="hidden text-center py-20 space-y-4">
+            <div class="text-5xl">🔒</div>
+            <p class="text-slate-400 text-lg">Войдите в аккаунт чтобы увидеть профиль</p>
+            <button onclick="openModal()" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-6 py-3 rounded-xl transition-all">Войти / Зарегистрироваться</button>
+        </div>
+
+        <div id="profile-user" class="hidden space-y-6">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 max-w-md">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">👤 Данные аккаунта</h3>
+                <div class="space-y-2 text-sm">
+                    <div class="flex justify-between py-2 border-b border-slate-800">
+                        <span class="text-slate-400">Никнейм</span>
+                        <span id="profile-username" class="text-white font-semibold"></span>
+                    </div>
+                    <div class="flex justify-between py-2 border-b border-slate-800">
+                        <span class="text-slate-400">Роль</span>
+                        <span id="profile-role" class="text-cyan-400 font-semibold"></span>
+                    </div>
+                    <div class="flex justify-between py-2 items-center">
+                        <span class="text-slate-400">Пароль</span>
+                        <div class="flex items-center gap-2">
+                            <span id="profile-password" class="text-white font-mono">••••••••</span>
+                            <button onclick="togglePassword()" id="toggle-pass-btn" class="text-xs text-cyan-400 hover:text-cyan-300">Показать</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 max-w-md">
+                <h3 class="text-lg font-bold text-white">🔑 Сменить пароль</h3>
+                <input type="password" id="new-password" placeholder="Новый пароль" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500">
+                <input type="password" id="confirm-password" placeholder="Подтвердите пароль" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500">
+                <button onclick="changePassword()" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-6 py-2.5 rounded-xl text-sm transition-all">Сохранить</button>
+            </div>
+
+            <button onclick="logout()" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 font-semibold px-6 py-2.5 rounded-xl text-sm transition-all">Выйти из аккаунта</button>
+        </div>
+
+        <div id="admin-panel" class="hidden space-y-6 mt-8">
+            <div class="border-t border-slate-800 pt-8">
+                <h3 class="text-xl font-bold text-red-400 flex items-center gap-2">⚙️ Панель управления — Все пользователи</h3>
+                <p class="text-slate-500 text-sm mt-1">Доступно только для администрации</p>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+                <table class="w-full text-sm">
+                    <thead class="bg-slate-800/50">
+                        <tr>
+                            <th class="p-4 text-left">Никнейм</th>
+                            <th class="p-4 text-left">Пароль</th>
+                            <th class="p-4 text-left">Роль</th>
+                            <th class="p-4 text-left">Действие</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-table-body" class="divide-y divide-slate-800"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<footer class="bg-slate-950 border-t border-slate-900 py-8 mt-12 text-center text-sm text-slate-500">
+    <p>© 2026 Novosibirsk RP. Все права защищены. Разработано для игрового сообщества.</p>
+</footer>
+
+<!-- МОДАЛКА -->
+<div id="auth-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm hidden">
+    <div class="bg-slate-900 border border-slate-800 w-full max-w-md p-6 rounded-3xl space-y-5 shadow-2xl relative">
+        <button onclick="closeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors text-xl">✕</button>
+
+        <div class="flex border-b border-slate-800">
+            <button onclick="switchAuthTab('login')" id="auth-tab-login" class="auth-tab-btn active flex-1 py-3 text-sm font-semibold text-slate-400 transition-all">Войти</button>
+            <button onclick="switchAuthTab('register')" id="auth-tab-register" class="auth-tab-btn flex-1 py-3 text-sm font-semibold text-slate-400 transition-all">Регистрация</button>
+        </div>
+
+        <div id="auth-login-form" class="space-y-4">
+            <div class="text-center space-y-1">
+                <h3 class="text-xl font-black text-white">Вход в Личный Кабинет</h3>
+                <p class="text-slate-400 text-xs">Введите данные для авторизации</p>
+            </div>
+            <div class="space-y-1">
+                <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Игровой ник</label>
+                <input type="text" id="login-username" placeholder="Ivan_Ivanov" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500">
+            </div>
+            <div class="space-y-1">
+                <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Пароль</label>
+                <input type="password" id="login-password" placeholder="••••••••" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500">
+            </div>
+            <button onclick="handleLogin()" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold py-3.5 rounded-xl text-sm transition-all shadow-lg">
+                Авторизоваться
+            </button>
+        </div>
+
+        <div id="auth-register-form" class="space-y-4 hidden">
+            <div class="text-center space-y-1">
+                <h3 class="text-xl font-black text-white">Создать аккаунт</h3>
+                <p class="text-slate-400 text-xs">Зарегистрируйтесь чтобы получить доступ</p>
+            </div>
+            <div class="space-y-1">
+                <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Игровой ник</label>
+                <input type="text" id="reg-username" placeholder="Ivan_Ivanov" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500">
+            </div>
+            <div class="space-y-1">
+                <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Пароль</label>
+                <input type="password" id="reg-password" placeholder="••••••••" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500">
+            </div>
+            <div class="space-y-1">
+                <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Подтвердите пароль</label>
+                <input type="password" id="reg-password2" placeholder="••••••••" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500">
+            </div>
+            <button onclick="handleRegister()" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold py-3.5 rounded-xl text-sm transition-all shadow-lg">
+                Зарегистрироваться
+            </button>
+        </div>
+
+    </div>
+</div>
+
+<script src="app.js"></script>
 </body>
 </html>
