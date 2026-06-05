@@ -81,12 +81,14 @@ function updateAuthZone() {
         const initial = window.currentUser.username.charAt(0).toUpperCase();
         const role    = window.currentUser.role || 'Пользователь';
         zone.innerHTML = `
-            <button class="user-chip" onclick="showPage('profile')" style="flex-direction:column;align-items:flex-end;gap:2px;padding:8px 14px;">
+            <button class="user-chip" onclick="showPage('profile')" style="flex-direction:column;align-items:flex-start;gap:3px;padding:8px 14px;">
                 <div style="display:flex;align-items:center;gap:8px;">
                     <div class="user-avatar">${initial}</div>
-                    <span style="font-size:14px;font-weight:700;color:#f1f5f9;">${window.currentUser.username}</span>
+                    <div style="display:flex;flex-direction:column;align-items:flex-start;gap:2px;">
+                        <span style="font-size:14px;font-weight:700;color:#f1f5f9;line-height:1;">${window.currentUser.username}</span>
+                        <span style="font-size:11px;font-weight:600;color:#00e5ff;line-height:1;">${role}</span>
+                    </div>
                 </div>
-                <span style="font-size:11px;font-weight:600;color:#00e5ff;letter-spacing:0.03em;padding-left:38px;">${role}</span>
             </button>`;
     } else {
         zone.innerHTML = `<button class="auth-btn" onclick="openModal()">Войти</button>`;
