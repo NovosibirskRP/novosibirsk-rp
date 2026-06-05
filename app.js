@@ -79,10 +79,14 @@ function updateAuthZone() {
     const zone = document.getElementById('auth-zone');
     if (window.currentUser) {
         const initial = window.currentUser.username.charAt(0).toUpperCase();
+        const role    = window.currentUser.role || 'Пользователь';
         zone.innerHTML = `
-            <button class="user-chip" onclick="showPage('profile')">
-                <div class="user-avatar">${initial}</div>
-                ${window.currentUser.username}
+            <button class="user-chip" onclick="showPage('profile')" style="flex-direction:column;align-items:flex-end;gap:2px;padding:8px 14px;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <div class="user-avatar">${initial}</div>
+                    <span style="font-size:14px;font-weight:700;color:#f1f5f9;">${window.currentUser.username}</span>
+                </div>
+                <span style="font-size:11px;font-weight:600;color:#00e5ff;letter-spacing:0.03em;padding-left:38px;">${role}</span>
             </button>`;
     } else {
         zone.innerHTML = `<button class="auth-btn" onclick="openModal()">Войти</button>`;
@@ -246,6 +250,7 @@ window.changeRole = async function(id, role) {
         if (window.currentUser && window.currentUser.id === id) {
             window.currentUser.role = role;
             localStorage.setItem('currentUser', JSON.stringify(window.currentUser));
+            updateAuthZone();
         }
         toast('Роль обновлена');
     } catch(e) { toast('Ошибка', 'error'); }
