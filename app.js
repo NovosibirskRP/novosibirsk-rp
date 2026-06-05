@@ -271,6 +271,14 @@ window.deleteUser = async function(id, username) {
     } catch(e) { toast('Ошибка', 'error'); }
 };
  
+// ─── СВОЙ ТЕГ ────────────────────────────────────────────────────────────────
+window.toggleCustomTag = function(val) {
+    const inp = document.getElementById('news-custom-tag');
+    if (!inp) return;
+    inp.style.display = val === 'Свой Вариант' ? 'block' : 'none';
+    if (val !== 'Свой Вариант') inp.value = '';
+};
+ 
 // ─── НОВОСТИ ─────────────────────────────────────────────────────────────────
 const TAG_CLASSES = {
     'Важно':        'tag-important',
@@ -319,10 +327,13 @@ window.loadNews = async function() {
 };
  
 window.createNews = async function() {
-    const title = document.getElementById('news-title').value.trim();
-    const tag   = document.getElementById('news-tag').value;
-    const text  = document.getElementById('news-text').value.trim();
+    const title     = document.getElementById('news-title').value.trim();
+    const tagSelect  = document.getElementById('news-tag').value;
+    const customTag  = document.getElementById('news-custom-tag').value.trim();
+    const tag        = tagSelect === 'Свой Вариант' ? (customTag || 'Свой Вариант') : tagSelect;
+    const text       = document.getElementById('news-text').value.trim();
     if (!title || !text) return toast('Заполните заголовок и текст!', 'error');
+    if (tagSelect === 'Свой Вариант' && !customTag) return toast('Введите свой вариант тега!', 'error');
     try {
         const res = await fetch(`${SUPABASE_URL}/rest/v1/news`, {
             method: 'POST', headers: H,
