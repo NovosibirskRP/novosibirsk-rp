@@ -6,20 +6,35 @@ const H = {
     "Content-Type": "application/json"
 };
  
-const ADMIN_RANKS = [
+// Все роли
+const ALL_ROLES = [
     "Пользователь",
+    // Фракции
+    "ФСБ", "СОБР", "Прокуратура", "Адвокатура", "Верховный Суд",
+    "Государственная Телерадиокомпания", "ОПГ (RUCH)", "Патрульная Полиция (ДПС)",
+    // Администрация
+    "Мэр", "Вице Мэр",
+    "Модерация", "Администрация",
+    "Команда технического администрирования",
+    "Секретарь",
+    "Ассистент Главного Владельца",
+    "Заместитель Главного Владельца",
+    "Главный Владелец"
+];
+ 
+// Роли у которых есть доступ к панели пользователей
+const ADMIN_ROLES = [
     "Главный Владелец",
     "Заместитель Главного Владельца",
     "Ассистент Главного Владельца",
     "Секретарь",
-    "Команда технического администрирования",
-    "Администрация",
-    "Модерация",
-    "Мэр",
-    "Вице Мэр"
+    "Команда технического администрирования"
 ];
  
-window.currentUser = (() => { try { return JSON.parse(localStorage.getItem('currentUser')); } catch(e) { return null; } })();
+window.currentUser = (() => {
+    try { return JSON.parse(localStorage.getItem('currentUser')); }
+    catch(e) { return null; }
+})();
  
 // ─── TOAST ───────────────────────────────────────────────────────────────────
 function toast(msg, type = 'success') {
@@ -35,10 +50,10 @@ window.showPage = function(name) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     const page = document.getElementById('page-' + name);
-    const btn = document.getElementById('nav-' + name);
+    const btn  = document.getElementById('nav-' + name);
     if (page) page.classList.add('active');
-    if (btn) btn.classList.add('active');
-    if (name === 'news') loadNews();
+    if (btn)  btn.classList.add('active');
+    if (name === 'news')    loadNews();
     if (name === 'profile') renderProfile();
 };
  
@@ -53,9 +68,9 @@ window.modalOverlayClick = function(e) {
     if (e.target === document.getElementById('auth-modal')) closeModal();
 };
 window.switchAuthTab = function(tab) {
-    document.getElementById('form-login').style.display = tab === 'login' ? 'block' : 'none';
+    document.getElementById('form-login').style.display    = tab === 'login'    ? 'block' : 'none';
     document.getElementById('form-register').style.display = tab === 'register' ? 'block' : 'none';
-    document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+    document.getElementById('tab-login').classList.toggle('active',    tab === 'login');
     document.getElementById('tab-register').classList.toggle('active', tab === 'register');
 };
  
@@ -79,33 +94,29 @@ window.handleLogin = async function() {
     const u = document.getElementById('login-username').value.trim();
     const p = document.getElementById('login-password').value;
     if (!u || !p) return toast('Заполните все поля!', 'error');
- 
     try {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/users?username=eq.${encodeURIComponent(u)}`, { headers: H });
+        const res   = await fetch(`${SUPABASE_URL}/rest/v1/users?username=eq.${encodeURIComponent(u)}`, { headers: H });
         const users = await res.json();
-        if (!users.length) return toast('Пользователь не найден!', 'error');
+        if (!users.length)           return toast('Пользователь не найден!', 'error');
         if (users[0].password !== p) return toast('Неверный пароль!', 'error');
         localStorage.setItem('currentUser', JSON.stringify(users[0]));
         window.currentUser = users[0];
         closeModal();
         updateAuthZone();
         toast('Добро пожаловать, ' + users[0].username + '!');
-    } catch(e) {
-        toast('Ошибка соединения', 'error');
-    }
+    } catch(e) { toast('Ошибка соединения', 'error'); }
 };
  
 // ─── РЕГИСТРАЦИЯ ─────────────────────────────────────────────────────────────
 window.handleRegister = async function() {
-    const u = document.getElementById('reg-username').value.trim();
-    const p = document.getElementById('reg-password').value;
+    const u  = document.getElementById('reg-username').value.trim();
+    const p  = document.getElementById('reg-password').value;
     const p2 = document.getElementById('reg-password2').value;
-    if (!u || !p) return toast('Заполните все поля!', 'error');
+    if (!u || !p)    return toast('Заполните все поля!', 'error');
     if (p.length < 4) return toast('Пароль минимум 4 символа!', 'error');
-    if (p !== p2) return toast('Пароли не совпадают!', 'error');
- 
+    if (p !== p2)    return toast('Пароли не совпадают!', 'error');
     try {
-        const check = await fetch(`${SUPABASE_URL}/rest/v1/users?username=eq.${encodeURIComponent(u)}`, { headers: H });
+        const check  = await fetch(`${SUPABASE_URL}/rest/v1/users?username=eq.${encodeURIComponent(u)}`, { headers: H });
         const exists = await check.json();
         if (exists.length) return toast('Этот ник уже занят!', 'error');
  
@@ -122,9 +133,7 @@ window.handleRegister = async function() {
         updateAuthZone();
         showPage('profile');
         toast('Аккаунт создан! Добро пожаловать, ' + u + '!');
-    } catch(e) {
-        toast('Ошибка соединения', 'error');
-    }
+    } catch(e) { toast('Ошибка соединения', 'error'); }
 };
  
 // ─── ВЫХОД ───────────────────────────────────────────────────────────────────
@@ -139,37 +148,38 @@ window.logout = function() {
 // ─── ПРОФИЛЬ ─────────────────────────────────────────────────────────────────
 window.renderProfile = function() {
     const guest = document.getElementById('profile-guest');
-    const user = document.getElementById('profile-user');
+    const user  = document.getElementById('profile-user');
     const admin = document.getElementById('admin-panel');
  
     if (!window.currentUser) {
         guest.style.display = 'block';
-        user.style.display = 'none';
+        user.style.display  = 'none';
         return;
     }
     guest.style.display = 'none';
-    user.style.display = 'block';
+    user.style.display  = 'block';
  
     document.getElementById('profile-username').textContent = window.currentUser.username;
-    document.getElementById('profile-role').textContent = window.currentUser.role || 'Пользователь';
+    document.getElementById('profile-role').textContent     = window.currentUser.role || 'Пользователь';
+ 
     const passEl = document.getElementById('profile-password');
     passEl.dataset.real = window.currentUser.password;
-    passEl.textContent = '••••••••';
+    passEl.textContent  = '••••••••';
     document.getElementById('toggle-pass-btn').textContent = 'Показать';
  
-    const isAdmin = window.currentUser.role && window.currentUser.role !== 'Пользователь';
+    const isAdmin = ADMIN_ROLES.includes(window.currentUser.role);
     admin.style.display = isAdmin ? 'block' : 'none';
     if (isAdmin) loadUsersTable();
 };
  
 window.togglePassword = function() {
-    const el = document.getElementById('profile-password');
+    const el  = document.getElementById('profile-password');
     const btn = document.getElementById('toggle-pass-btn');
     if (el.textContent === '••••••••') {
-        el.textContent = el.dataset.real;
+        el.textContent  = el.dataset.real;
         btn.textContent = 'Скрыть';
     } else {
-        el.textContent = '••••••••';
+        el.textContent  = '••••••••';
         btn.textContent = 'Показать';
     }
 };
@@ -178,10 +188,9 @@ window.togglePassword = function() {
 window.changePassword = async function() {
     const np = document.getElementById('new-password').value;
     const cp = document.getElementById('confirm-password').value;
-    if (!np) return toast('Введите новый пароль!', 'error');
+    if (!np)          return toast('Введите новый пароль!', 'error');
     if (np.length < 4) return toast('Пароль минимум 4 символа!', 'error');
-    if (np !== cp) return toast('Пароли не совпадают!', 'error');
- 
+    if (np !== cp)    return toast('Пароли не совпадают!', 'error');
     try {
         const res = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${window.currentUser.id}`, {
             method: 'PATCH', headers: H,
@@ -190,13 +199,11 @@ window.changePassword = async function() {
         if (!res.ok) return toast('Ошибка при смене пароля', 'error');
         window.currentUser.password = np;
         localStorage.setItem('currentUser', JSON.stringify(window.currentUser));
-        document.getElementById('new-password').value = '';
+        document.getElementById('new-password').value    = '';
         document.getElementById('confirm-password').value = '';
         renderProfile();
         toast('Пароль успешно изменён!');
-    } catch(e) {
-        toast('Ошибка соединения', 'error');
-    }
+    } catch(e) { toast('Ошибка соединения', 'error'); }
 };
  
 // ─── ТАБЛИЦА ПОЛЬЗОВАТЕЛЕЙ ───────────────────────────────────────────────────
@@ -204,7 +211,7 @@ window.loadUsersTable = async function() {
     const tbody = document.getElementById('users-table-body');
     tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:#334155;padding:24px;">Загрузка...</td></tr>`;
     try {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/users?order=username.asc`, { headers: H });
+        const res   = await fetch(`${SUPABASE_URL}/rest/v1/users?order=username.asc`, { headers: H });
         const users = await res.json();
         if (!users.length) {
             tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:#334155;padding:24px;">Нет пользователей</td></tr>`;
@@ -216,10 +223,12 @@ window.loadUsersTable = async function() {
                 <td><span class="pass-cell">${u.password}</span></td>
                 <td>
                     <select class="role-select" onchange="changeRole(${u.id}, this.value)">
-                        ${ADMIN_RANKS.map(r => `<option value="${r}"${u.role===r?' selected':''}>${r}</option>`).join('')}
+                        ${ALL_ROLES.map(r => `<option value="${r}"${u.role === r ? ' selected' : ''}>${r}</option>`).join('')}
                     </select>
                 </td>
-                <td><button class="btn-danger" onclick="deleteUser(${u.id})">Удалить</button></td>
+                <td>
+                    <button class="btn-danger" onclick="deleteUser(${u.id}, '${u.username}')">Удалить</button>
+                </td>
             </tr>
         `).join('');
     } catch(e) {
@@ -230,14 +239,20 @@ window.loadUsersTable = async function() {
 window.changeRole = async function(id, role) {
     try {
         await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${id}`, {
-            method: 'PATCH', headers: H, body: JSON.stringify({ role })
+            method: 'PATCH', headers: H,
+            body: JSON.stringify({ role })
         });
+        // Обновить локально если это текущий пользователь
+        if (window.currentUser && window.currentUser.id === id) {
+            window.currentUser.role = role;
+            localStorage.setItem('currentUser', JSON.stringify(window.currentUser));
+        }
         toast('Роль обновлена');
     } catch(e) { toast('Ошибка', 'error'); }
 };
  
-window.deleteUser = async function(id) {
-    if (!confirm('Удалить этого пользователя?')) return;
+window.deleteUser = async function(id, username) {
+    if (!confirm(`Удалить пользователя "${username}"?`)) return;
     try {
         await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${id}`, { method: 'DELETE', headers: H });
         toast('Пользователь удалён');
@@ -247,15 +262,15 @@ window.deleteUser = async function(id) {
  
 // ─── НОВОСТИ ─────────────────────────────────────────────────────────────────
 const TAG_CLASSES = {
-    'Важно': 'tag-important',
-    'Обновление': 'tag-update',
-    'Мероприятие': 'tag-event',
+    'Важно':        'tag-important',
+    'Обновление':   'tag-update',
+    'Мероприятие':  'tag-event',
     'Свой Вариант': 'tag-custom'
 };
 const TAG_ICONS = {
-    'Важно': '🔴',
-    'Обновление': '⚙️',
-    'Мероприятие': '🎉',
+    'Важно':        '🔴',
+    'Обновление':   '⚙️',
+    'Мероприятие':  '🎉',
     'Свой Вариант': '✏️'
 };
  
@@ -263,17 +278,17 @@ window.loadNews = async function() {
     const feed = document.getElementById('news-feed');
     feed.innerHTML = `<div class="empty"><div class="empty-icon">⏳</div><p>Загрузка...</p></div>`;
     try {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/news?order=created_at.desc`, { headers: H });
+        const res  = await fetch(`${SUPABASE_URL}/rest/v1/news?order=created_at.desc`, { headers: H });
         const news = await res.json();
         if (!news.length) {
             feed.innerHTML = `<div class="empty"><div class="empty-icon">📭</div><p>Новостей пока нет</p></div>`;
             return;
         }
-        const isAdmin = window.currentUser && window.currentUser.role !== 'Пользователь';
+        const canDelete = window.currentUser && ADMIN_ROLES.includes(window.currentUser.role);
         feed.innerHTML = news.map(n => {
-            const tagCls = TAG_CLASSES[n.tag] || 'tag-custom';
-            const tagIcon = TAG_ICONS[n.tag] || '📌';
-            const date = n.created_at ? new Date(n.created_at).toLocaleDateString('ru-RU') : '';
+            const tagCls  = TAG_CLASSES[n.tag] || 'tag-custom';
+            const tagIcon = TAG_ICONS[n.tag]   || '📌';
+            const date    = n.created_at ? new Date(n.created_at).toLocaleDateString('ru-RU') : '';
             return `
             <div class="news-card">
                 <div class="news-meta">
@@ -282,7 +297,7 @@ window.loadNews = async function() {
                 </div>
                 <h3>${n.title}</h3>
                 <p>${n.text}</p>
-                ${isAdmin ? `<div style="border-top:1px solid var(--border);padding-top:12px;">
+                ${canDelete ? `<div style="border-top:1px solid var(--border);padding-top:12px;">
                     <button class="delete-news-btn" onclick="deleteNewsById(${n.id})">🗑 Удалить новость</button>
                 </div>` : ''}
             </div>`;
@@ -294,8 +309,8 @@ window.loadNews = async function() {
  
 window.createNews = async function() {
     const title = document.getElementById('news-title').value.trim();
-    const tag = document.getElementById('news-tag').value;
-    const text = document.getElementById('news-text').value.trim();
+    const tag   = document.getElementById('news-tag').value;
+    const text  = document.getElementById('news-text').value.trim();
     if (!title || !text) return toast('Заполните заголовок и текст!', 'error');
     try {
         const res = await fetch(`${SUPABASE_URL}/rest/v1/news`, {
@@ -304,7 +319,7 @@ window.createNews = async function() {
         });
         if (!res.ok) return toast('Ошибка публикации. Проверьте таблицу news в Supabase.', 'error');
         document.getElementById('news-title').value = '';
-        document.getElementById('news-text').value = '';
+        document.getElementById('news-text').value  = '';
         toast('Новость опубликована!');
         loadNews();
     } catch(e) { toast('Ошибка соединения', 'error'); }
@@ -322,7 +337,8 @@ window.deleteNewsById = async function(id) {
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
     updateAuthZone();
-    if (window.currentUser && window.currentUser.role !== 'Пользователь') {
+    // Показать панель новостей для администраторов
+    if (window.currentUser && ADMIN_ROLES.includes(window.currentUser.role)) {
         const p = document.getElementById('admin-news-panel');
         if (p) p.style.display = 'block';
     }
