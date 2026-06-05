@@ -6,312 +6,423 @@
     <title>Novosibirsk RP | Официальный сайт</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rubik:wght@400;500;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Russo+One&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Rubik', sans-serif; }
-        .logo-font { font-family: 'Bebas Neue', sans-serif; }
-        .nav-link { color: #94a3b8; }
-        .nav-link:hover, .nav-link.active { color: #fff; background: rgba(6,182,212,0.1); }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        .faction-card:hover { transform: translateY(-4px); }
-        .faction-card { transition: all 0.3s; }
-        .animate-fade-in { animation: fadeIn 0.4s ease; }
-        @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
-        .modal-overlay { transition: opacity 0.3s; }
-        .tag-important { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
-        .tag-update { background: rgba(6,182,212,0.15); color: #22d3ee; border: 1px solid rgba(6,182,212,0.3); }
-        .tag-event { background: rgba(168,85,247,0.15); color: #c084fc; border: 1px solid rgba(168,85,247,0.3); }
-        .tag-custom { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); }
-        .auth-tab-btn.active { background: rgba(6,182,212,0.15); color: #22d3ee; border-bottom: 2px solid #22d3ee; }
-        input, select, textarea { color: white !important; }
-        input::placeholder, textarea::placeholder { color: #64748b !important; }
-        table th { color: #94a3b8; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
-        table td { color: #e2e8f0; }
-        tr:hover td { background: rgba(255,255,255,0.03); }
+        :root {
+            --cyan: #00e5ff;
+            --blue: #2979ff;
+            --red: #ff1744;
+            --bg: #060a14;
+            --card: #0d1424;
+            --border: rgba(255,255,255,0.07);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: #e2e8f0; min-height: 100vh; overflow-x: hidden; }
+        .logo { font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.1em; }
+
+        /* NAV */
+        nav { background: rgba(6,10,20,0.85); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+        .nav-inner { max-width: 1280px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 68px; }
+        .nav-links { display: flex; gap: 4px; }
+        .nav-btn { background: none; border: none; color: #64748b; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; padding: 8px 16px; border-radius: 10px; cursor: pointer; transition: all 0.2s; }
+        .nav-btn:hover { color: #e2e8f0; background: rgba(255,255,255,0.05); }
+        .nav-btn.active { color: var(--cyan); background: rgba(0,229,255,0.08); }
+
+        /* PAGES */
+        .page { display: none; max-width: 1280px; margin: 0 auto; padding: 40px 24px 80px; animation: fadeUp 0.35s ease; }
+        .page.active { display: block; }
+        @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+
+        /* HERO */
+        .hero { position: relative; border-radius: 28px; overflow: hidden; background: linear-gradient(135deg, #0a1628 0%, #060a14 60%); border: 1px solid var(--border); padding: 80px 40px; text-align: center; margin-bottom: 60px; }
+        .hero::before { content:''; position:absolute; inset:0; background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(0,229,255,0.12) 0%, transparent 70%); pointer-events:none; }
+        .hero-badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 20px; border: 1px solid rgba(0,229,255,0.25); background: rgba(0,229,255,0.05); color: var(--cyan); font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 24px; }
+        .hero h1 { font-family: 'Russo One', sans-serif; font-size: clamp(2.2rem, 5vw, 4rem); color: #fff; line-height: 1.15; margin-bottom: 20px; }
+        .hero h1 span { background: linear-gradient(90deg, var(--cyan), var(--blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero p { color: #64748b; font-size: 17px; max-width: 540px; margin: 0 auto 36px; line-height: 1.7; }
+        .btn-play { display: inline-block; background: #fff; color: #060a14; font-weight: 800; font-size: 16px; padding: 16px 40px; border-radius: 16px; text-decoration: none; transition: all 0.25s; box-shadow: 0 0 40px rgba(255,255,255,0.1); }
+        .btn-play:hover { background: #e2e8f0; transform: translateY(-2px); box-shadow: 0 0 60px rgba(255,255,255,0.15); }
+
+        /* SECTION TITLE */
+        .sec-title { font-family: 'Russo One', sans-serif; font-size: 1.6rem; color: #fff; margin-bottom: 8px; }
+        .sec-sub { color: #475569; font-size: 14px; margin-bottom: 28px; }
+
+        /* FACTION GRID */
+        .faction-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .faction-card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 28px; display: flex; flex-direction: column; gap: 16px; transition: all 0.3s; cursor: default; }
+        .faction-card:hover { border-color: rgba(0,229,255,0.3); transform: translateY(-4px); box-shadow: 0 20px 60px rgba(0,0,0,0.4); }
+        .faction-card.opg:hover { border-color: rgba(255,23,68,0.35); }
+        .faction-icon { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
+        .faction-card h3 { font-weight: 700; font-size: 17px; color: #f1f5f9; }
+        .faction-card p { color: #475569; font-size: 13px; line-height: 1.65; flex: 1; }
+        .faction-card .apply-btn { background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: #94a3b8; font-weight: 600; font-size: 13px; padding: 10px; border-radius: 12px; cursor: pointer; transition: all 0.2s; text-align: center; }
+        .faction-card .apply-btn:hover { background: rgba(0,229,255,0.1); border-color: rgba(0,229,255,0.3); color: var(--cyan); }
+        .faction-card.opg .apply-btn:hover { background: rgba(255,23,68,0.1); border-color: rgba(255,23,68,0.3); color: #ff6b6b; }
+
+        /* NEWS */
+        .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; }
+        .news-card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 24px; display: flex; flex-direction: column; gap: 12px; transition: border-color 0.2s; }
+        .news-card:hover { border-color: rgba(255,255,255,0.12); }
+        .tag { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; }
+        .tag-important { background: rgba(255,23,68,0.12); color: #ff6b6b; border: 1px solid rgba(255,23,68,0.2); }
+        .tag-update { background: rgba(0,229,255,0.1); color: var(--cyan); border: 1px solid rgba(0,229,255,0.2); }
+        .tag-event { background: rgba(168,85,247,0.1); color: #c084fc; border: 1px solid rgba(168,85,247,0.2); }
+        .tag-custom { background: rgba(251,191,36,0.1); color: #fbbf24; border: 1px solid rgba(251,191,36,0.2); }
+        .news-card h3 { font-weight: 700; font-size: 16px; color: #f1f5f9; }
+        .news-card p { color: #475569; font-size: 13px; line-height: 1.65; flex: 1; }
+        .news-meta { display: flex; justify-content: space-between; align-items: center; }
+        .news-date { color: #334155; font-size: 12px; }
+        .delete-news-btn { background: none; border: none; color: #ef4444; font-size: 12px; cursor: pointer; opacity: 0.7; transition: opacity 0.2s; }
+        .delete-news-btn:hover { opacity: 1; }
+
+        /* ADMIN PANEL NEWS */
+        .admin-panel { background: var(--card); border: 2px dashed rgba(0,229,255,0.2); border-radius: 20px; padding: 28px; margin-bottom: 32px; }
+        .admin-panel-title { color: var(--cyan); font-weight: 700; font-size: 15px; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+        @media(max-width:600px) { .form-grid { grid-template-columns: 1fr; } }
+        .inp { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px; color: #f1f5f9; font-size: 14px; font-family: 'Inter',sans-serif; outline: none; transition: border-color 0.2s; width: 100%; }
+        .inp:focus { border-color: rgba(0,229,255,0.4); }
+        .inp::placeholder { color: #334155; }
+        select.inp option { background: #0d1424; }
+        textarea.inp { resize: none; }
+
+        /* BUTTONS */
+        .btn-primary { background: linear-gradient(135deg, var(--cyan), var(--blue)); color: #060a14; font-weight: 800; font-size: 14px; padding: 12px 28px; border-radius: 12px; border: none; cursor: pointer; transition: all 0.2s; }
+        .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-danger { background: rgba(255,23,68,0.1); border: 1px solid rgba(255,23,68,0.2); color: #ff6b6b; font-weight: 600; font-size: 13px; padding: 8px 16px; border-radius: 10px; cursor: pointer; transition: all 0.2s; }
+        .btn-danger:hover { background: rgba(255,23,68,0.2); }
+        .btn-ghost { background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: #64748b; font-weight: 600; font-size: 13px; padding: 8px 16px; border-radius: 10px; cursor: pointer; transition: all 0.2s; }
+        .btn-ghost:hover { background: rgba(255,255,255,0.07); color: #94a3b8; }
+
+        /* AUTH BTN */
+        .auth-btn { background: linear-gradient(135deg, var(--cyan), var(--blue)); color: #060a14; font-weight: 800; font-size: 14px; padding: 10px 24px; border-radius: 12px; border: none; cursor: pointer; transition: all 0.2s; }
+        .auth-btn:hover { opacity: 0.85; }
+        .user-chip { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); padding: 8px 14px; border-radius: 12px; cursor: pointer; transition: all 0.2s; color: #e2e8f0; font-size: 14px; font-weight: 600; }
+        .user-chip:hover { border-color: rgba(0,229,255,0.3); }
+        .user-avatar { width: 30px; height: 30px; border-radius: 50%; background: rgba(0,229,255,0.15); border: 1px solid rgba(0,229,255,0.3); display: flex; align-items: center; justify-content: center; color: var(--cyan); font-weight: 800; font-size: 13px; }
+
+        /* MODAL */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); z-index: 200; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.open { display: flex; }
+        .modal-box { background: #0d1424; border: 1px solid var(--border); border-radius: 24px; width: 100%; max-width: 420px; padding: 32px; position: relative; animation: fadeUp 0.3s ease; }
+        .modal-close { position: absolute; top: 16px; right: 16px; background: none; border: none; color: #475569; font-size: 20px; cursor: pointer; transition: color 0.2s; line-height: 1; }
+        .modal-close:hover { color: #fff; }
+        .modal-tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 28px; }
+        .modal-tab { flex: 1; background: none; border: none; padding: 12px; color: #475569; font-weight: 700; font-size: 14px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.2s; font-family: 'Inter', sans-serif; }
+        .modal-tab.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+        .modal-title { font-family: 'Russo One', sans-serif; font-size: 1.3rem; color: #fff; margin-bottom: 6px; text-align: center; }
+        .modal-sub { color: #475569; font-size: 13px; text-align: center; margin-bottom: 24px; }
+        .form-label { display: block; color: #475569; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 6px; margin-top: 14px; }
+        .form-label:first-child { margin-top: 0; }
+
+        /* PROFILE */
+        .profile-card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 28px; max-width: 480px; }
+        .profile-card h3 { font-weight: 700; font-size: 16px; color: #fff; margin-bottom: 20px; }
+        .profile-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+        .profile-row:last-child { border-bottom: none; }
+        .profile-label { color: #475569; }
+        .profile-value { color: #f1f5f9; font-weight: 600; }
+        .profile-value.cyan { color: var(--cyan); }
+
+        /* USERS TABLE */
+        .users-table-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 20px; overflow: hidden; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        thead tr { background: rgba(255,255,255,0.03); }
+        th { padding: 14px 16px; text-align: left; color: #334155; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
+        td { padding: 14px 16px; color: #94a3b8; font-size: 13px; border-top: 1px solid var(--border); }
+        tbody tr:hover td { background: rgba(255,255,255,0.02); }
+        td .username-cell { color: #f1f5f9; font-weight: 600; }
+        td .pass-cell { font-family: monospace; color: #64748b; }
+        select.role-select { background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: #94a3b8; font-size: 12px; padding: 6px 10px; border-radius: 8px; outline: none; cursor: pointer; }
+
+        /* EMPTY STATE */
+        .empty { text-align: center; padding: 60px 20px; color: #334155; }
+        .empty-icon { font-size: 3rem; margin-bottom: 12px; }
+        .empty p { font-size: 15px; }
+
+        /* TOASTS */
+        #toast { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%); background: #0d1424; border: 1px solid var(--border); color: #e2e8f0; padding: 14px 24px; border-radius: 14px; font-size: 14px; font-weight: 500; z-index: 999; opacity: 0; transition: opacity 0.3s; pointer-events: none; white-space: nowrap; }
+        #toast.show { opacity: 1; }
+        #toast.success { border-color: rgba(0,229,255,0.4); color: var(--cyan); }
+        #toast.error { border-color: rgba(255,23,68,0.4); color: #ff6b6b; }
+
+        /* DIVIDER */
+        .divider { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+        .section-header { margin-bottom: 32px; }
+
+        /* GRID UTIL */
+        .flex-end { display: flex; justify-content: flex-end; }
+        .mt-3 { margin-top: 12px; }
+        .mt-4 { margin-top: 16px; }
+        .mt-6 { margin-top: 24px; }
+        .gap-2 { gap: 8px; }
+        .flex { display: flex; }
+        .items-center { align-items: center; }
+        .space-y > * + * { margin-top: 16px; }
+
+        /* SCROLLBAR */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
+
+        @media(max-width:768px) {
+            .nav-links { display: none; }
+            .hero { padding: 48px 24px; }
+            .faction-grid, .news-grid { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col">
+<body>
+
+<!-- TOAST -->
+<div id="toast"></div>
 
 <!-- NAV -->
-<nav class="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between h-20">
-            <div class="cursor-pointer" onclick="switchTab('main')">
-                <span class="logo-font text-3xl tracking-widest bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">NOVOSIBIRSK</span>
-                <span class="logo-font text-3xl tracking-widest text-white"> RP</span>
-            </div>
-            <div class="hidden md:flex space-x-1">
-                <button onclick="switchTab('main')" id="nav-main" class="nav-link active px-4 py-2 rounded-lg text-sm font-medium transition-all">Главная</button>
-                <button onclick="switchTab('news')" id="nav-news" class="nav-link px-4 py-2 rounded-lg text-sm font-medium transition-all">Новости</button>
-                <button onclick="switchTab('profile')" id="nav-profile" class="nav-link px-4 py-2 rounded-lg text-sm font-medium transition-all">Профиль</button>
-            </div>
-            <div id="auth-zone">
-                <button onclick="openModal()" id="auth-btn" class="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold px-6 py-2.5 rounded-xl text-sm transition-all shadow-lg active:scale-95">
-                    Войти
-                </button>
-            </div>
+<nav>
+    <div class="nav-inner">
+        <div class="logo" style="cursor:pointer;font-size:26px;" onclick="showPage('main')">
+            <span style="background:linear-gradient(90deg,#00e5ff,#2979ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">NOVOSIBIRSK</span>
+            <span style="color:#fff;"> RP</span>
         </div>
+        <div class="nav-links">
+            <button class="nav-btn active" id="nav-main" onclick="showPage('main')">Главная</button>
+            <button class="nav-btn" id="nav-news" onclick="showPage('news')">Новости</button>
+            <button class="nav-btn" id="nav-profile" onclick="showPage('profile')">Профиль</button>
+        </div>
+        <div id="auth-zone"></div>
     </div>
 </nav>
 
-<main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10">
+<!-- ГЛАВНАЯ -->
+<div class="page active" id="page-main">
+    <div class="hero">
+        <div class="hero-badge">🚀 Сибирь на усиленном режиме</div>
+        <h1>Погрузись в атмосферу<br><span>Реальной Жизни</span></h1>
+        <p>Суровый климат, проработанные фракции, круглосуточные патрули и полная свобода выбора. Кем станешь ты в этом мегаполисе?</p>
+        <a href="https://discord.gg/rp9btukQV5" target="_blank" class="btn-play">Начать играть 🔥</a>
+    </div>
 
-    <!-- ГЛАВНАЯ -->
-    <section id="tab-main" class="tab-content active animate-fade-in space-y-16">
-        <div class="relative rounded-3xl overflow-hidden border border-slate-800 bg-gradient-to-b from-slate-900 to-slate-950 p-8 sm:p-12 lg:p-16 text-center space-y-6 shadow-2xl">
-            <div class="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-cyan-500/10 via-transparent to-transparent pointer-events-none"></div>
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-cyan-500/30 bg-cyan-500/5 text-cyan-400 text-xs font-semibold uppercase tracking-wider">
-                🚀 Сибирь на усиленном режиме
-            </div>
-            <h1 class="text-4xl sm:text-6xl font-black tracking-tight text-white max-w-3xl mx-auto leading-tight">
-                Погрузись в атмосферу <span class="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">Реальной Жизни</span>
-            </h1>
-            <p class="text-slate-400 text-lg max-w-2xl mx-auto">
-                Суровый климат, проработанные фракции, круглосуточные патрули и полная свобода выбора. Кем станешь ты в этом мегаполисе?
-            </p>
-            <div class="pt-4">
-                <a href="https://discord.gg/rp9btukQV5" target="_blank" class="inline-block bg-white text-slate-950 font-black px-8 py-4 rounded-2xl text-base hover:bg-slate-200 transition-all shadow-xl active:scale-95">
-                    Начать играть 🔥
-                </a>
-            </div>
-        </div>
+    <div class="section-header">
+        <div class="sec-title">Государственные Фракции</div>
+        <div class="sec-sub">Выберите свой путь развития в структурах министерств</div>
+    </div>
 
-        <div class="space-y-6">
+    <div class="faction-grid">
+        <div class="faction-card">
+            <div class="faction-icon" style="background:rgba(234,179,8,0.1);border:1px solid rgba(234,179,8,0.2);">🕵️</div>
             <div>
-                <h2 class="text-2xl sm:text-3xl font-bold text-white">Государственные Фракции</h2>
-                <p class="text-slate-400 mt-1">Выберите свой путь развития в структурах министерств</p>
+                <h3>ФСБ</h3>
+                <p>Федеральная служба безопасности. Контрразведка, оперативная работа, надзор за государственной безопасностью.</p>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-
-                <div class="faction-card bg-slate-900 border border-slate-800 p-6 rounded-2xl flex flex-col justify-between space-y-4 hover:border-cyan-500/40 group">
-                    <div class="space-y-3">
-                        <div class="w-12 h-12 rounded-xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">🕵️</div>
-                        <h3 class="text-xl font-bold text-white">ФСБ</h3>
-                        <p class="text-slate-400 text-sm leading-relaxed">Федеральная служба безопасности. Контрразведка, оперативная работа, надзор за государственной безопасностью.</p>
-                    </div>
-                    <button class="w-full bg-slate-800 hover:bg-cyan-500 hover:text-slate-950 text-slate-300 font-semibold py-2.5 rounded-xl text-sm transition-all">Подать заявление</button>
-                </div>
-
-                <div class="faction-card bg-slate-900 border border-slate-800 p-6 rounded-2xl flex flex-col justify-between space-y-4 hover:border-cyan-500/40 group">
-                    <div class="space-y-3">
-                        <div class="w-12 h-12 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">🪖</div>
-                        <h3 class="text-xl font-bold text-white">СОБР</h3>
-                        <p class="text-slate-400 text-sm leading-relaxed">Специальный отряд быстрого реагирования. Штурмы, захват преступников, поддержка силовых операций.</p>
-                    </div>
-                    <button class="w-full bg-slate-800 hover:bg-cyan-500 hover:text-slate-950 text-slate-300 font-semibold py-2.5 rounded-xl text-sm transition-all">Подать заявление</button>
-                </div>
-
-                <div class="faction-card bg-slate-900 border border-slate-800 p-6 rounded-2xl flex flex-col justify-between space-y-4 hover:border-cyan-500/40 group">
-                    <div class="space-y-3">
-                        <div class="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">⚖️</div>
-                        <h3 class="text-xl font-bold text-white">Прокуратура</h3>
-                        <p class="text-slate-400 text-sm leading-relaxed">Надзор за законностью, возбуждение уголовных дел, представление обвинения в суде.</p>
-                    </div>
-                    <button class="w-full bg-slate-800 hover:bg-cyan-500 hover:text-slate-950 text-slate-300 font-semibold py-2.5 rounded-xl text-sm transition-all">Подать заявление</button>
-                </div>
-
-                <div class="faction-card bg-slate-900 border border-slate-800 p-6 rounded-2xl flex flex-col justify-between space-y-4 hover:border-cyan-500/40 group">
-                    <div class="space-y-3">
-                        <div class="w-12 h-12 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">👨‍⚖️</div>
-                        <h3 class="text-xl font-bold text-white">Адвокатура</h3>
-                        <p class="text-slate-400 text-sm leading-relaxed">Защита прав граждан, юридическая помощь, представление интересов подзащитных в суде.</p>
-                    </div>
-                    <button class="w-full bg-slate-800 hover:bg-cyan-500 hover:text-slate-950 text-slate-300 font-semibold py-2.5 rounded-xl text-sm transition-all">Подать заявление</button>
-                </div>
-
-                <div class="faction-card bg-slate-900 border border-slate-800 p-6 rounded-2xl flex flex-col justify-between space-y-4 hover:border-cyan-500/40 group">
-                    <div class="space-y-3">
-                        <div class="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">🏛️</div>
-                        <h3 class="text-xl font-bold text-white">Верховный Суд</h3>
-                        <p class="text-slate-400 text-sm leading-relaxed">Высшая судебная инстанция. Рассмотрение уголовных и гражданских дел, вынесение приговоров.</p>
-                    </div>
-                    <button class="w-full bg-slate-800 hover:bg-cyan-500 hover:text-slate-950 text-slate-300 font-semibold py-2.5 rounded-xl text-sm transition-all">Подать заявление</button>
-                </div>
-
-                <div class="faction-card bg-slate-900 border border-slate-800 p-6 rounded-2xl flex flex-col justify-between space-y-4 hover:border-cyan-500/40 group">
-                    <div class="space-y-3">
-                        <div class="w-12 h-12 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">📺</div>
-                        <h3 class="text-xl font-bold text-white">Государственная Телерадиокомпания</h3>
-                        <p class="text-slate-400 text-sm leading-relaxed">Освещение событий города, ведение прямых эфиров, журналистские расследования и репортажи.</p>
-                    </div>
-                    <button class="w-full bg-slate-800 hover:bg-cyan-500 hover:text-slate-950 text-slate-300 font-semibold py-2.5 rounded-xl text-sm transition-all">Подать заявление</button>
-                </div>
-
-                <div class="faction-card bg-slate-900 border border-slate-800 p-6 rounded-2xl flex flex-col justify-between space-y-4 hover:border-red-500/40 group">
-                    <div class="space-y-3">
-                        <div class="w-12 h-12 rounded-xl bg-red-900/20 border border-red-800/40 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">💀</div>
-                        <h3 class="text-xl font-bold text-white">ОПГ <span class="text-red-400">(RUCH)</span></h3>
-                        <p class="text-slate-400 text-sm leading-relaxed">Организованная преступная группировка. Теневой бизнес, уличный контроль, криминальные операции.</p>
-                    </div>
-                    <button class="w-full bg-slate-800 hover:bg-red-500 hover:text-white text-slate-300 font-semibold py-2.5 rounded-xl text-sm transition-all">Вступить</button>
-                </div>
-
-                <div class="faction-card bg-slate-900 border border-slate-800 p-6 rounded-2xl flex flex-col justify-between space-y-4 hover:border-cyan-500/40 group">
-                    <div class="space-y-3">
-                        <div class="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">🚔</div>
-                        <h3 class="text-xl font-bold text-white">Патрульная Полиция <span class="text-cyan-400">(ДПС)</span></h3>
-                        <p class="text-slate-400 text-sm leading-relaxed">Обеспечение правопорядка, патрулирование, перехват нарушителей, обыски и организация блокпостов.</p>
-                    </div>
-                    <button class="w-full bg-slate-800 hover:bg-cyan-500 hover:text-slate-950 text-slate-300 font-semibold py-2.5 rounded-xl text-sm transition-all">Подать заявление</button>
-                </div>
-
-            </div>
+            <button class="apply-btn">Подать заявление</button>
         </div>
-    </section>
-
-    <!-- НОВОСТИ -->
-    <section id="tab-news" class="tab-content animate-fade-in space-y-8">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-6">
+        <div class="faction-card">
+            <div class="faction-icon" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);">🪖</div>
             <div>
-                <h2 class="text-3xl font-extrabold text-white">Новости Сервера</h2>
-                <p class="text-slate-400 mt-1">Официальные объявления, патчи и события</p>
+                <h3>СОБР</h3>
+                <p>Специальный отряд быстрого реагирования. Штурмы, захват преступников, поддержка силовых операций.</p>
             </div>
+            <button class="apply-btn">Подать заявление</button>
         </div>
-
-        <div id="admin-news-panel" class="hidden bg-slate-900 border-2 border-dashed border-cyan-500/30 p-6 rounded-2xl space-y-4">
-            <div class="flex items-center gap-2 text-cyan-400 font-bold text-lg">🛠️ Панель администратора: Опубликовать новость</div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <input type="text" id="news-title" placeholder="Заголовок новости" class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500">
-                <select id="news-tag" class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500">
-                    <option value="Важно">🔴 Важно</option>
-                    <option value="Обновление">⚙️ Обновление</option>
-                    <option value="Мероприятие">🎉 Мероприятие</option>
-                    <option value="Свой Вариант">✏️ Свой Вариант</option>
-                </select>
+        <div class="faction-card">
+            <div class="faction-icon" style="background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2);">⚖️</div>
+            <div>
+                <h3>Прокуратура</h3>
+                <p>Надзор за законностью, возбуждение уголовных дел, представление обвинения в суде.</p>
             </div>
-            <textarea id="news-text" rows="4" placeholder="Текст публикации..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500 resize-none"></textarea>
-            <div class="flex justify-end">
-                <button onclick="createNews()" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-6 py-2.5 rounded-xl text-sm transition-all">Опубликовать</button>
+            <button class="apply-btn">Подать заявление</button>
+        </div>
+        <div class="faction-card">
+            <div class="faction-icon" style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.2);">👨‍⚖️</div>
+            <div>
+                <h3>Адвокатура</h3>
+                <p>Защита прав граждан, юридическая помощь, представление интересов подзащитных в суде.</p>
             </div>
+            <button class="apply-btn">Подать заявление</button>
         </div>
-
-        <div id="news-feed" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
-    </section>
-
-    <!-- ПРОФИЛЬ -->
-    <section id="tab-profile" class="tab-content animate-fade-in space-y-8">
-        <div class="border-b border-slate-800 pb-6">
-            <h2 class="text-3xl font-extrabold text-white">Профиль</h2>
-            <p class="text-slate-400 mt-1">Управление аккаунтом</p>
+        <div class="faction-card">
+            <div class="faction-icon" style="background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.2);">🏛️</div>
+            <div>
+                <h3>Верховный Суд</h3>
+                <p>Высшая судебная инстанция. Рассмотрение уголовных и гражданских дел, вынесение приговоров.</p>
+            </div>
+            <button class="apply-btn">Подать заявление</button>
         </div>
-
-        <div id="profile-guest" class="hidden text-center py-20 space-y-4">
-            <div class="text-5xl">🔒</div>
-            <p class="text-slate-400 text-lg">Войдите в аккаунт чтобы увидеть профиль</p>
-            <button onclick="openModal()" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-6 py-3 rounded-xl transition-all">Войти / Зарегистрироваться</button>
+        <div class="faction-card">
+            <div class="faction-icon" style="background:rgba(14,165,233,0.1);border:1px solid rgba(14,165,233,0.2);">📺</div>
+            <div>
+                <h3>Государственная Телерадиокомпания</h3>
+                <p>Освещение событий города, ведение прямых эфиров, журналистские расследования и репортажи.</p>
+            </div>
+            <button class="apply-btn">Подать заявление</button>
         </div>
+        <div class="faction-card opg">
+            <div class="faction-icon" style="background:rgba(127,29,29,0.3);border:1px solid rgba(255,23,68,0.2);">💀</div>
+            <div>
+                <h3>ОПГ <span style="color:#ff6b6b;">(RUCH)</span></h3>
+                <p>Организованная преступная группировка. Теневой бизнес, уличный контроль, криминальные операции.</p>
+            </div>
+            <button class="apply-btn">Вступить</button>
+        </div>
+        <div class="faction-card">
+            <div class="faction-icon" style="background:rgba(0,229,255,0.08);border:1px solid rgba(0,229,255,0.15);">🚔</div>
+            <div>
+                <h3>Патрульная Полиция <span style="color:var(--cyan);">(ДПС)</span></h3>
+                <p>Обеспечение правопорядка, патрулирование, перехват нарушителей, обыски и организация блокпостов.</p>
+            </div>
+            <button class="apply-btn">Подать заявление</button>
+        </div>
+    </div>
+</div>
 
-        <div id="profile-user" class="hidden space-y-6">
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 max-w-md">
-                <h3 class="text-lg font-bold text-white flex items-center gap-2">👤 Данные аккаунта</h3>
-                <div class="space-y-2 text-sm">
-                    <div class="flex justify-between py-2 border-b border-slate-800">
-                        <span class="text-slate-400">Никнейм</span>
-                        <span id="profile-username" class="text-white font-semibold"></span>
-                    </div>
-                    <div class="flex justify-between py-2 border-b border-slate-800">
-                        <span class="text-slate-400">Роль</span>
-                        <span id="profile-role" class="text-cyan-400 font-semibold"></span>
-                    </div>
-                    <div class="flex justify-between py-2 items-center">
-                        <span class="text-slate-400">Пароль</span>
-                        <div class="flex items-center gap-2">
-                            <span id="profile-password" class="text-white font-mono">••••••••</span>
-                            <button onclick="togglePassword()" id="toggle-pass-btn" class="text-xs text-cyan-400 hover:text-cyan-300">Показать</button>
-                        </div>
-                    </div>
+<!-- НОВОСТИ -->
+<div class="page" id="page-news">
+    <div class="section-header">
+        <div class="sec-title">Новости Сервера</div>
+        <div class="sec-sub">Официальные объявления, патчи и события из жизни Новосибирска</div>
+    </div>
+
+    <div id="admin-news-panel" style="display:none;" class="admin-panel">
+        <div class="admin-panel-title">🛠️ Панель администратора — Опубликовать новость</div>
+        <div class="form-grid">
+            <input type="text" id="news-title" placeholder="Заголовок новости" class="inp">
+            <select id="news-tag" class="inp">
+                <option value="Важно">🔴 Важно</option>
+                <option value="Обновление">⚙️ Обновление</option>
+                <option value="Мероприятие">🎉 Мероприятие</option>
+                <option value="Свой Вариант">✏️ Свой Вариант</option>
+            </select>
+        </div>
+        <textarea id="news-text" rows="3" placeholder="Текст публикации..." class="inp"></textarea>
+        <div class="flex-end mt-3">
+            <button class="btn-primary" onclick="createNews()">Опубликовать</button>
+        </div>
+    </div>
+
+    <div id="news-feed" class="news-grid">
+        <div class="empty"><div class="empty-icon">📰</div><p>Загрузка новостей...</p></div>
+    </div>
+</div>
+
+<!-- ПРОФИЛЬ -->
+<div class="page" id="page-profile">
+    <div class="section-header">
+        <div class="sec-title">Профиль</div>
+        <div class="sec-sub">Управление аккаунтом</div>
+    </div>
+
+    <!-- Гость -->
+    <div id="profile-guest">
+        <div class="empty">
+            <div class="empty-icon">🔒</div>
+            <p style="margin-bottom:20px;">Войдите чтобы увидеть профиль</p>
+            <button class="btn-primary" onclick="openModal()">Войти / Зарегистрироваться</button>
+        </div>
+    </div>
+
+    <!-- Авторизован -->
+    <div id="profile-user" style="display:none;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:20px;max-width:780px;">
+            <div class="profile-card">
+                <h3>👤 Данные аккаунта</h3>
+                <div class="profile-row">
+                    <span class="profile-label">Никнейм</span>
+                    <span class="profile-value" id="profile-username"></span>
+                </div>
+                <div class="profile-row">
+                    <span class="profile-label">Роль</span>
+                    <span class="profile-value cyan" id="profile-role"></span>
+                </div>
+                <div class="profile-row">
+                    <span class="profile-label">Пароль</span>
+                    <span style="display:flex;align-items:center;gap:10px;">
+                        <span class="profile-value" id="profile-password" data-real="">••••••••</span>
+                        <button class="btn-ghost" id="toggle-pass-btn" onclick="togglePassword()" style="padding:4px 10px;font-size:12px;">Показать</button>
+                    </span>
                 </div>
             </div>
 
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 max-w-md">
-                <h3 class="text-lg font-bold text-white">🔑 Сменить пароль</h3>
-                <input type="password" id="new-password" placeholder="Новый пароль" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500">
-                <input type="password" id="confirm-password" placeholder="Подтвердите пароль" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500">
-                <button onclick="changePassword()" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-6 py-2.5 rounded-xl text-sm transition-all">Сохранить</button>
+            <div class="profile-card">
+                <h3>🔑 Сменить пароль</h3>
+                <label class="form-label">Новый пароль</label>
+                <input type="password" id="new-password" placeholder="Минимум 4 символа" class="inp">
+                <label class="form-label">Подтвердите пароль</label>
+                <input type="password" id="confirm-password" placeholder="Повторите пароль" class="inp">
+                <div class="mt-4">
+                    <button class="btn-primary" onclick="changePassword()">Сохранить пароль</button>
+                </div>
             </div>
-
-            <button onclick="logout()" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 font-semibold px-6 py-2.5 rounded-xl text-sm transition-all">Выйти из аккаунта</button>
         </div>
 
-        <div id="admin-panel" class="hidden space-y-6 mt-8">
-            <div class="border-t border-slate-800 pt-8">
-                <h3 class="text-xl font-bold text-red-400 flex items-center gap-2">⚙️ Панель управления — Все пользователи</h3>
-                <p class="text-slate-500 text-sm mt-1">Доступно только для администрации</p>
+        <div class="mt-6">
+            <button class="btn-danger" onclick="logout()">Выйти из аккаунта</button>
+        </div>
+
+        <!-- Админ-панель -->
+        <div id="admin-panel" style="display:none;">
+            <hr class="divider">
+            <div class="section-header">
+                <div class="sec-title" style="color:#ff6b6b;">⚙️ Панель администрации</div>
+                <div class="sec-sub">Все зарегистрированные пользователи</div>
             </div>
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
-                <table class="w-full text-sm">
-                    <thead class="bg-slate-800/50">
+            <div class="users-table-wrap">
+                <table>
+                    <thead>
                         <tr>
-                            <th class="p-4 text-left">Никнейм</th>
-                            <th class="p-4 text-left">Пароль</th>
-                            <th class="p-4 text-left">Роль</th>
-                            <th class="p-4 text-left">Действие</th>
+                            <th>Никнейм</th>
+                            <th>Пароль</th>
+                            <th>Роль</th>
+                            <th>Действие</th>
                         </tr>
                     </thead>
-                    <tbody id="users-table-body" class="divide-y divide-slate-800"></tbody>
+                    <tbody id="users-table-body"></tbody>
                 </table>
             </div>
         </div>
-    </section>
+    </div>
+</div>
 
-</main>
-
-<footer class="bg-slate-950 border-t border-slate-900 py-8 mt-12 text-center text-sm text-slate-500">
-    <p>© 2026 Novosibirsk RP. Все права защищены. Разработано для игрового сообщества.</p>
+<!-- FOOTER -->
+<footer style="border-top:1px solid var(--border);padding:32px 24px;text-align:center;color:#1e293b;font-size:13px;margin-top:40px;">
+    © 2026 Novosibirsk RP — Все права защищены
 </footer>
 
 <!-- МОДАЛКА -->
-<div id="auth-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm hidden">
-    <div class="bg-slate-900 border border-slate-800 w-full max-w-md p-6 rounded-3xl space-y-5 shadow-2xl relative">
-        <button onclick="closeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors text-xl">✕</button>
-
-        <div class="flex border-b border-slate-800">
-            <button onclick="switchAuthTab('login')" id="auth-tab-login" class="auth-tab-btn active flex-1 py-3 text-sm font-semibold text-slate-400 transition-all">Войти</button>
-            <button onclick="switchAuthTab('register')" id="auth-tab-register" class="auth-tab-btn flex-1 py-3 text-sm font-semibold text-slate-400 transition-all">Регистрация</button>
+<div class="modal-overlay" id="auth-modal" onclick="modalOverlayClick(event)">
+    <div class="modal-box">
+        <button class="modal-close" onclick="closeModal()">✕</button>
+        <div class="modal-tabs">
+            <button class="modal-tab active" id="tab-login" onclick="switchAuthTab('login')">Войти</button>
+            <button class="modal-tab" id="tab-register" onclick="switchAuthTab('register')">Регистрация</button>
         </div>
 
-        <div id="auth-login-form" class="space-y-4">
-            <div class="text-center space-y-1">
-                <h3 class="text-xl font-black text-white">Вход в Личный Кабинет</h3>
-                <p class="text-slate-400 text-xs">Введите данные для авторизации</p>
+        <!-- Форма входа -->
+        <div id="form-login">
+            <div class="modal-title">Вход в аккаунт</div>
+            <div class="modal-sub">Введите ваши данные для входа</div>
+            <label class="form-label">Игровой ник</label>
+            <input type="text" id="login-username" placeholder="Ivan_Ivanov" class="inp">
+            <label class="form-label">Пароль</label>
+            <input type="password" id="login-password" placeholder="••••••••" class="inp" onkeydown="if(event.key==='Enter')handleLogin()">
+            <div style="margin-top:20px;">
+                <button class="btn-primary" style="width:100%;padding:14px;" onclick="handleLogin()">Авторизоваться</button>
             </div>
-            <div class="space-y-1">
-                <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Игровой ник</label>
-                <input type="text" id="login-username" placeholder="Ivan_Ivanov" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500">
-            </div>
-            <div class="space-y-1">
-                <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Пароль</label>
-                <input type="password" id="login-password" placeholder="••••••••" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500">
-            </div>
-            <button onclick="handleLogin()" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold py-3.5 rounded-xl text-sm transition-all shadow-lg">
-                Авторизоваться
-            </button>
         </div>
 
-        <div id="auth-register-form" class="space-y-4 hidden">
-            <div class="text-center space-y-1">
-                <h3 class="text-xl font-black text-white">Создать аккаунт</h3>
-                <p class="text-slate-400 text-xs">Зарегистрируйтесь чтобы получить доступ</p>
+        <!-- Форма регистрации -->
+        <div id="form-register" style="display:none;">
+            <div class="modal-title">Создать аккаунт</div>
+            <div class="modal-sub">Зарегистрируйтесь чтобы получить доступ</div>
+            <label class="form-label">Игровой ник</label>
+            <input type="text" id="reg-username" placeholder="Ivan_Ivanov" class="inp">
+            <label class="form-label">Пароль</label>
+            <input type="password" id="reg-password" placeholder="Минимум 4 символа" class="inp">
+            <label class="form-label">Подтвердите пароль</label>
+            <input type="password" id="reg-password2" placeholder="Повторите пароль" class="inp" onkeydown="if(event.key==='Enter')handleRegister()">
+            <div style="margin-top:20px;">
+                <button class="btn-primary" style="width:100%;padding:14px;" onclick="handleRegister()">Зарегистрироваться</button>
             </div>
-            <div class="space-y-1">
-                <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Игровой ник</label>
-                <input type="text" id="reg-username" placeholder="Ivan_Ivanov" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500">
-            </div>
-            <div class="space-y-1">
-                <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Пароль</label>
-                <input type="password" id="reg-password" placeholder="••••••••" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500">
-            </div>
-            <div class="space-y-1">
-                <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Подтвердите пароль</label>
-                <input type="password" id="reg-password2" placeholder="••••••••" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500">
-            </div>
-            <button onclick="handleRegister()" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold py-3.5 rounded-xl text-sm transition-all shadow-lg">
-                Зарегистрироваться
-            </button>
         </div>
-
     </div>
 </div>
 
