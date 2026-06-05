@@ -204,7 +204,7 @@
 
     <div class="section-header">
         <div class="sec-title">Государственные Фракции</div>
-        <div class="sec-sub">Выберите свой путь развития в структурах министерств. (КНОПКИ ФРАКЦИЙ ЕЩЁ НЕ РАБОТАЮТ!)</div>
+        <div class="sec-sub">Выберите свой путь развития в структурах министерств</div>
     </div>
 
     <div class="faction-grid">
@@ -286,12 +286,15 @@
         <div class="admin-panel-title">🛠️ Панель администратора — Опубликовать новость</div>
         <div class="form-grid">
             <input type="text" id="news-title" placeholder="Заголовок новости" class="inp">
-            <select id="news-tag" class="inp">
-                <option value="Важно">🔴 Важно</option>
-                <option value="Обновление">⚙️ Обновление</option>
-                <option value="Мероприятие">🎉 Мероприятие</option>
-                <option value="Свой Вариант">✏️ Свой Вариант</option>
-            </select>
+            <div>
+                <select id="news-tag" class="inp" onchange="toggleCustomTag(this.value)">
+                    <option value="Важно">🔴 Важно</option>
+                    <option value="Обновление">⚙️ Обновление</option>
+                    <option value="Мероприятие">🎉 Мероприятие</option>
+                    <option value="Свой Вариант">✏️ Свой Вариант</option>
+                </select>
+                <input type="text" id="news-custom-tag" placeholder="Введите свой тег..." class="inp" style="display:none;margin-top:8px;">
+            </div>
         </div>
         <textarea id="news-text" rows="3" placeholder="Текст публикации..." class="inp"></textarea>
         <div class="flex-end mt-3">
