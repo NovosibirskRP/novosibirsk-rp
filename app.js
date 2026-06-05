@@ -109,6 +109,10 @@ window.handleLogin = async function() {
         window.currentUser = users[0];
         closeModal();
         updateAuthZone();
+        if (ADMIN_ROLES.includes(users[0].role)) {
+            const panel = document.getElementById('admin-news-panel');
+            if (panel) panel.style.display = 'block';
+        }
         toast('Добро пожаловать, ' + users[0].username + '!');
     } catch(e) { toast('Ошибка соединения', 'error'); }
 };
