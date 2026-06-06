@@ -513,14 +513,26 @@ window.submitForm = async function(type) {
     }
  
     // Сохраняем в Supabase
-    await db('requests', { method: 'POST', body: JSON.stringify(data) });
+    const saved = await db('requests', { method: 'POST', body: JSON.stringify(data) });
  
-    // Отправляем в Discord
-    await sendDiscordWebhook(webhookUrl, {
+    // Правило роутинга webhook по типу заявки — каждый тип идёт в свой канал
+    const WEBHOOK_BY_TYPE = {
+        passport:     WEBHOOK_PASSPORT_LICENSE,
+        license:      WEBHOOK_PASSPORT_LICENSE,
+        medbook:      WEBHOOK_MEDBOOK,
+        faction_join: WEBHOOK_MEDBOOK,      // меняй на свой webhook если создашь канал
+        court:        WEBHOOK_MEDBOOK,      // меняй на свой webhook если создашь канал
+        government:   WEBHOOK_PASSPORT_LICENSE,
+        lawyer:       WEBHOOK_MEDBOOK,
+    };
+    const finalWebhook = WEBHOOK_BY_TYPE[data.type] || WEBHOOK_PASSPORT_LICENSE;
+ 
+    // Отправляем в Discord с меткой типа в заголовке чтобы не путалось
+    await sendDiscordWebhook(finalWebhook, {
         title: embedTitle,
         color: embedColor,
         fields: embedFields,
-        footer: { text: 'Novosibirsk RP • Ожидает рассмотрения' },
+        footer: { text: `Novosibirsk RP • ${data.type?.toUpperCase()} • ID: ${saved?.[0]?.id || '?'} • Ожидает рассмотрения` },
         timestamp: new Date().toISOString()
     });
  
@@ -529,6 +541,26 @@ window.submitForm = async function(type) {
 };
  
 // ─── MY DOCS ──────────────────────────────────
+ 
+const EXPIRY_DAYS = { passport: 30, medbook: 60, license: 14 };
+ 
+function calcExpiry(createdAt, type) {
+    const days = EXPIRY_DAYS[type];
+    if (!days || !createdAt) return null;
+    const exp = new Date(createdAt);
+    exp.setDate(exp.getDate() + days);
+    return exp;
+}
+ 
+function expiryBadge(createdAt, type) {
+    const exp = calcExpiry(createdAt, type);
+    if (!exp) return '';
+    const now = new Date();
+    const diff = Math.ceil((exp - now) / 86400000);
+    if (diff < 0) return `<span class="badge badge-rejected">⏰ Истёк ${exp.toLocaleDateString('ru-RU')}</span>`;
+    if (diff <= 5) return `<span class="badge badge-pending">⚠️ Истекает через ${diff} дн.</span>`;
+    return `<span class="badge badge-approved">📅 До ${exp.toLocaleDateString('ru-RU')}</span>`;
+}
  
 window.loadMyDocs = async function() {
     const guestDiv = document.getElementById('mydocs-guest');
@@ -554,23 +586,66 @@ window.loadMyDocs = async function() {
         faction_join: '🏛️ Вступление во фракцию', court: '⚖️ Судебный иск',
         government: '📋 Обращение в правительство', lawyer: '👨‍⚖️ Адвокат'
     };
+    const typeIcons = {
+        passport: '🪪', medbook: '🏥', license: '🔫',
+        faction_join: '🏛️', court: '⚖️', government: '📋', lawyer: '👨‍⚖️'
+    };
  
     listDiv.innerHTML = reqs.map(r => {
-        const badge = r.status === 'approved' ? '<span class="badge badge-approved">✓ Одобрено</span>'
-                    : r.status === 'rejected' ? '<span class="badge badge-rejected">✕ Отклонено</span>'
-                    : '<span class="badge badge-pending">⏳ На рассмотрении</span>';
+        const statusBadge = r.status === 'approved'
+            ? '<span class="badge badge-approved">✓ Одобрено</span>'
+            : r.status === 'rejected'
+            ? '<span class="badge badge-rejected">✕ Отклонено</span>'
+            : '<span class="badge badge-pending">⏳ На рассмотрении</span>';
+ 
+        const expiry = r.status === 'approved' ? expiryBadge(r.created_at, r.type) : '';
         const date = r.created_at ? new Date(r.created_at).toLocaleDateString('ru-RU') : '';
-        return `<div class="doc-card">
-            <div style="display:flex;align-items:center;gap:14px">
-                <div class="doc-icon">${(typeLabels[r.type] || '📄').charAt(0)}</div>
-                <div>
-                    <div style="font-weight:700;color:#fff;font-size:16px">${typeLabels[r.type] || r.type}</div>
-                    <div style="color:var(--text);font-size:13px;margin-top:2px">${date}</div>
+ 
+        const adminActions = isAdmin(window.currentUser) ? `
+            <div style="display:flex;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+                <button onclick="deleteRequest(${r.id})" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#f87171;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;text-transform:uppercase;padding:6px 14px;border-radius:8px;cursor:pointer">🗑 Удалить</button>
+                ${r.status === 'approved' ? `<button onclick="setExpiry(${r.id})" style="background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);color:#fbbf24;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;text-transform:uppercase;padding:6px 14px;border-radius:8px;cursor:pointer">📅 Изменить срок</button>` : ''}
+            </div>` : '';
+ 
+        return `<div class="doc-card" style="flex-direction:column;align-items:stretch;gap:0">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+                <div style="display:flex;align-items:center;gap:14px">
+                    <div class="doc-icon">${typeIcons[r.type] || '📄'}</div>
+                    <div>
+                        <div style="font-weight:700;color:#fff;font-size:16px">${typeLabels[r.type] || r.type}</div>
+                        <div style="color:var(--text);font-size:13px;margin-top:2px">${date} • ${r.char_name || r.username || ''}</div>
+                    </div>
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+                    ${statusBadge}
+                    ${expiry}
                 </div>
             </div>
-            ${badge}
+            ${adminActions}
         </div>`;
     }).join('');
+};
+ 
+window.deleteRequest = async function(id) {
+    if (!confirm('Удалить этот документ/заявку?')) return;
+    await db(`requests?id=eq.${id}`, { method: 'DELETE' });
+    notify('Документ удалён');
+    loadMyDocs();
+};
+ 
+window.setExpiry = async function(id) {
+    const days = prompt('Установить срок годности (дней от сегодня):');
+    if (!days || isNaN(days)) return;
+    const exp = new Date();
+    exp.setDate(exp.getDate() + parseInt(days));
+    // Сохраняем дату создания как будто сейчас минус (стандарт - days)
+    // Реальнее — добавим поле expires_at
+    await db(`requests?id=eq.${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ expires_at: exp.toISOString() })
+    });
+    notify(`Срок годности установлен до ${exp.toLocaleDateString('ru-RU')}`);
+    loadMyDocs();
 };
  
 // ─── ADMIN REQUESTS ───────────────────────────
@@ -615,20 +690,63 @@ window.loadAdminRequests = async function() {
 };
  
 window.reviewRequest = async function(id, status) {
-    await db(`requests?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify({ status }) });
+    // Получаем заявку чтобы знать тип и данные
+    const reqs = await db(`requests?id=eq.${id}`);
+    const req = reqs?.[0];
+    if (!req) return notify('Заявка не найдена', false);
  
-    // Отправить уведомление в Discord
+    // Срок годности по умолчанию при одобрении
+    const EXPIRY_DAYS_DEFAULT = { passport: 30, medbook: 60, license: 14 };
+    let expiresAt = null;
+    if (status === 'approved' && EXPIRY_DAYS_DEFAULT[req.type]) {
+        const exp = new Date();
+        exp.setDate(exp.getDate() + EXPIRY_DAYS_DEFAULT[req.type]);
+        expiresAt = exp.toISOString();
+    }
+ 
+    await db(`requests?id=eq.${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status, ...(expiresAt ? { expires_at: expiresAt } : {}) })
+    });
+ 
+    // Каждый тип летит строго в свой webhook
+    const WEBHOOK_BY_TYPE = {
+        passport:     WEBHOOK_PASSPORT_LICENSE,
+        license:      WEBHOOK_PASSPORT_LICENSE,
+        medbook:      WEBHOOK_MEDBOOK,
+        faction_join: WEBHOOK_MEDBOOK,
+        court:        WEBHOOK_MEDBOOK,
+        government:   WEBHOOK_PASSPORT_LICENSE,
+        lawyer:       WEBHOOK_MEDBOOK,
+    };
+    const webhook = WEBHOOK_BY_TYPE[req.type] || WEBHOOK_PASSPORT_LICENSE;
+ 
+    const typeNames = {
+        passport: '🪪 Паспорт', medbook: '🏥 Мед. книжка', license: '🔫 Лицензия',
+        faction_join: '🏛️ Вступление во фракцию', court: '⚖️ Судебный иск',
+        government: '📋 Обращение в правительство', lawyer: '👨‍⚖️ Адвокат'
+    };
+ 
     const emoji = status === 'approved' ? '✅' : '❌';
-    const label = status === 'approved' ? 'Одобрено' : 'Отклонено';
-    await sendDiscordWebhook(WEBHOOK_PASSPORT_LICENSE, {
-        title: `${emoji} Заявка ${label}`,
+    const label = status === 'approved' ? 'ОДОБРЕНО' : 'ОТКЛОНЕНО';
+    const fields = [
+        { name: '👤 Игрок', value: req.username || '—', inline: true },
+        { name: '📋 Тип', value: typeNames[req.type] || req.type, inline: true },
+        { name: '👮 Администратор', value: window.currentUser.username, inline: true },
+    ];
+    if (expiresAt) {
+        fields.push({ name: '📅 Действителен до', value: new Date(expiresAt).toLocaleDateString('ru-RU'), inline: true });
+    }
+ 
+    await sendDiscordWebhook(webhook, {
+        title: `${emoji} ${typeNames[req.type] || req.type} — ${label}`,
         color: status === 'approved' ? 0x22c55e : 0xef4444,
-        description: `Администратор **${window.currentUser.username}** ${label.toLowerCase()} заявку #${id}`,
-        footer: { text: 'Novosibirsk RP' },
+        fields,
+        footer: { text: `Novosibirsk RP • ID: ${id}` },
         timestamp: new Date().toISOString()
     });
  
-    notify(label + '!');
+    notify(label === 'ОДОБРЕНО' ? 'Одобрено!' : 'Отклонено!');
     loadAdminRequests();
 };
  
