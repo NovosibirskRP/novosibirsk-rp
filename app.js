@@ -369,72 +369,98 @@ window.submitForm = async function(type) {
     let embedFields = [];
  
     if (type === 'passport') {
-        const u = document.getElementById('passport-username').value.trim();
-        const n = document.getElementById('passport-name').value.trim();
-        const d = document.getElementById('passport-dob').value;
-        const b = document.getElementById('passport-birthplace').value.trim();
-        const a = document.getElementById('passport-address').value.trim();
-        if (!u || !n || !d || !b || !a) return notify('Заполните все поля', false);
-        data = { type: 'passport', username: u, char_name: n, dob: d, birthplace: b, address: a, status: 'pending', user_id: window.currentUser?.id };
+        const u    = document.getElementById('passport-username').value.trim();
+        const n    = document.getElementById('passport-name').value.trim();
+        const d    = document.getElementById('passport-dob').value;
+        const job  = document.getElementById('passport-job').value.trim();
+        const gen  = document.getElementById('passport-gender').value;
+        const bio  = document.getElementById('passport-bio').value.trim();
+        const addr = document.getElementById('passport-address').value.trim();
+        const sign = document.getElementById('passport-sign').value.trim();
+        if (!u || !n || !d || !job || !gen) return notify('Заполните обязательные поля', false);
+        data = { type: 'passport', username: u, char_name: n, dob: d, address: job, reason: gen, note: bio, experience: addr, faction: sign, status: 'pending', user_id: window.currentUser?.id };
         embedTitle = '🪪 Новая заявка на Паспорт';
         embedColor = 0x00f5ff;
         embedFields = [
             { name: '👤 Игрок', value: u, inline: true },
-            { name: '📛 Имя персонажа', value: n, inline: true },
+            { name: '✍️ Подпись', value: sign || u, inline: true },
+            { name: '📛 ФИО', value: n, inline: false },
             { name: '🎂 Дата рождения', value: d, inline: true },
-            { name: '📍 Место рождения', value: b, inline: true },
-            { name: '🏠 Адрес', value: a, inline: false },
+            { name: '⚧ Пол', value: gen, inline: true },
+            { name: '💼 Место работы', value: job, inline: false },
+            { name: '🏠 Место проживания', value: addr || '—', inline: false },
+            { name: '📖 Биография', value: bio || '—', inline: false },
         ];
         webhookUrl = WEBHOOK_PASSPORT_LICENSE;
  
     } else if (type === 'medbook') {
-        const u = document.getElementById('medbook-username').value.trim();
-        const n = document.getElementById('medbook-name').value.trim();
-        const r = document.getElementById('medbook-reason').value;
-        const nt = document.getElementById('medbook-note').value.trim();
-        if (!u || !n) return notify('Заполните все поля', false);
-        data = { type: 'medbook', username: u, char_name: n, reason: r, note: nt, status: 'pending', user_id: window.currentUser?.id };
+        const u    = document.getElementById('medbook-username').value.trim();
+        const n    = document.getElementById('medbook-name').value.trim();
+        const dob  = document.getElementById('medbook-dob').value;
+        const job  = document.getElementById('medbook-job').value.trim();
+        const pos  = document.getElementById('medbook-position').value.trim();
+        const goal = document.getElementById('medbook-goal').value.trim();
+        const dis  = document.getElementById('medbook-disease').value;
+        const nt   = document.getElementById('medbook-note').value.trim();
+        if (!u || !n || !job || !pos || !goal) return notify('Заполните обязательные поля', false);
+        data = { type: 'medbook', username: u, char_name: n, dob: dob, address: job, reason: pos, note: goal + ' | ' + dis + (nt ? ' | ' + nt : ''), status: 'pending', user_id: window.currentUser?.id };
         embedTitle = '🏥 Новая заявка на Мед. книжку';
         embedColor = 0x22c55e;
         embedFields = [
             { name: '👤 Игрок', value: u, inline: true },
-            { name: '📛 Имя персонажа', value: n, inline: true },
-            { name: '📋 Цель', value: r, inline: false },
+            { name: '📛 ФИО', value: n, inline: true },
+            { name: '🎂 Дата рождения', value: dob || '—', inline: true },
+            { name: '💼 Место работы', value: job, inline: true },
+            { name: '🏷️ Должность', value: pos, inline: true },
+            { name: '🎯 Цель получения', value: goal, inline: false },
+            { name: '🏥 Категория болезни', value: dis, inline: false },
             { name: '💬 Примечание', value: nt || '—', inline: false },
         ];
         webhookUrl = WEBHOOK_MEDBOOK;
  
     } else if (type === 'license') {
-        const u = document.getElementById('license-username').value.trim();
-        const n = document.getElementById('license-name').value.trim();
-        const t = document.getElementById('license-type').value;
-        const r = document.getElementById('license-reason').value.trim();
-        if (!u || !n || !r) return notify('Заполните все поля', false);
-        data = { type: 'license', username: u, char_name: n, weapon_type: t, reason: r, status: 'pending', user_id: window.currentUser?.id };
+        const u       = document.getElementById('license-username').value.trim();
+        const n       = document.getElementById('license-name').value.trim();
+        const dob     = document.getElementById('license-dob').value;
+        const job     = document.getElementById('license-job').value.trim();
+        const faction = document.getElementById('license-faction').value;
+        const reason  = document.getElementById('license-reason').value.trim();
+        const weapon  = document.getElementById('license-type').value;
+        const sign    = document.getElementById('license-sign').value.trim();
+        if (!u || !n || !job || !reason) return notify('Заполните обязательные поля', false);
+        data = { type: 'license', username: u, char_name: n, dob: dob, address: job, faction: faction, reason: reason, weapon_type: weapon, note: sign, status: 'pending', user_id: window.currentUser?.id };
         embedTitle = '🔫 Новая заявка на Лицензию';
         embedColor = 0xf59e0b;
         embedFields = [
             { name: '👤 Игрок', value: u, inline: true },
-            { name: '📛 Имя персонажа', value: n, inline: true },
-            { name: '🔫 Тип оружия', value: t, inline: true },
-            { name: '📋 Причина', value: r, inline: false },
+            { name: '✍️ Подпись', value: sign || u, inline: true },
+            { name: '📛 ФИО из паспорта', value: n, inline: false },
+            { name: '🎂 Дата рождения', value: dob || '—', inline: true },
+            { name: '💼 Место работы', value: job, inline: true },
+            { name: '🏛️ Фракция', value: faction, inline: true },
+            { name: '❓ Зачем нужно оружие', value: reason, inline: false },
+            { name: '🔫 Какое оружие', value: weapon, inline: false },
         ];
         webhookUrl = WEBHOOK_PASSPORT_LICENSE;
  
     } else if (type === 'faction-join') {
-        const u = document.getElementById('faction-username').value.trim();
-        const f = document.getElementById('faction-name').value;
-        const r = document.getElementById('faction-reason').value.trim();
-        const ex = document.getElementById('faction-exp').value.trim();
-        if (!u || !r) return notify('Заполните все поля', false);
-        data = { type: 'faction_join', username: u, faction: f, reason: r, experience: ex, status: 'pending', user_id: window.currentUser?.id };
+        const u       = document.getElementById('faction-username').value.trim();
+        const roblox  = document.getElementById('faction-roblox').value.trim();
+        const rname   = document.getElementById('faction-realname').value.trim();
+        const medbook = document.getElementById('faction-medbook').value;
+        const faction = document.getElementById('faction-name').value;
+        const bio     = document.getElementById('faction-bio').value.trim();
+        if (!u || !roblox || !rname) return notify('Заполните обязательные поля', false);
+        data = { type: 'faction_join', username: u, char_name: rname, faction: faction, reason: roblox, note: medbook, experience: bio, status: 'pending', user_id: window.currentUser?.id };
         embedTitle = '🏛️ Заявление во фракцию';
         embedColor = 0x8b5cf6;
         embedFields = [
             { name: '👤 Игрок', value: u, inline: true },
-            { name: '🏛️ Фракция', value: f, inline: true },
-            { name: '💬 Мотивация', value: r, inline: false },
-            { name: '🎮 Опыт', value: ex || '—', inline: false },
+            { name: '🏛️ Фракция', value: faction, inline: true },
+            { name: '🎮 Nickname | Username (Roblox)', value: roblox, inline: false },
+            { name: '📛 Имя и фамилия из паспорта', value: rname, inline: false },
+            { name: '🏥 Мед. книжка', value: medbook, inline: true },
+            { name: '📖 Био', value: bio || '—', inline: false },
         ];
         webhookUrl = WEBHOOK_PASSPORT_LICENSE;
  
@@ -647,4 +673,3 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('login-password')?.addEventListener('keydown', e => { if(e.key==='Enter') handleLogin(); });
     document.getElementById('reg-password2')?.addEventListener('keydown', e => { if(e.key==='Enter') handleRegister(); });
 });
- 
