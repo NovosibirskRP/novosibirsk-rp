@@ -1,4 +1,3 @@
-mkdir -p /mnt/user-data/outputs && cat > /tmp/index.html << 'HTMLEOF'
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -191,7 +190,7 @@ mkdir -p /mnt/user-data/outputs && cat > /tmp/index.html << 'HTMLEOF'
     </div>
     <div class="stats">
         <div class="stat-card"><div class="stat-num">8</div><div class="stat-label">Фракций</div></div>
-        <div class="stat-card"><div class="stat-num">--/-</div><div class="stat-label">Онлайн</div></div>
+        <div class="stat-card"><div class="stat-num">24/7</div><div class="stat-label">Онлайн</div></div>
         <div class="stat-card"><div class="stat-num">100+</div><div class="stat-label">Игроков</div></div>
     </div>
     <div class="section-header">
@@ -424,13 +423,16 @@ mkdir -p /mnt/user-data/outputs && cat > /tmp/index.html << 'HTMLEOF'
 <!-- PASSPORT -->
 <div class="modal-overlay" id="modal-passport">
 <div class="modal-box"><button class="modal-close" onclick="closeModal('passport')">✕</button>
-<div class="modal-header"><div class="modal-title">🪪 Оформление паспорта</div><div class="modal-sub">Заполните данные — заявка уйдёт на проверку</div></div>
+<div class="modal-header"><div class="modal-title">🪪 Оформление паспорта</div><div class="modal-sub">Если заполнено не по форме — будет отклонено</div></div>
 <div class="modal-body">
     <div class="form-group"><label class="form-label">Игровой никнейм</label><input type="text" id="passport-username" class="form-input" placeholder="Ivan_Ivanov"></div>
-    <div class="form-group"><label class="form-label">Имя персонажа</label><input type="text" id="passport-name" class="form-input" placeholder="Иван Иванов"></div>
-    <div class="form-group"><label class="form-label">Дата рождения</label><input type="date" id="passport-dob" class="form-input"></div>
-    <div class="form-group"><label class="form-label">Место рождения</label><input type="text" id="passport-birthplace" class="form-input" placeholder="Новосибирск"></div>
-    <div class="form-group"><label class="form-label">Адрес проживания</label><input type="text" id="passport-address" class="form-input" placeholder="ул. Ленина, д. 1"></div>
+    <div class="form-group"><label class="form-label">ФИО персонажа *</label><input type="text" id="passport-name" class="form-input" placeholder="Иван Иванович Иванов"></div>
+    <div class="form-group"><label class="form-label">Дата рождения РП персонажа *</label><input type="date" id="passport-dob" class="form-input"></div>
+    <div class="form-group"><label class="form-label">Место работы *</label><input type="text" id="passport-job" class="form-input" placeholder="Безработный / Название фракции"></div>
+    <div class="form-group"><label class="form-label">Пол *</label><select id="passport-gender" class="form-input"><option value="Мужской">Мужской</option><option value="Женский">Женский</option></select></div>
+    <div class="form-group"><label class="form-label">Биография (не обязательно)</label><textarea id="passport-bio" class="form-input" placeholder="Краткая биография персонажа..."></textarea></div>
+    <div class="form-group"><label class="form-label">Место проживания (не обязательно)</label><input type="text" id="passport-address" class="form-input" placeholder="ул. Ленина, д. 1"></div>
+    <div class="form-group"><label class="form-label">Подпись (ваш ник)</label><input type="text" id="passport-sign" class="form-input" placeholder="Ivan_Ivanov"></div>
     <button class="form-submit" onclick="submitForm('passport')">Подать заявку</button>
 </div></div>
 </div>
@@ -438,12 +440,25 @@ mkdir -p /mnt/user-data/outputs && cat > /tmp/index.html << 'HTMLEOF'
 <!-- MEDBOOK -->
 <div class="modal-overlay" id="modal-medbook">
 <div class="modal-box"><button class="modal-close" onclick="closeModal('medbook')">✕</button>
-<div class="modal-header"><div class="modal-title">🏥 Медицинская книжка</div><div class="modal-sub">Необходима для работы в ряде фракций</div></div>
+<div class="modal-header"><div class="modal-title">🏥 Медицинская книжка</div><div class="modal-sub">Заявление на получение медицинской книжки</div></div>
 <div class="modal-body">
     <div class="form-group"><label class="form-label">Игровой никнейм</label><input type="text" id="medbook-username" class="form-input" placeholder="Ivan_Ivanov"></div>
-    <div class="form-group"><label class="form-label">Имя персонажа</label><input type="text" id="medbook-name" class="form-input" placeholder="Иван Иванов"></div>
-    <div class="form-group"><label class="form-label">Цель получения</label><select id="medbook-reason" class="form-input"><option>Работа в медицине</option><option>Работа с продуктами</option><option>Работа в госслужбе</option><option>Другое</option></select></div>
-    <div class="form-group"><label class="form-label">Дополнительно</label><textarea id="medbook-note" class="form-input" placeholder="Любые уточнения..."></textarea></div>
+    <div class="form-group"><label class="form-label">ФИО гражданина *</label><input type="text" id="medbook-name" class="form-input" placeholder="Иван Иванович Иванов"></div>
+    <div class="form-group"><label class="form-label">Дата рождения *</label><input type="date" id="medbook-dob" class="form-input"></div>
+    <div class="form-group"><label class="form-label">Место работы *</label><input type="text" id="medbook-job" class="form-input" placeholder="Название фракции / организации"></div>
+    <div class="form-group"><label class="form-label">Должность *</label><input type="text" id="medbook-position" class="form-input" placeholder="Ваша должность"></div>
+    <div class="form-group"><label class="form-label">Цель получения *</label><input type="text" id="medbook-goal" class="form-input" placeholder="Для работы в..."></div>
+    <div class="form-group"><label class="form-label">Категория болезни *</label>
+        <select id="medbook-disease" class="form-input">
+            <option value="M0 — Болезнь отсутствует">M0 — Болезнь отсутствует</option>
+            <option value="M1 — Психическое расстройство">M1 — Психическое расстройство</option>
+            <option value="M2 — Сердечно-сосудистые заболевания">M2 — Сердечно-сосудистые заболевания</option>
+            <option value="M3 — Заболевания опорно-двигательного аппарата">M3 — Заболевания опорно-двигательного аппарата</option>
+            <option value="M4 — Хронические заболевания внутренних органов">M4 — Хронические заболевания внутренних органов</option>
+            <option value="M5 — Аллергия">M5 — Аллергия (укажите в примечании)</option>
+        </select>
+    </div>
+    <div class="form-group"><label class="form-label">Примечание (если M5 — укажите аллергию)</label><textarea id="medbook-note" class="form-input" placeholder="Дополнительная информация..."></textarea></div>
     <button class="form-submit" onclick="submitForm('medbook')">Подать заявку</button>
 </div></div>
 </div>
@@ -451,12 +466,35 @@ mkdir -p /mnt/user-data/outputs && cat > /tmp/index.html << 'HTMLEOF'
 <!-- LICENSE -->
 <div class="modal-overlay" id="modal-license">
 <div class="modal-box"><button class="modal-close" onclick="closeModal('license')">✕</button>
-<div class="modal-header"><div class="modal-title">🔫 Лицензия на оружие</div><div class="modal-sub">Заявка рассматривается администрацией</div></div>
+<div class="modal-header"><div class="modal-title">🔫 Лицензия на оружие</div><div class="modal-sub">Если заполнено не по форме — будет отклонено</div></div>
 <div class="modal-body">
     <div class="form-group"><label class="form-label">Игровой никнейм</label><input type="text" id="license-username" class="form-input" placeholder="Ivan_Ivanov"></div>
-    <div class="form-group"><label class="form-label">Имя персонажа</label><input type="text" id="license-name" class="form-input" placeholder="Иван Иванов"></div>
-    <div class="form-group"><label class="form-label">Тип оружия</label><select id="license-type" class="form-input"><option>Пистолет</option><option>Ружьё</option><option>Охотничий карабин</option></select></div>
-    <div class="form-group"><label class="form-label">Причина</label><textarea id="license-reason" class="form-input" placeholder="Объясните зачем вам нужна лицензия..."></textarea></div>
+    <div class="form-group"><label class="form-label">ФИО из паспорта *</label><input type="text" id="license-name" class="form-input" placeholder="Иван Иванович Иванов"></div>
+    <div class="form-group"><label class="form-label">Дата рождения РП персонажа *</label><input type="date" id="license-dob" class="form-input"></div>
+    <div class="form-group"><label class="form-label">Место работы *</label><input type="text" id="license-job" class="form-input" placeholder="Фракция / организация"></div>
+    <div class="form-group"><label class="form-label">Фракция *</label><select id="license-faction" class="form-input">
+        <option>Гражданский</option>
+        <option>Патрульная Полиция (ДПС)</option>
+        <option>ФСБ</option><option>СОБР</option>
+        <option>Прокуратура</option><option>Адвокатура</option>
+        <option>Верховный Суд</option><option>ГТРК</option>
+        <option>МЧС</option><option>ОПГ (RUCH)</option>
+    </select></div>
+    <div class="form-group"><label class="form-label">Зачем вам нужно оружие? *</label><textarea id="license-reason" class="form-input" placeholder="Объясните причину..."></textarea></div>
+    <div class="form-group"><label class="form-label">Какое оружие? *</label>
+        <select id="license-type" class="form-input">
+            <option value="G1 — Холодное оружие">G1 — Холодное оружие</option>
+            <option value="G2 — Пистолет">G2 — Пистолет</option>
+            <option value="G3 — Дробовик">G3 — Дробовик</option>
+            <option value="G4 — МП 5">G4 — МП 5</option>
+            <option value="G5 — M4 Карабин">G5 — M4 Карабин</option>
+            <option value="G6 — G36">G6 — G36</option>
+        </select>
+    </div>
+    <div class="form-group"><label class="form-label">Подпись (ваш ник)</label><input type="text" id="license-sign" class="form-input" placeholder="Ivan_Ivanov"></div>
+    <div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.2);border-radius:10px;padding:12px;margin-bottom:14px;font-size:13px;color:#fbbf24;line-height:1.6">
+        ⚠️ Правительство может не согласиться с выбором оружия из-за фракции или не дать лицензию вообще.
+    </div>
     <button class="form-submit" onclick="submitForm('license')">Подать заявку</button>
 </div></div>
 </div>
@@ -464,12 +502,19 @@ mkdir -p /mnt/user-data/outputs && cat > /tmp/index.html << 'HTMLEOF'
 <!-- FACTION JOIN -->
 <div class="modal-overlay" id="modal-faction-join">
 <div class="modal-box"><button class="modal-close" onclick="closeModal('faction-join')">✕</button>
-<div class="modal-header"><div class="modal-title">🏛️ Вступление во фракцию</div><div class="modal-sub">Заявка отправится командованию фракции</div></div>
+<div class="modal-header"><div class="modal-title">🏛️ Вступление во фракцию</div><div class="modal-sub">Форма для вступления во фракцию</div></div>
 <div class="modal-body">
     <div class="form-group"><label class="form-label">Игровой никнейм</label><input type="text" id="faction-username" class="form-input" placeholder="Ivan_Ivanov"></div>
-    <div class="form-group"><label class="form-label">Фракция</label><select id="faction-name" class="form-input"><option>ФСБ</option><option>СОБР</option><option>Патрульная Полиция (ДПС)</option><option>Прокуратура</option><option>Адвокатура</option><option>Верховный Суд</option><option>ГТРК</option></select></div>
-    <div class="form-group"><label class="form-label">Почему хотите вступить?</label><textarea id="faction-reason" class="form-input" placeholder="Расскажите о себе и мотивации..."></textarea></div>
-    <div class="form-group"><label class="form-label">Опыт в RP</label><textarea id="faction-exp" class="form-input" placeholder="Предыдущий опыт ролевых игр..."></textarea></div>
+    <div class="form-group"><label class="form-label">Nickname и Username из Роблокса *</label><input type="text" id="faction-roblox" class="form-input" placeholder="Nickname | @Username"></div>
+    <div class="form-group"><label class="form-label">Имя и фамилия из паспорта *</label><input type="text" id="faction-realname" class="form-input" placeholder="Иван Иванов"></div>
+    <div class="form-group"><label class="form-label">Есть ли у вас мед. книжка? *</label><select id="faction-medbook" class="form-input"><option value="Да">Да</option><option value="Нет">Нет</option></select></div>
+    <div class="form-group"><label class="form-label">В какую фракцию вступаете? *</label><select id="faction-name" class="form-input">
+        <option>ФСБ</option><option>СОБР</option>
+        <option>Патрульная Полиция (ДПС)</option>
+        <option>Прокуратура</option><option>Адвокатура</option>
+        <option>Верховный Суд</option><option>ГТРК</option><option>МЧС</option>
+    </select></div>
+    <div class="form-group"><label class="form-label">Био (не обязательно)</label><textarea id="faction-bio" class="form-input" placeholder="Расскажите о себе..."></textarea></div>
     <button class="form-submit" onclick="submitForm('faction-join')">Подать заявление</button>
 </div></div>
 </div>
@@ -514,4 +559,3 @@ mkdir -p /mnt/user-data/outputs && cat > /tmp/index.html << 'HTMLEOF'
 <script src="app.js"></script>
 </body>
 </html>
-
