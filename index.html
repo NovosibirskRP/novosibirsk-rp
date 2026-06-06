@@ -1,3 +1,4 @@
+mkdir -p /mnt/user-data/outputs && cat > /tmp/index.html << 'HTMLEOF'
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -6,429 +7,513 @@
     <title>Novosibirsk RP | Официальный сайт</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Russo+One&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --cyan: #00e5ff;
-            --blue: #2979ff;
-            --red: #ff1744;
-            --bg: #060a14;
-            --card: #0d1424;
-            --border: rgba(255,255,255,0.07);
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: #e2e8f0; min-height: 100vh; overflow-x: hidden; }
-        .logo { font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.1em; }
-
-        /* NAV */
-        nav { background: rgba(6,10,20,0.85); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
-        .nav-inner { max-width: 1280px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 68px; }
-        .nav-links { display: flex; gap: 4px; }
-        .nav-btn { background: none; border: none; color: #64748b; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; padding: 8px 16px; border-radius: 10px; cursor: pointer; transition: all 0.2s; }
-        .nav-btn:hover { color: #e2e8f0; background: rgba(255,255,255,0.05); }
-        .nav-btn.active { color: var(--cyan); background: rgba(0,229,255,0.08); }
-
-        /* PAGES */
-        .page { display: none; max-width: 1280px; margin: 0 auto; padding: 40px 24px 80px; animation: fadeUp 0.35s ease; }
-        .page.active { display: block; }
-        @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
-
-        /* HERO */
-        .hero { position: relative; border-radius: 28px; overflow: hidden; background: linear-gradient(135deg, #0a1628 0%, #060a14 60%); border: 1px solid var(--border); padding: 80px 40px; text-align: center; margin-bottom: 60px; }
-        .hero::before { content:''; position:absolute; inset:0; background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(0,229,255,0.12) 0%, transparent 70%); pointer-events:none; }
-        .hero-badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 20px; border: 1px solid rgba(0,229,255,0.25); background: rgba(0,229,255,0.05); color: var(--cyan); font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 24px; }
-        .hero h1 { font-family: 'Russo One', sans-serif; font-size: clamp(2.2rem, 5vw, 4rem); color: #fff; line-height: 1.15; margin-bottom: 20px; }
-        .hero h1 span { background: linear-gradient(90deg, var(--cyan), var(--blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .hero p { color: #64748b; font-size: 17px; max-width: 540px; margin: 0 auto 36px; line-height: 1.7; }
-        .btn-play { display: inline-block; background: #fff; color: #060a14; font-weight: 800; font-size: 16px; padding: 16px 40px; border-radius: 16px; text-decoration: none; transition: all 0.25s; box-shadow: 0 0 40px rgba(255,255,255,0.1); }
-        .btn-play:hover { background: #e2e8f0; transform: translateY(-2px); box-shadow: 0 0 60px rgba(255,255,255,0.15); }
-
-        /* SECTION TITLE */
-        .sec-title { font-family: 'Russo One', sans-serif; font-size: 1.6rem; color: #fff; margin-bottom: 8px; }
-        .sec-sub { color: #475569; font-size: 14px; margin-bottom: 28px; }
-
-        /* FACTION GRID */
-        .faction-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        .faction-card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 28px; display: flex; flex-direction: column; gap: 16px; transition: all 0.3s; cursor: default; }
-        .faction-card:hover { border-color: rgba(0,229,255,0.3); transform: translateY(-4px); box-shadow: 0 20px 60px rgba(0,0,0,0.4); }
-        .faction-card.opg:hover { border-color: rgba(255,23,68,0.35); }
-        .faction-icon { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
-        .faction-card h3 { font-weight: 700; font-size: 17px; color: #f1f5f9; }
-        .faction-card p { color: #475569; font-size: 13px; line-height: 1.65; flex: 1; }
-        .faction-card .apply-btn { background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: #94a3b8; font-weight: 600; font-size: 13px; padding: 10px; border-radius: 12px; cursor: pointer; transition: all 0.2s; text-align: center; }
-        .faction-card .apply-btn:hover { background: rgba(0,229,255,0.1); border-color: rgba(0,229,255,0.3); color: var(--cyan); }
-        .faction-card.opg .apply-btn:hover { background: rgba(255,23,68,0.1); border-color: rgba(255,23,68,0.3); color: #ff6b6b; }
-
-        /* NEWS */
-        .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; }
-        .news-card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 24px; display: flex; flex-direction: column; gap: 12px; transition: border-color 0.2s; }
-        .news-card:hover { border-color: rgba(255,255,255,0.12); }
-        .tag { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; }
-        .tag-important { background: rgba(255,23,68,0.12); color: #ff6b6b; border: 1px solid rgba(255,23,68,0.2); }
-        .tag-update { background: rgba(0,229,255,0.1); color: var(--cyan); border: 1px solid rgba(0,229,255,0.2); }
-        .tag-event { background: rgba(168,85,247,0.1); color: #c084fc; border: 1px solid rgba(168,85,247,0.2); }
-        .tag-custom { background: rgba(251,191,36,0.1); color: #fbbf24; border: 1px solid rgba(251,191,36,0.2); }
-        .news-card h3 { font-weight: 700; font-size: 16px; color: #f1f5f9; }
-        .news-card p { color: #475569; font-size: 13px; line-height: 1.65; flex: 1; }
-        .news-meta { display: flex; justify-content: space-between; align-items: center; }
-        .news-date { color: #334155; font-size: 12px; }
-        .delete-news-btn { background: none; border: none; color: #ef4444; font-size: 12px; cursor: pointer; opacity: 0.7; transition: opacity 0.2s; }
-        .delete-news-btn:hover { opacity: 1; }
-
-        /* ADMIN PANEL NEWS */
-        .admin-panel { background: var(--card); border: 2px dashed rgba(0,229,255,0.2); border-radius: 20px; padding: 28px; margin-bottom: 32px; }
-        .admin-panel-title { color: var(--cyan); font-weight: 700; font-size: 15px; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
-        @media(max-width:600px) { .form-grid { grid-template-columns: 1fr; } }
-        .inp { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px; color: #f1f5f9; font-size: 14px; font-family: 'Inter',sans-serif; outline: none; transition: border-color 0.2s; width: 100%; }
-        .inp:focus { border-color: rgba(0,229,255,0.4); }
-        .inp::placeholder { color: #334155; }
-        select.inp option { background: #0d1424; }
-        textarea.inp { resize: none; }
-
-        /* BUTTONS */
-        .btn-primary { background: linear-gradient(135deg, var(--cyan), var(--blue)); color: #060a14; font-weight: 800; font-size: 14px; padding: 12px 28px; border-radius: 12px; border: none; cursor: pointer; transition: all 0.2s; }
-        .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
-        .btn-danger { background: rgba(255,23,68,0.1); border: 1px solid rgba(255,23,68,0.2); color: #ff6b6b; font-weight: 600; font-size: 13px; padding: 8px 16px; border-radius: 10px; cursor: pointer; transition: all 0.2s; }
-        .btn-danger:hover { background: rgba(255,23,68,0.2); }
-        .btn-ghost { background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: #64748b; font-weight: 600; font-size: 13px; padding: 8px 16px; border-radius: 10px; cursor: pointer; transition: all 0.2s; }
-        .btn-ghost:hover { background: rgba(255,255,255,0.07); color: #94a3b8; }
-
-        /* AUTH BTN */
-        .auth-btn { background: linear-gradient(135deg, var(--cyan), var(--blue)); color: #060a14; font-weight: 800; font-size: 14px; padding: 10px 24px; border-radius: 12px; border: none; cursor: pointer; transition: all 0.2s; }
-        .auth-btn:hover { opacity: 0.85; }
-        .user-chip { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); padding: 8px 14px; border-radius: 12px; cursor: pointer; transition: all 0.2s; color: #e2e8f0; font-size: 14px; font-weight: 600; }
-        .user-chip:hover { border-color: rgba(0,229,255,0.3); }
-        .user-avatar { width: 30px; height: 30px; border-radius: 50%; background: rgba(0,229,255,0.15); border: 1px solid rgba(0,229,255,0.3); display: flex; align-items: center; justify-content: center; color: var(--cyan); font-weight: 800; font-size: 13px; }
-
-        /* MODAL */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); z-index: 200; display: none; align-items: center; justify-content: center; padding: 20px; }
-        .modal-overlay.open { display: flex; }
-        .modal-box { background: #0d1424; border: 1px solid var(--border); border-radius: 24px; width: 100%; max-width: 420px; padding: 32px; position: relative; animation: fadeUp 0.3s ease; }
-        .modal-close { position: absolute; top: 16px; right: 16px; background: none; border: none; color: #475569; font-size: 20px; cursor: pointer; transition: color 0.2s; line-height: 1; }
-        .modal-close:hover { color: #fff; }
-        .modal-tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 28px; }
-        .modal-tab { flex: 1; background: none; border: none; padding: 12px; color: #475569; font-weight: 700; font-size: 14px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.2s; font-family: 'Inter', sans-serif; }
-        .modal-tab.active { color: var(--cyan); border-bottom-color: var(--cyan); }
-        .modal-title { font-family: 'Russo One', sans-serif; font-size: 1.3rem; color: #fff; margin-bottom: 6px; text-align: center; }
-        .modal-sub { color: #475569; font-size: 13px; text-align: center; margin-bottom: 24px; }
-        .form-label { display: block; color: #475569; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 6px; margin-top: 14px; }
-        .form-label:first-child { margin-top: 0; }
-
-        /* PROFILE */
-        .profile-card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 28px; max-width: 480px; }
-        .profile-card h3 { font-weight: 700; font-size: 16px; color: #fff; margin-bottom: 20px; }
-        .profile-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
-        .profile-row:last-child { border-bottom: none; }
-        .profile-label { color: #475569; }
-        .profile-value { color: #f1f5f9; font-weight: 600; }
-        .profile-value.cyan { color: var(--cyan); }
-
-        /* USERS TABLE */
-        .users-table-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 20px; overflow: hidden; overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 600px; }
-        thead tr { background: rgba(255,255,255,0.03); }
-        th { padding: 14px 16px; text-align: left; color: #334155; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
-        td { padding: 14px 16px; color: #94a3b8; font-size: 13px; border-top: 1px solid var(--border); }
-        tbody tr:hover td { background: rgba(255,255,255,0.02); }
-        td .username-cell { color: #f1f5f9; font-weight: 600; }
-        td .pass-cell { font-family: monospace; color: #64748b; }
-        select.role-select { background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: #94a3b8; font-size: 12px; padding: 6px 10px; border-radius: 8px; outline: none; cursor: pointer; }
-
-        /* EMPTY STATE */
-        .empty { text-align: center; padding: 60px 20px; color: #334155; }
-        .empty-icon { font-size: 3rem; margin-bottom: 12px; }
-        .empty p { font-size: 15px; }
-
-        /* TOASTS */
-        #toast { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%); background: #0d1424; border: 1px solid var(--border); color: #e2e8f0; padding: 14px 24px; border-radius: 14px; font-size: 14px; font-weight: 500; z-index: 999; opacity: 0; transition: opacity 0.3s; pointer-events: none; white-space: nowrap; }
-        #toast.show { opacity: 1; }
-        #toast.success { border-color: rgba(0,229,255,0.4); color: var(--cyan); }
-        #toast.error { border-color: rgba(255,23,68,0.4); color: #ff6b6b; }
-
-        /* DIVIDER */
-        .divider { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
-        .section-header { margin-bottom: 32px; }
-
-        /* GRID UTIL */
-        .flex-end { display: flex; justify-content: flex-end; }
-        .mt-3 { margin-top: 12px; }
-        .mt-4 { margin-top: 16px; }
-        .mt-6 { margin-top: 24px; }
-        .gap-2 { gap: 8px; }
-        .flex { display: flex; }
-        .items-center { align-items: center; }
-        .space-y > * + * { margin-top: 16px; }
-
-        /* SCROLLBAR */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
-
-        @media(max-width:768px) {
-            .nav-links { display: none; }
-            .hero { padding: 48px 24px; }
-            .faction-grid, .news-grid { grid-template-columns: 1fr; }
-        }
+        :root{--cyan:#00f5ff;--blue:#0ea5e9;--dark:#030712;--card:#0d1117;--border:rgba(0,245,255,0.12);--text:#94a3b8}
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:'Rajdhani',sans-serif;background:var(--dark);color:#e2e8f0;min-height:100vh;overflow-x:hidden}
+        body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 50% -10%,rgba(0,245,255,0.07) 0%,transparent 60%);pointer-events:none;z-index:0}
+        body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);pointer-events:none;z-index:0}
+        .logo-font{font-family:'Bebas Neue',sans-serif}
+        .mono{font-family:'JetBrains Mono',monospace}
+        nav{position:sticky;top:0;z-index:100;background:rgba(3,7,18,0.9);backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
+        .nav-inner{max-width:1280px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:72px}
+        .logo{display:flex;align-items:center;gap:10px;cursor:pointer}
+        .logo-text{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;background:linear-gradient(90deg,var(--cyan),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .logo-badge{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--cyan);border:1px solid var(--border);padding:2px 8px;border-radius:4px;opacity:0.7}
+        .nav-links{display:flex;gap:4px}
+        .nav-btn{background:none;border:none;color:var(--text);font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:600;padding:8px 14px;border-radius:8px;cursor:pointer;transition:all 0.2s;letter-spacing:0.5px;text-transform:uppercase}
+        .nav-btn:hover{color:#fff;background:rgba(0,245,255,0.08)}
+        .nav-btn.active{color:var(--cyan);background:rgba(0,245,255,0.1)}
+        .auth-zone{display:flex;align-items:center;gap:12px}
+        .btn-primary{background:linear-gradient(135deg,var(--cyan),var(--blue));color:#030712;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:14px;letter-spacing:1px;text-transform:uppercase;border:none;padding:10px 22px;border-radius:10px;cursor:pointer;transition:all 0.2s}
+        .btn-primary:hover{opacity:0.85;transform:translateY(-1px);box-shadow:0 8px 25px rgba(0,245,255,0.25)}
+        .tab{display:none;position:relative;z-index:1}
+        .tab.active{display:block;animation:fadeUp 0.35s ease}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+        .container{max-width:1280px;margin:0 auto;padding:40px 24px}
+        .hero{position:relative;border-radius:24px;border:1px solid var(--border);overflow:hidden;padding:80px 48px;text-align:center;margin-bottom:64px}
+        .hero-bg{position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,245,255,0.04) 0%,transparent 50%,rgba(14,165,233,0.04) 100%)}
+        .hero-grid{position:absolute;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:40px 40px;opacity:0.4}
+        .hero-tag{display:inline-flex;align-items:center;gap:6px;padding:6px 16px;border-radius:100px;border:1px solid rgba(0,245,255,0.25);background:rgba(0,245,255,0.05);color:var(--cyan);font-size:12px;font-weight:600;letter-spacing:2px;text-transform:uppercase;margin-bottom:24px}
+        .hero h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,8vw,96px);letter-spacing:4px;line-height:1;color:#fff;margin-bottom:20px}
+        .hero h1 span{background:linear-gradient(90deg,var(--cyan),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .hero p{color:var(--text);font-size:18px;max-width:560px;margin:0 auto 36px;line-height:1.6}
+        .hero-btns{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+        .btn-discord{display:inline-flex;align-items:center;gap:10px;background:#5865f2;color:#fff;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:16px;letter-spacing:1px;text-transform:uppercase;padding:16px 32px;border-radius:14px;text-decoration:none;transition:all 0.2s;border:none;cursor:pointer}
+        .btn-discord:hover{background:#4752c4;transform:translateY(-2px);box-shadow:0 12px 30px rgba(88,101,242,0.4)}
+        .btn-why{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#fff;font-family:'Rajdhani',sans-serif;font-weight:600;font-size:15px;letter-spacing:1px;text-transform:uppercase;padding:16px 28px;border-radius:14px;text-decoration:none;transition:all 0.2s;cursor:pointer}
+        .btn-why:hover{background:rgba(255,255,255,0.1);transform:translateY(-2px)}
+        .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:64px}
+        .stat-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;text-align:center}
+        .stat-num{font-family:'Bebas Neue',sans-serif;font-size:48px;color:var(--cyan);line-height:1}
+        .stat-label{color:var(--text);font-size:13px;letter-spacing:2px;text-transform:uppercase;margin-top:4px}
+        .section-header{margin-bottom:32px}
+        .section-title{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:3px;color:#fff}
+        .section-sub{color:var(--text);font-size:15px;margin-top:4px}
+        .factions-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px}
+        .faction-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px;transition:all 0.3s;position:relative;overflow:hidden}
+        .faction-card::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity 0.3s;background:linear-gradient(135deg,rgba(0,245,255,0.05),transparent)}
+        .faction-card:hover{border-color:rgba(0,245,255,0.3);transform:translateY(-4px);box-shadow:0 20px 40px rgba(0,0,0,0.4)}
+        .faction-card:hover::before{opacity:1}
+        .faction-icon{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:16px;border:1px solid var(--border)}
+        .faction-name{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:#fff;margin-bottom:8px}
+        .faction-desc{color:var(--text);font-size:14px;line-height:1.6}
+        .faction-tag{display:inline-block;margin-top:14px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--cyan);border:1px solid rgba(0,245,255,0.2);padding:3px 10px;border-radius:4px;letter-spacing:1px}
+        .faction-tag.criminal{color:#f87171;border-color:rgba(248,113,113,0.2)}
+        .portal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px}
+        .portal-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px 20px;cursor:pointer;transition:all 0.25s;position:relative;overflow:hidden;text-align:center}
+        .portal-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--cyan),var(--blue));transform:scaleX(0);transition:transform 0.3s}
+        .portal-card:hover{border-color:rgba(0,245,255,0.3);transform:translateY(-4px);box-shadow:0 20px 40px rgba(0,0,0,0.5)}
+        .portal-card:hover::after{transform:scaleX(1)}
+        .portal-icon{font-size:40px;margin-bottom:16px;display:block}
+        .portal-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:#fff;margin-bottom:6px}
+        .portal-desc{color:var(--text);font-size:12px;line-height:1.5}
+        .modal-overlay{position:fixed;inset:0;z-index:500;background:rgba(3,7,18,0.92);backdrop-filter:blur(12px);display:none;align-items:center;justify-content:center;padding:20px}
+        .modal-overlay.open{display:flex;animation:fadeIn 0.2s ease}
+        @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+        .modal-box{background:#0d1117;border:1px solid var(--border);border-radius:24px;width:100%;max-width:520px;position:relative;max-height:90vh;overflow-y:auto;scrollbar-width:thin}
+        .modal-header{padding:28px 28px 0;border-bottom:1px solid var(--border)}
+        .modal-title{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;color:#fff;margin-bottom:4px}
+        .modal-sub{color:var(--text);font-size:13px;margin-bottom:20px}
+        .modal-close{position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text);width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;transition:all 0.2s}
+        .modal-close:hover{color:#fff;background:rgba(255,255,255,0.1)}
+        .modal-body{padding:24px 28px 28px}
+        .form-group{margin-bottom:14px}
+        .form-label{display:block;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--text);margin-bottom:7px}
+        .form-input{width:100%;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;padding:12px 16px;color:#fff;font-family:'Rajdhani',sans-serif;font-size:15px;outline:none;transition:border-color 0.2s}
+        .form-input:focus{border-color:rgba(0,245,255,0.4);background:rgba(0,245,255,0.03)}
+        .form-input::placeholder{color:#334155}
+        select.form-input option{background:#0d1117}
+        textarea.form-input{resize:vertical;min-height:90px}
+        .form-submit{width:100%;background:linear-gradient(135deg,var(--cyan),var(--blue));color:#030712;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:15px;letter-spacing:2px;text-transform:uppercase;border:none;padding:14px;border-radius:12px;cursor:pointer;margin-top:6px;transition:all 0.2s}
+        .form-submit:hover{opacity:0.85;transform:translateY(-1px);box-shadow:0 8px 25px rgba(0,245,255,0.3)}
+        .auth-tabs{display:flex;border-bottom:1px solid var(--border)}
+        .auth-tab{flex:1;padding:14px;background:none;border:none;color:var(--text);font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:600;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;border-bottom:2px solid transparent;margin-bottom:-1px}
+        .auth-tab.active{color:var(--cyan);border-bottom-color:var(--cyan)}
+        .badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:100px;font-size:11px;font-weight:600;letter-spacing:1px}
+        .badge-pending{background:rgba(251,191,36,0.1);color:#fbbf24;border:1px solid rgba(251,191,36,0.2)}
+        .badge-approved{background:rgba(34,197,94,0.1);color:#22c55e;border:1px solid rgba(34,197,94,0.2)}
+        .badge-rejected{background:rgba(239,68,68,0.1);color:#f87171;border:1px solid rgba(239,68,68,0.2)}
+        .doc-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:10px}
+        .doc-icon{width:42px;height:42px;border-radius:12px;background:rgba(0,245,255,0.08);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+        .salary-table{width:100%;border-collapse:collapse}
+        .salary-table th{padding:12px 16px;text-align:left;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--text);border-bottom:1px solid var(--border)}
+        .salary-table td{padding:13px 16px;border-bottom:1px solid rgba(255,255,255,0.03);font-size:15px}
+        .salary-table tr:hover td{background:rgba(255,255,255,0.02)}
+        .salary-amount{font-family:'JetBrains Mono',monospace;color:#22c55e;font-weight:700}
+        .rank-section{margin-bottom:32px}
+        .rank-section-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:var(--cyan);margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+        .rank-item{display:flex;align-items:center;justify-content:space-between;padding:11px 16px;border-radius:10px;margin-bottom:5px;background:rgba(255,255,255,0.02);border:1px solid var(--border)}
+        .rank-name{font-size:14px;font-weight:600;color:#fff}
+        .rank-xp{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--cyan)}
+        .admin-requests{display:grid;gap:14px}
+        .request-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px}
+        .request-type{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--cyan);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
+        .request-player{font-size:18px;font-weight:700;color:#fff;margin-bottom:6px}
+        .request-data{color:var(--text);font-size:14px;line-height:1.7}
+        .request-actions{display:flex;gap:10px;margin-top:14px}
+        .btn-approve{flex:1;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);color:#22c55e;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:13px;letter-spacing:1px;text-transform:uppercase;padding:10px;border-radius:10px;cursor:pointer;transition:all 0.2s}
+        .btn-approve:hover{background:rgba(34,197,94,0.2)}
+        .btn-reject{flex:1;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#f87171;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:13px;letter-spacing:1px;text-transform:uppercase;padding:10px;border-radius:10px;cursor:pointer;transition:all 0.2s}
+        .btn-reject:hover{background:rgba(239,68,68,0.2)}
+        .profile-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:24px;margin-bottom:18px}
+        .profile-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--border)}
+        .profile-row:last-child{border-bottom:none}
+        .profile-label{color:var(--text);font-size:12px;letter-spacing:1px;text-transform:uppercase}
+        .profile-value{color:#fff;font-weight:600;font-size:15px}
+        .news-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:18px}
+        .news-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:22px;transition:all 0.2s}
+        .news-card:hover{border-color:rgba(0,245,255,0.25)}
+        .news-tag{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:100px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px}
+        .tag-important{background:rgba(239,68,68,0.1);color:#f87171;border:1px solid rgba(239,68,68,0.2)}
+        .tag-update{background:rgba(0,245,255,0.1);color:var(--cyan);border:1px solid rgba(0,245,255,0.2)}
+        .tag-event{background:rgba(168,85,247,0.1);color:#c084fc;border:1px solid rgba(168,85,247,0.2)}
+        .tag-custom{background:rgba(251,191,36,0.1);color:#fbbf24;border:1px solid rgba(251,191,36,0.2)}
+        .news-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:#fff;margin-bottom:10px}
+        .news-text{color:var(--text);font-size:14px;line-height:1.7}
+        .news-date{font-family:'JetBrains Mono',monospace;font-size:11px;color:#334155;margin-top:12px}
+        .why-item{display:flex;gap:16px;margin-bottom:20px;align-items:flex-start}
+        .why-num{font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--cyan);line-height:1;flex-shrink:0;width:32px}
+        .why-text{color:var(--text);font-size:15px;line-height:1.6;padding-top:6px}
+        .why-text strong{color:#fff}
+        .portal-nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px}
+        .portal-nav-btn{background:rgba(255,255,255,0.03);border:1px solid var(--border);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:8px 16px;border-radius:10px;cursor:pointer;transition:all 0.2s}
+        .portal-nav-btn:hover,.portal-nav-btn.active{background:rgba(0,245,255,0.1);border-color:rgba(0,245,255,0.3);color:var(--cyan)}
+        .sep{height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);margin:32px 0}
+        .empty{text-align:center;padding:60px 20px;color:var(--text)}
+        .empty-icon{font-size:48px;margin-bottom:16px;opacity:0.5}
+        .loading-text{text-align:center;padding:40px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px}
+        ::-webkit-scrollbar{width:5px}
+        ::-webkit-scrollbar-track{background:var(--dark)}
+        ::-webkit-scrollbar-thumb{background:rgba(0,245,255,0.2);border-radius:3px}
+        @media(max-width:768px){.stats{grid-template-columns:1fr}.hero{padding:48px 24px}.nav-links{display:none}.portal-grid{grid-template-columns:repeat(2,1fr)}}
     </style>
 </head>
 <body>
 
-<!-- TOAST -->
-<div id="toast"></div>
-
-<!-- NAV -->
 <nav>
     <div class="nav-inner">
-        <div class="logo" style="cursor:pointer;font-size:26px;" onclick="showPage('main')">
-            <span style="background:linear-gradient(90deg,#00e5ff,#2979ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">NOVOSIBIRSK</span>
-            <span style="color:#fff;"> RP</span>
+        <div class="logo" onclick="switchTab('main')">
+            <span class="logo-text">NOVOSIBIRSK RP</span>
+            <span class="logo-badge">v2.0</span>
         </div>
         <div class="nav-links">
-            <button class="nav-btn active" id="nav-main" onclick="showPage('main')">Главная</button>
-            <button class="nav-btn" id="nav-news" onclick="showPage('news')">Новости</button>
-            <button class="nav-btn" id="nav-profile" onclick="showPage('profile')">Профиль</button>
+            <button class="nav-btn active" id="nav-main" onclick="switchTab('main')">Главная</button>
+            <button class="nav-btn" id="nav-portal" onclick="switchTab('portal')">Портал</button>
+            <button class="nav-btn" id="nav-news" onclick="switchTab('news')">Новости</button>
+            <button class="nav-btn" id="nav-profile" onclick="switchTab('profile')">Профиль</button>
         </div>
-        <div id="auth-zone"></div>
+        <div class="auth-zone" id="auth-zone">
+            <button class="btn-primary" onclick="openModal('auth')">Войти</button>
+        </div>
     </div>
 </nav>
 
 <!-- ГЛАВНАЯ -->
-<div class="page active" id="page-main">
+<div class="tab active" id="tab-main">
+<div class="container">
     <div class="hero">
-        <div class="hero-badge">🚀 Сибирь на усиленном режиме</div>
-        <h1>Погрузись в атмосферу<br><span>Реальной Жизни</span></h1>
-        <p>Суровый климат, проработанные фракции, круглосуточные патрули и полная свобода выбора. Кем станешь ты в этом мегаполисе?</p>
-        <a href="https://discord.gg/rp9btukQV5" target="_blank" class="btn-play">Начать играть 🔥</a>
+        <div class="hero-bg"></div>
+        <div class="hero-grid"></div>
+        <div style="position:relative">
+            <div class="hero-tag">🚀 Сибирь на усиленном режиме</div>
+            <h1>Novosibirsk<br><span>Role Play</span></h1>
+            <p>Суровый мегаполис, живые фракции, реальная экономика. Каждый выбор имеет последствия — стань частью города.</p>
+            <div class="hero-btns">
+                <a href="https://discord.gg/rp9btukQV5" target="_blank" class="btn-discord">
+                    <svg width="20" height="20" viewBox="0 0 71 55" fill="white"><path d="M60.1 4.9A58.6 58.6 0 0 0 45.5.4a.2.2 0 0 0-.2.1 40.8 40.8 0 0 0-1.8 3.7 54.1 54.1 0 0 0-16.2 0 37.4 37.4 0 0 0-1.8-3.7.2.2 0 0 0-.2-.1A58.4 58.4 0 0 0 10.5 4.9a.2.2 0 0 0-.1.1C1.5 18.1-1 30.9.3 43.5a.2.2 0 0 0 .1.2 58.9 58.9 0 0 0 17.7 9 .2.2 0 0 0 .2-.1 42 42 0 0 0 3.6-5.9.2.2 0 0 0-.1-.3 38.7 38.7 0 0 1-5.5-2.6.2.2 0 0 1 0-.4l1.1-.8a.2.2 0 0 1 .2 0c11.5 5.3 24 5.3 35.4 0a.2.2 0 0 1 .2 0l1.1.8a.2.2 0 0 1 0 .4 36.3 36.3 0 0 1-5.5 2.6.2.2 0 0 0-.1.3 47.1 47.1 0 0 0 3.6 5.9.2.2 0 0 0 .2.1 58.7 58.7 0 0 0 17.8-9 .2.2 0 0 0 .1-.2C73.1 28.8 69.5 16 60.2 5a.2.2 0 0 0-.1-.1zM23.7 36.1c-3.5 0-6.4-3.2-6.4-7.2s2.8-7.2 6.4-7.2c3.6 0 6.5 3.3 6.4 7.2 0 4-2.8 7.2-6.4 7.2zm23.6 0c-3.5 0-6.4-3.2-6.4-7.2s2.8-7.2 6.4-7.2c3.6 0 6.5 3.3 6.4 7.2 0 4-2.8 7.2-6.4 7.2z"/></svg>
+                    Зайти в Discord
+                </a>
+                <button class="btn-why" onclick="openModal('why')">❓ Зачем заходить</button>
+            </div>
+        </div>
     </div>
-
+    <div class="stats">
+        <div class="stat-card"><div class="stat-num">8</div><div class="stat-label">Фракций</div></div>
+        <div class="stat-card"><div class="stat-num">24/7</div><div class="stat-label">Онлайн</div></div>
+        <div class="stat-card"><div class="stat-num">100+</div><div class="stat-label">Игроков</div></div>
+    </div>
     <div class="section-header">
-        <div class="sec-title">Государственные Фракции</div>
-        <div class="sec-sub">Выберите свой путь развития в структурах министерств</div>
+        <div class="section-title">Фракции</div>
+        <div class="section-sub">Государственные структуры и криминальный мир Новосибирска</div>
+    </div>
+    <div class="factions-grid">
+        <div class="faction-card"><div class="faction-icon" style="background:rgba(234,179,8,0.08);border-color:rgba(234,179,8,0.2)">🕵️</div><div class="faction-name">ФСБ</div><div class="faction-desc">Федеральная служба безопасности. Контрразведка, оперативная работа и надзор за государственной безопасностью.</div><span class="faction-tag">ГОСУДАРСТВЕННАЯ</span></div>
+        <div class="faction-card"><div class="faction-icon" style="background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.2)">🪖</div><div class="faction-name">СОБР</div><div class="faction-desc">Специальный отряд быстрого реагирования. Штурмы, захват преступников, поддержка силовых операций.</div><span class="faction-tag">ГОСУДАРСТВЕННАЯ</span></div>
+        <div class="faction-card"><div class="faction-icon" style="background:rgba(59,130,246,0.08);border-color:rgba(59,130,246,0.2)">🚔</div><div class="faction-name">Патрульная Полиция (ДПС)</div><div class="faction-desc">Обеспечение правопорядка, патрулирование улиц, перехват нарушителей и организация блокпостов.</div><span class="faction-tag">ГОСУДАРСТВЕННАЯ</span></div>
+        <div class="faction-card"><div class="faction-icon" style="background:rgba(59,130,246,0.08);border-color:rgba(59,130,246,0.2)">⚖️</div><div class="faction-name">Прокуратура</div><div class="faction-desc">Надзор за законностью, возбуждение уголовных дел, представление обвинения в суде.</div><span class="faction-tag">ГОСУДАРСТВЕННАЯ</span></div>
+        <div class="faction-card"><div class="faction-icon" style="background:rgba(34,197,94,0.08);border-color:rgba(34,197,94,0.2)">👨‍⚖️</div><div class="faction-name">Адвокатура</div><div class="faction-desc">Защита прав граждан, юридическая помощь и представление интересов подзащитных в суде.</div><span class="faction-tag">ГОСУДАРСТВЕННАЯ</span></div>
+        <div class="faction-card"><div class="faction-icon" style="background:rgba(168,85,247,0.08);border-color:rgba(168,85,247,0.2)">🏛️</div><div class="faction-name">Верховный Суд</div><div class="faction-desc">Высшая судебная инстанция. Рассмотрение уголовных и гражданских дел, вынесение приговоров.</div><span class="faction-tag">ГОСУДАРСТВЕННАЯ</span></div>
+        <div class="faction-card"><div class="faction-icon" style="background:rgba(14,165,233,0.08);border-color:rgba(14,165,233,0.2)">📺</div><div class="faction-name">ГТРК</div><div class="faction-desc">Государственная телерадиокомпания. Прямые эфиры, журналистские расследования и репортажи.</div><span class="faction-tag">ГОСУДАРСТВЕННАЯ</span></div>
+        <div class="faction-card"><div class="faction-icon" style="background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.2)">💀</div><div class="faction-name">ОПГ (RUCH)</div><div class="faction-desc">Организованная преступная группировка. Теневой бизнес, уличный контроль, криминальные операции.</div><span class="faction-tag criminal">КРИМИНАЛЬНАЯ</span></div>
+    </div>
+</div>
+</div>
+
+<!-- ПОРТАЛ -->
+<div class="tab" id="tab-portal">
+<div class="container">
+    <div class="section-header" style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:16px">
+        <div><div class="section-title">Городской Портал</div><div class="section-sub">Документы, лицензии, заявления и информация</div></div>
+    </div>
+    <div class="portal-nav">
+        <button class="portal-nav-btn active" onclick="switchPortal('services')">🏛️ Услуги</button>
+        <button class="portal-nav-btn" onclick="switchPortal('mydocs')">📄 Мои документы</button>
+        <button class="portal-nav-btn" onclick="switchPortal('salary')">💰 Зарплаты</button>
+        <button class="portal-nav-btn" onclick="switchPortal('ranks')">🏆 Звания</button>
+        <button class="portal-nav-btn admin-only" id="btn-admin-requests" style="display:none" onclick="switchPortal('admin-requests')">⚙️ Заявки</button>
+        <button class="portal-nav-btn police-only" id="btn-passports" style="display:none" onclick="switchPortal('passports')">🔍 Паспорта</button>
     </div>
 
-    <div class="faction-grid">
-        <div class="faction-card">
-            <div class="faction-icon" style="background:rgba(234,179,8,0.1);border:1px solid rgba(234,179,8,0.2);">🕵️</div>
-            <div>
-                <h3>ФСБ</h3>
-                <p>Федеральная служба безопасности. Контрразведка, оперативная работа, надзор за государственной безопасностью.</p>
-            </div>
-            <button class="apply-btn">Подать заявление</button>
-        </div>
-        <div class="faction-card">
-            <div class="faction-icon" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);">🪖</div>
-            <div>
-                <h3>СОБР</h3>
-                <p>Специальный отряд быстрого реагирования. Штурмы, захват преступников, поддержка силовых операций.</p>
-            </div>
-            <button class="apply-btn">Подать заявление</button>
-        </div>
-        <div class="faction-card">
-            <div class="faction-icon" style="background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2);">⚖️</div>
-            <div>
-                <h3>Прокуратура</h3>
-                <p>Надзор за законностью, возбуждение уголовных дел, представление обвинения в суде.</p>
-            </div>
-            <button class="apply-btn">Подать заявление</button>
-        </div>
-        <div class="faction-card">
-            <div class="faction-icon" style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.2);">👨‍⚖️</div>
-            <div>
-                <h3>Адвокатура</h3>
-                <p>Защита прав граждан, юридическая помощь, представление интересов подзащитных в суде.</p>
-            </div>
-            <button class="apply-btn">Подать заявление</button>
-        </div>
-        <div class="faction-card">
-            <div class="faction-icon" style="background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.2);">🏛️</div>
-            <div>
-                <h3>Верховный Суд</h3>
-                <p>Высшая судебная инстанция. Рассмотрение уголовных и гражданских дел, вынесение приговоров.</p>
-            </div>
-            <button class="apply-btn">Подать заявление</button>
-        </div>
-        <div class="faction-card">
-            <div class="faction-icon" style="background:rgba(14,165,233,0.1);border:1px solid rgba(14,165,233,0.2);">📺</div>
-            <div>
-                <h3>Государственная Телерадиокомпания</h3>
-                <p>Освещение событий города, ведение прямых эфиров, журналистские расследования и репортажи.</p>
-            </div>
-            <button class="apply-btn">Подать заявление</button>
-        </div>
-        <div class="faction-card opg">
-            <div class="faction-icon" style="background:rgba(127,29,29,0.3);border:1px solid rgba(255,23,68,0.2);">💀</div>
-            <div>
-                <h3>ОПГ <span style="color:#ff6b6b;">(RUCH)</span></h3>
-                <p>Организованная преступная группировка. Теневой бизнес, уличный контроль, криминальные операции.</p>
-            </div>
-            <button class="apply-btn">Вступить</button>
-        </div>
-        <div class="faction-card">
-            <div class="faction-icon" style="background:rgba(0,229,255,0.08);border:1px solid rgba(0,229,255,0.15);">🚔</div>
-            <div>
-                <h3>Патрульная Полиция <span style="color:var(--cyan);">(ДПС)</span></h3>
-                <p>Обеспечение правопорядка, патрулирование, перехват нарушителей, обыски и организация блокпостов.</p>
-            </div>
-            <button class="apply-btn">Подать заявление</button>
+    <div id="portal-services">
+        <div class="portal-grid">
+            <div class="portal-card" onclick="requireAuth(function(){openModal('passport')})"><span class="portal-icon">🪪</span><div class="portal-title">Паспорт</div><div class="portal-desc">Оформить гражданский паспорт Новосибирска</div></div>
+            <div class="portal-card" onclick="requireAuth(function(){openModal('medbook')})"><span class="portal-icon">🏥</span><div class="portal-title">Мед. книжка</div><div class="portal-desc">Получить медицинскую книжку для работы</div></div>
+            <div class="portal-card" onclick="requireAuth(function(){openModal('license')})"><span class="portal-icon">🔫</span><div class="portal-title">Лицензия на оружие</div><div class="portal-desc">Подать заявку на владение оружием</div></div>
+            <div class="portal-card" onclick="requireAuth(function(){openModal('faction-join')})"><span class="portal-icon">🏛️</span><div class="portal-title">Вступить во фракцию</div><div class="portal-desc">Подать заявление в государственную структуру</div></div>
+            <div class="portal-card" onclick="requireAuth(function(){openModal('court')})"><span class="portal-icon">⚖️</span><div class="portal-title">Подать в суд</div><div class="portal-desc">Открыть судебное дело против игрока</div></div>
+            <div class="portal-card" onclick="requireAuth(function(){openModal('government')})"><span class="portal-icon">📋</span><div class="portal-title">Обращение в Правительство</div><div class="portal-desc">Официальная жалоба или предложение</div></div>
+            <div class="portal-card" onclick="requireAuth(function(){openModal('lawyer')})"><span class="portal-icon">👨‍⚖️</span><div class="portal-title">К Адвокату</div><div class="portal-desc">Запросить юридическую помощь</div></div>
         </div>
     </div>
+
+    <div id="portal-mydocs" style="display:none">
+        <div id="mydocs-guest" class="empty" style="display:none"><div class="empty-icon">🔒</div><p style="margin-bottom:16px">Войдите чтобы увидеть ваши документы</p><button class="btn-primary" onclick="openModal('auth')">Войти</button></div>
+        <div id="mydocs-list"></div>
+    </div>
+
+    <div id="portal-salary" style="display:none">
+        <div class="profile-card">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px"><span style="font-size:28px">💰</span><div><div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:#fff">Зарплаты фракций</div><div style="color:var(--text);font-size:13px">Актуальные ставки</div></div></div>
+            <table class="salary-table">
+                <thead><tr><th>Фракция</th><th>Зарплата / час</th></tr></thead>
+                <tbody>
+                    <tr><td>🏛️ Горадминистрация</td><td class="salary-amount">8,500€</td></tr>
+                    <tr><td>🏛️ Верховный Суд</td><td class="salary-amount">5,400€</td></tr>
+                    <tr><td>🪖 СОБР</td><td class="salary-amount">5,500€</td></tr>
+                    <tr><td>🕵️ ФСБ</td><td class="salary-amount">5,000€</td></tr>
+                    <tr><td>⚖️ Прокуратура</td><td class="salary-amount">5,200€</td></tr>
+                    <tr><td>🚑 МЧС</td><td class="salary-amount">4,500€</td></tr>
+                    <tr><td>💀 ОПГ (RUCH)</td><td><span class="salary-amount">5,500€</span> <span style="color:#f87171;font-size:11px;font-family:'JetBrains Mono',monospace">★ только Администрация</span></td></tr>
+                    <tr><td>🚔 Патрульная Полиция (ДПС)</td><td class="salary-amount">4,200€</td></tr>
+                    <tr><td>👨‍⚖️ Адвокатура</td><td class="salary-amount">5,000€</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="portal-ranks" style="display:none">
+        <div class="rank-section">
+            <div class="rank-section-title">🚔 Патрульная Полиция (ДПС)</div>
+            <div class="rank-item"><span class="rank-name">Офицер-стажёр (Trainee Officer)</span><span class="rank-xp">0–299 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Полицейский (Police Constable)</span><span class="rank-xp">300–599 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Старший констебль (Senior Constable)</span><span class="rank-xp">600–899 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Главный констебль (Chief Constable)</span><span class="rank-xp">900–1199 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Старший начальник констебль</span><span class="rank-xp">1200–1499 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Инспектор (Inspector)</span><span class="rank-xp">1500–2199 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Старший инспектор</span><span class="rank-xp">2200–2899 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Главный инспектор</span><span class="rank-xp">2900–3599 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Старший главный инспектор</span><span class="rank-xp">3600–4299 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Суперинтендант</span><span class="rank-xp">4300–4999 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Главный суперинтендант</span><span class="rank-xp">5000–7499 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Директор</span><span class="rank-xp">7500–9999 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Старший директор</span><span class="rank-xp">10000–12499 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Заместитель начальника</span><span class="rank-xp">12500–14999 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Начальник полиции</span><span class="rank-xp">15000–19999 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Президент государственной полиции</span><span class="rank-xp">20000–24999 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Инспектора полиции</span><span class="rank-xp">25000–29999 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Генеральный инспектор</span><span class="rank-xp">30000+ XP</span></div>
+            <div class="rank-item" style="border-color:rgba(234,179,8,0.3)"><span class="rank-name" style="color:#fbbf24">ФСБ — геймпасс Undercover</span><span class="rank-xp">0+ XP</span></div>
+            <div class="rank-item" style="border-color:rgba(234,179,8,0.3)"><span class="rank-name" style="color:#fbbf24">СОБР — геймпасс S.E.K</span><span class="rank-xp">0+ XP</span></div>
+        </div>
+        <div class="rank-section">
+            <div class="rank-section-title">🚑 Медики (МЧС)</div>
+            <div class="rank-item"><span class="rank-name">Врач-ординатор (Rescue Service)</span><span class="rank-xp">0–500 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Старший врач (Rescue Service)</span><span class="rank-xp">500–1500 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Врач скорой помощи (Emergency Doctor)</span><span class="rank-xp">1500+ XP</span></div>
+        </div>
+        <div class="rank-section">
+            <div class="rank-section-title">🚒 Пожарные (МЧС)</div>
+            <div class="rank-item"><span class="rank-name">Рядовой внутренней службы</span><span class="rank-xp">0–250 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Сержант внутренней службы</span><span class="rank-xp">250–500 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Младший Лейтенант</span><span class="rank-xp">500–1500 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Старший Лейтенант</span><span class="rank-xp">1500–2500 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Младший Майор</span><span class="rank-xp">2500–4000 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Старший Майор</span><span class="rank-xp">4000–7500 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Подполковник</span><span class="rank-xp">7500–9500 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Полковник</span><span class="rank-xp">9500–15000 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Генерал МЧС (Fire Commander)</span><span class="rank-xp">15000+ XP</span></div>
+        </div>
+    </div>
+
+    <div id="portal-admin-requests" style="display:none">
+        <div class="loading-text" id="requests-loading">Загрузка заявок...</div>
+        <div class="admin-requests" id="admin-requests-list"></div>
+    </div>
+
+    <div id="portal-passports" style="display:none">
+        <div class="loading-text" id="passports-loading">Загрузка паспортов...</div>
+        <div id="passports-list"></div>
+    </div>
+</div>
 </div>
 
 <!-- НОВОСТИ -->
-<div class="page" id="page-news">
-    <div class="section-header">
-        <div class="sec-title">Новости Сервера</div>
-        <div class="sec-sub">Официальные объявления, патчи и события из жизни Новосибирска</div>
+<div class="tab" id="tab-news">
+<div class="container">
+    <div class="section-header" style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:20px">
+        <div><div class="section-title">Новости Сервера</div><div class="section-sub">Официальные объявления, патчи и события</div></div>
     </div>
-
-    <div id="admin-news-panel" style="display:none;" class="admin-panel">
-        <div class="admin-panel-title">🛠️ Панель администратора — Опубликовать новость</div>
-        <div class="form-grid">
-            <input type="text" id="news-title" placeholder="Заголовок новости" class="inp">
-            <div>
-                <select id="news-tag" class="inp" onchange="toggleCustomTag(this.value)">
-                    <option value="Важно">🔴 Важно</option>
-                    <option value="Обновление">⚙️ Обновление</option>
-                    <option value="Мероприятие">🎉 Мероприятие</option>
-                    <option value="Свой Вариант">✏️ Свой Вариант</option>
-                </select>
-                <input type="text" id="news-custom-tag" placeholder="Введите свой тег..." class="inp" style="display:none;margin-top:8px;">
-            </div>
+    <div id="admin-news-panel" style="display:none" class="profile-card" style="border-color:rgba(0,245,255,0.2);margin-bottom:20px">
+        <div style="color:var(--cyan);font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;margin-bottom:14px">🛠️ Опубликовать новость</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+            <input type="text" id="news-title" placeholder="Заголовок" class="form-input">
+            <select id="news-tag" class="form-input"><option value="Важно">🔴 Важно</option><option value="Обновление">⚙️ Обновление</option><option value="Мероприятие">🎉 Мероприятие</option><option value="Свой Вариант">✏️ Свой Вариант</option></select>
         </div>
-        <textarea id="news-text" rows="3" placeholder="Текст публикации..." class="inp"></textarea>
-        <div class="flex-end mt-3">
-            <button class="btn-primary" onclick="createNews()">Опубликовать</button>
-        </div>
+        <textarea id="news-text" placeholder="Текст новости..." class="form-input" style="margin-bottom:12px"></textarea>
+        <button class="form-submit" onclick="createNews()">Опубликовать</button>
     </div>
-
-    <div id="news-feed" class="news-grid">
-        <div class="empty"><div class="empty-icon">📰</div><p>Загрузка новостей...</p></div>
-    </div>
+    <div class="news-grid" id="news-feed"><div class="loading-text">Загрузка новостей...</div></div>
+</div>
 </div>
 
 <!-- ПРОФИЛЬ -->
-<div class="page" id="page-profile">
-    <div class="section-header">
-        <div class="sec-title">Профиль</div>
-        <div class="sec-sub">Управление аккаунтом</div>
-    </div>
-
-    <!-- Гость -->
-    <div id="profile-guest">
-        <div class="empty">
-            <div class="empty-icon">🔒</div>
-            <p style="margin-bottom:20px;">Войдите чтобы увидеть профиль</p>
-            <button class="btn-primary" onclick="openModal()">Войти / Зарегистрироваться</button>
-        </div>
-    </div>
-
-    <!-- Авторизован -->
-    <div id="profile-user" style="display:none;">
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:20px;max-width:780px;">
-            <div class="profile-card">
-                <h3>👤 Данные аккаунта</h3>
-                <div class="profile-row">
-                    <span class="profile-label">Никнейм</span>
-                    <span class="profile-value" id="profile-username"></span>
-                </div>
-                <div class="profile-row">
-                    <span class="profile-label">Роль</span>
-                    <span class="profile-value cyan" id="profile-role"></span>
-                </div>
-                <div class="profile-row">
-                    <span class="profile-label">Пароль</span>
-                    <span style="display:flex;align-items:center;gap:10px;">
-                        <span class="profile-value" id="profile-password" data-real="">••••••••</span>
-                        <button class="btn-ghost" id="toggle-pass-btn" onclick="togglePassword()" style="padding:4px 10px;font-size:12px;">Показать</button>
-                    </span>
-                </div>
+<div class="tab" id="tab-profile">
+<div class="container" style="max-width:680px">
+    <div class="section-header"><div class="section-title">Профиль</div></div>
+    <div id="profile-guest" style="display:none" class="empty"><div class="empty-icon">🔒</div><p style="margin-bottom:16px">Войдите в аккаунт для доступа к профилю</p><button class="btn-primary" onclick="openModal('auth')">Войти / Зарегистрироваться</button></div>
+    <div id="profile-user" style="display:none">
+        <div class="profile-card">
+            <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px">
+                <div style="width:54px;height:54px;border-radius:14px;background:rgba(0,245,255,0.1);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--cyan)" id="profile-avatar">?</div>
+                <div><div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:#fff" id="profile-username"></div><div style="color:var(--cyan);font-size:13px;letter-spacing:1px" id="profile-role"></div></div>
             </div>
-
-            <div class="profile-card">
-                <h3>🔑 Сменить пароль</h3>
-                <label class="form-label">Новый пароль</label>
-                <input type="password" id="new-password" placeholder="Минимум 4 символа" class="inp">
-                <label class="form-label">Подтвердите пароль</label>
-                <input type="password" id="confirm-password" placeholder="Повторите пароль" class="inp">
-                <div class="mt-4">
-                    <button class="btn-primary" onclick="changePassword()">Сохранить пароль</button>
-                </div>
-            </div>
+            <div class="profile-row"><span class="profile-label">Пароль</span><div style="display:flex;align-items:center;gap:10px"><span class="profile-value mono" id="profile-password">••••••••</span><button onclick="togglePassword()" id="toggle-pass-btn" style="background:none;border:none;color:var(--cyan);font-size:12px;cursor:pointer;font-family:'Rajdhani',sans-serif;letter-spacing:1px">ПОКАЗАТЬ</button></div></div>
         </div>
-
-        <div class="mt-6">
-            <button class="btn-danger" onclick="logout()">Выйти из аккаунта</button>
+        <div class="profile-card">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff;margin-bottom:14px">🔑 Сменить пароль</div>
+            <div class="form-group"><input type="password" id="new-password" placeholder="Новый пароль" class="form-input"></div>
+            <div class="form-group"><input type="password" id="confirm-password" placeholder="Подтвердите пароль" class="form-input"></div>
+            <button class="form-submit" onclick="changePassword()">Сохранить</button>
         </div>
-
-        <!-- Админ-панель -->
-        <div id="admin-panel" style="display:none;">
-            <hr class="divider">
-            <div class="section-header">
-                <div class="sec-title" style="color:#ff6b6b;">⚙️ Панель администрации</div>
-                <div class="sec-sub">Все зарегистрированные пользователи</div>
-            </div>
-            <div class="users-table-wrap">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Никнейм</th>
-                            <th>Пароль</th>
-                            <th>Роль</th>
-                            <th>Действие</th>
-                        </tr>
-                    </thead>
+        <button onclick="logout()" style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);color:#f87171;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:14px;letter-spacing:2px;text-transform:uppercase;padding:12px 24px;border-radius:12px;cursor:pointer;transition:all 0.2s;width:100%;margin-bottom:24px">Выйти из аккаунта</button>
+        <div id="admin-users-panel" style="display:none">
+            <div class="sep"></div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:#f87171;margin-bottom:4px">⚙️ Все пользователи</div>
+            <div style="color:var(--text);font-size:13px;margin-bottom:16px">Только для администрации</div>
+            <div class="profile-card" style="padding:0;overflow:hidden">
+                <table class="salary-table" style="width:100%">
+                    <thead><tr><th style="padding:14px 16px">Ник</th><th style="padding:14px 16px">Пароль</th><th style="padding:14px 16px">Роль</th><th style="padding:14px 16px">Действие</th></tr></thead>
                     <tbody id="users-table-body"></tbody>
                 </table>
             </div>
         </div>
     </div>
 </div>
+</div>
 
-<!-- FOOTER -->
-<footer style="border-top:1px solid var(--border);padding:32px 24px;text-align:center;color:#1e293b;font-size:13px;margin-top:40px;">
-    © 2026 Novosibirsk RP — Все права защищены
-</footer>
+<!-- ===== MODALS ===== -->
 
-<!-- МОДАЛКА -->
-<div class="modal-overlay" id="auth-modal" onclick="modalOverlayClick(event)">
-    <div class="modal-box">
-        <button class="modal-close" onclick="closeModal()">✕</button>
-        <div class="modal-tabs">
-            <button class="modal-tab active" id="tab-login" onclick="switchAuthTab('login')">Войти</button>
-            <button class="modal-tab" id="tab-register" onclick="switchAuthTab('register')">Регистрация</button>
-        </div>
-
-        <!-- Форма входа -->
-        <div id="form-login">
-            <div class="modal-title">Вход в аккаунт</div>
-            <div class="modal-sub">Введите ваши данные для входа</div>
-            <label class="form-label">Игровой ник</label>
-            <input type="text" id="login-username" placeholder="Ivan_Ivanov" class="inp">
-            <label class="form-label">Пароль</label>
-            <input type="password" id="login-password" placeholder="••••••••" class="inp" onkeydown="if(event.key==='Enter')handleLogin()">
-            <div style="margin-top:20px;">
-                <button class="btn-primary" style="width:100%;padding:14px;" onclick="handleLogin()">Авторизоваться</button>
-            </div>
-        </div>
-
-        <!-- Форма регистрации -->
-        <div id="form-register" style="display:none;">
-            <div class="modal-title">Создать аккаунт</div>
-            <div class="modal-sub">Зарегистрируйтесь чтобы получить доступ</div>
-            <label class="form-label">Игровой ник</label>
-            <input type="text" id="reg-username" placeholder="Ivan_Ivanov" class="inp">
-            <label class="form-label">Пароль</label>
-            <input type="password" id="reg-password" placeholder="Минимум 4 символа" class="inp">
-            <label class="form-label">Подтвердите пароль</label>
-            <input type="password" id="reg-password2" placeholder="Повторите пароль" class="inp" onkeydown="if(event.key==='Enter')handleRegister()">
-            <div style="margin-top:20px;">
-                <button class="btn-primary" style="width:100%;padding:14px;" onclick="handleRegister()">Зарегистрироваться</button>
-            </div>
+<!-- AUTH -->
+<div class="modal-overlay" id="modal-auth">
+<div class="modal-box">
+    <button class="modal-close" onclick="closeModal('auth')">✕</button>
+    <div class="modal-header">
+        <div class="auth-tabs">
+            <button class="auth-tab active" id="auth-tab-login" onclick="switchAuthTab('login')">Войти</button>
+            <button class="auth-tab" id="auth-tab-register" onclick="switchAuthTab('register')">Регистрация</button>
         </div>
     </div>
+    <div class="modal-body">
+        <div id="auth-login-form">
+            <div class="modal-title">Вход</div><div class="modal-sub">Введите данные аккаунта</div>
+            <div class="form-group"><label class="form-label">Никнейм</label><input type="text" id="login-username" placeholder="Ivan_Ivanov" class="form-input"></div>
+            <div class="form-group"><label class="form-label">Пароль</label><input type="password" id="login-password" placeholder="••••••••" class="form-input"></div>
+            <button class="form-submit" onclick="handleLogin()">Войти</button>
+        </div>
+        <div id="auth-register-form" style="display:none">
+            <div class="modal-title">Регистрация</div><div class="modal-sub">Создайте новый аккаунт</div>
+            <div class="form-group"><label class="form-label">Никнейм</label><input type="text" id="reg-username" placeholder="Ivan_Ivanov" class="form-input"></div>
+            <div class="form-group"><label class="form-label">Пароль</label><input type="password" id="reg-password" placeholder="••••••••" class="form-input"></div>
+            <div class="form-group"><label class="form-label">Повторите пароль</label><input type="password" id="reg-password2" placeholder="••••••••" class="form-input"></div>
+            <button class="form-submit" onclick="handleRegister()">Зарегистрироваться</button>
+        </div>
+    </div>
+</div>
+</div>
+
+<!-- WHY -->
+<div class="modal-overlay" id="modal-why">
+<div class="modal-box">
+    <button class="modal-close" onclick="closeModal('why')">✕</button>
+    <div class="modal-body" style="padding-top:28px">
+        <div class="modal-title">Зачем заходить?</div><div class="modal-sub" style="margin-bottom:24px">Что тебя ждёт в Novosibirsk RP</div>
+        <div class="why-item"><div class="why-num">01</div><div class="why-text"><strong>Живой город.</strong> Реальная экономика, банки, бизнес, зарплаты и кредиты — всё как в настоящей жизни.</div></div>
+        <div class="why-item"><div class="why-num">02</div><div class="why-text"><strong>Фракции на выбор.</strong> От полиции до ОПГ — каждая со своей иерархией, заданиями и атмосферой.</div></div>
+        <div class="why-item"><div class="why-num">03</div><div class="why-text"><strong>Круглосуточные события.</strong> Погони, суды, рейды, выборы мэра — что-то происходит всегда.</div></div>
+        <div class="why-item"><div class="why-num">04</div><div class="why-text"><strong>Серьёзное комьюнити.</strong> Уважение к RP, чёткие правила, активная администрация.</div></div>
+        <a href="https://discord.gg/rp9btukQV5" target="_blank" class="btn-discord" style="width:100%;justify-content:center;margin-top:8px;text-decoration:none">
+            <svg width="20" height="20" viewBox="0 0 71 55" fill="white"><path d="M60.1 4.9A58.6 58.6 0 0 0 45.5.4a.2.2 0 0 0-.2.1 40.8 40.8 0 0 0-1.8 3.7 54.1 54.1 0 0 0-16.2 0 37.4 37.4 0 0 0-1.8-3.7.2.2 0 0 0-.2-.1A58.4 58.4 0 0 0 10.5 4.9a.2.2 0 0 0-.1.1C1.5 18.1-1 30.9.3 43.5a.2.2 0 0 0 .1.2 58.9 58.9 0 0 0 17.7 9 .2.2 0 0 0 .2-.1 42 42 0 0 0 3.6-5.9.2.2 0 0 0-.1-.3 38.7 38.7 0 0 1-5.5-2.6.2.2 0 0 1 0-.4l1.1-.8a.2.2 0 0 1 .2 0c11.5 5.3 24 5.3 35.4 0a.2.2 0 0 1 .2 0l1.1.8a.2.2 0 0 1 0 .4 36.3 36.3 0 0 1-5.5 2.6.2.2 0 0 0-.1.3 47.1 47.1 0 0 0 3.6 5.9.2.2 0 0 0 .2.1 58.7 58.7 0 0 0 17.8-9 .2.2 0 0 0 .1-.2C73.1 28.8 69.5 16 60.2 5a.2.2 0 0 0-.1-.1zM23.7 36.1c-3.5 0-6.4-3.2-6.4-7.2s2.8-7.2 6.4-7.2c3.6 0 6.5 3.3 6.4 7.2 0 4-2.8 7.2-6.4 7.2zm23.6 0c-3.5 0-6.4-3.2-6.4-7.2s2.8-7.2 6.4-7.2c3.6 0 6.5 3.3 6.4 7.2 0 4-2.8 7.2-6.4 7.2z"/></svg>
+            Зайти в Discord сейчас
+        </a>
+    </div>
+</div>
+</div>
+
+<!-- PASSPORT -->
+<div class="modal-overlay" id="modal-passport">
+<div class="modal-box"><button class="modal-close" onclick="closeModal('passport')">✕</button>
+<div class="modal-header"><div class="modal-title">🪪 Оформление паспорта</div><div class="modal-sub">Заполните данные — заявка уйдёт на проверку</div></div>
+<div class="modal-body">
+    <div class="form-group"><label class="form-label">Игровой никнейм</label><input type="text" id="passport-username" class="form-input" placeholder="Ivan_Ivanov"></div>
+    <div class="form-group"><label class="form-label">Имя персонажа</label><input type="text" id="passport-name" class="form-input" placeholder="Иван Иванов"></div>
+    <div class="form-group"><label class="form-label">Дата рождения</label><input type="date" id="passport-dob" class="form-input"></div>
+    <div class="form-group"><label class="form-label">Место рождения</label><input type="text" id="passport-birthplace" class="form-input" placeholder="Новосибирск"></div>
+    <div class="form-group"><label class="form-label">Адрес проживания</label><input type="text" id="passport-address" class="form-input" placeholder="ул. Ленина, д. 1"></div>
+    <button class="form-submit" onclick="submitForm('passport')">Подать заявку</button>
+</div></div>
+</div>
+
+<!-- MEDBOOK -->
+<div class="modal-overlay" id="modal-medbook">
+<div class="modal-box"><button class="modal-close" onclick="closeModal('medbook')">✕</button>
+<div class="modal-header"><div class="modal-title">🏥 Медицинская книжка</div><div class="modal-sub">Необходима для работы в ряде фракций</div></div>
+<div class="modal-body">
+    <div class="form-group"><label class="form-label">Игровой никнейм</label><input type="text" id="medbook-username" class="form-input" placeholder="Ivan_Ivanov"></div>
+    <div class="form-group"><label class="form-label">Имя персонажа</label><input type="text" id="medbook-name" class="form-input" placeholder="Иван Иванов"></div>
+    <div class="form-group"><label class="form-label">Цель получения</label><select id="medbook-reason" class="form-input"><option>Работа в медицине</option><option>Работа с продуктами</option><option>Работа в госслужбе</option><option>Другое</option></select></div>
+    <div class="form-group"><label class="form-label">Дополнительно</label><textarea id="medbook-note" class="form-input" placeholder="Любые уточнения..."></textarea></div>
+    <button class="form-submit" onclick="submitForm('medbook')">Подать заявку</button>
+</div></div>
+</div>
+
+<!-- LICENSE -->
+<div class="modal-overlay" id="modal-license">
+<div class="modal-box"><button class="modal-close" onclick="closeModal('license')">✕</button>
+<div class="modal-header"><div class="modal-title">🔫 Лицензия на оружие</div><div class="modal-sub">Заявка рассматривается администрацией</div></div>
+<div class="modal-body">
+    <div class="form-group"><label class="form-label">Игровой никнейм</label><input type="text" id="license-username" class="form-input" placeholder="Ivan_Ivanov"></div>
+    <div class="form-group"><label class="form-label">Имя персонажа</label><input type="text" id="license-name" class="form-input" placeholder="Иван Иванов"></div>
+    <div class="form-group"><label class="form-label">Тип оружия</label><select id="license-type" class="form-input"><option>Пистолет</option><option>Ружьё</option><option>Охотничий карабин</option></select></div>
+    <div class="form-group"><label class="form-label">Причина</label><textarea id="license-reason" class="form-input" placeholder="Объясните зачем вам нужна лицензия..."></textarea></div>
+    <button class="form-submit" onclick="submitForm('license')">Подать заявку</button>
+</div></div>
+</div>
+
+<!-- FACTION JOIN -->
+<div class="modal-overlay" id="modal-faction-join">
+<div class="modal-box"><button class="modal-close" onclick="closeModal('faction-join')">✕</button>
+<div class="modal-header"><div class="modal-title">🏛️ Вступление во фракцию</div><div class="modal-sub">Заявка отправится командованию фракции</div></div>
+<div class="modal-body">
+    <div class="form-group"><label class="form-label">Игровой никнейм</label><input type="text" id="faction-username" class="form-input" placeholder="Ivan_Ivanov"></div>
+    <div class="form-group"><label class="form-label">Фракция</label><select id="faction-name" class="form-input"><option>ФСБ</option><option>СОБР</option><option>Патрульная Полиция (ДПС)</option><option>Прокуратура</option><option>Адвокатура</option><option>Верховный Суд</option><option>ГТРК</option></select></div>
+    <div class="form-group"><label class="form-label">Почему хотите вступить?</label><textarea id="faction-reason" class="form-input" placeholder="Расскажите о себе и мотивации..."></textarea></div>
+    <div class="form-group"><label class="form-label">Опыт в RP</label><textarea id="faction-exp" class="form-input" placeholder="Предыдущий опыт ролевых игр..."></textarea></div>
+    <button class="form-submit" onclick="submitForm('faction-join')">Подать заявление</button>
+</div></div>
+</div>
+
+<!-- COURT -->
+<div class="modal-overlay" id="modal-court">
+<div class="modal-box"><button class="modal-close" onclick="closeModal('court')">✕</button>
+<div class="modal-header"><div class="modal-title">⚖️ Подать в суд</div><div class="modal-sub">Дело будет передано в Верховный Суд</div></div>
+<div class="modal-body">
+    <div class="form-group"><label class="form-label">Ваш никнейм</label><input type="text" id="court-plaintiff" class="form-input" placeholder="Ivan_Ivanov"></div>
+    <div class="form-group"><label class="form-label">Никнейм ответчика</label><input type="text" id="court-defendant" class="form-input" placeholder="Petr_Petrov"></div>
+    <div class="form-group"><label class="form-label">Суть иска</label><textarea id="court-claim" class="form-input" placeholder="Опишите суть дела подробно..."></textarea></div>
+    <div class="form-group"><label class="form-label">Доказательства</label><textarea id="court-evidence" class="form-input" placeholder="Ссылки на скриншоты, видео..."></textarea></div>
+    <button class="form-submit" onclick="submitForm('court')">Подать иск</button>
+</div></div>
+</div>
+
+<!-- GOVERNMENT -->
+<div class="modal-overlay" id="modal-government">
+<div class="modal-box"><button class="modal-close" onclick="closeModal('government')">✕</button>
+<div class="modal-header"><div class="modal-title">📋 Обращение в Правительство</div><div class="modal-sub">Жалоба или предложение для городской администрации</div></div>
+<div class="modal-body">
+    <div class="form-group"><label class="form-label">Ваш никнейм</label><input type="text" id="gov-username" class="form-input" placeholder="Ivan_Ivanov"></div>
+    <div class="form-group"><label class="form-label">Тема обращения</label><select id="gov-type" class="form-input"><option>Жалоба</option><option>Предложение</option><option>Просьба</option><option>Другое</option></select></div>
+    <div class="form-group"><label class="form-label">Текст обращения</label><textarea id="gov-text" class="form-input" placeholder="Изложите суть обращения..."></textarea></div>
+    <button class="form-submit" onclick="submitForm('government')">Отправить</button>
+</div></div>
+</div>
+
+<!-- LAWYER -->
+<div class="modal-overlay" id="modal-lawyer">
+<div class="modal-box"><button class="modal-close" onclick="closeModal('lawyer')">✕</button>
+<div class="modal-header"><div class="modal-title">👨‍⚖️ Обращение к Адвокату</div><div class="modal-sub">Запрос юридической помощи</div></div>
+<div class="modal-body">
+    <div class="form-group"><label class="form-label">Ваш никнейм</label><input type="text" id="lawyer-username" class="form-input" placeholder="Ivan_Ivanov"></div>
+    <div class="form-group"><label class="form-label">Ситуация</label><select id="lawyer-situation" class="form-input"><option>Арест / Задержание</option><option>Судебное дело</option><option>Нарушение прав</option><option>Другое</option></select></div>
+    <div class="form-group"><label class="form-label">Описание</label><textarea id="lawyer-text" class="form-input" placeholder="Опишите ситуацию..."></textarea></div>
+    <button class="form-submit" onclick="submitForm('lawyer')">Запросить помощь</button>
+</div></div>
 </div>
 
 <script src="app.js"></script>
 </body>
 </html>
+HTMLEOF
+cp /tmp/index.html /mnt/user-data/outputs/index.html
+echo "index.html done"
