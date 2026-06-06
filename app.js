@@ -82,11 +82,20 @@ window.switchPortal = function(section) {
 };
  
 function initPortal() {
-    // показать/скрыть спец-кнопки
-    const btnAdmin = document.getElementById('btn-admin-requests');
-    const btnPolice = document.getElementById('btn-passports');
+    const btnAdmin  = document.getElementById('btn-admin-requests');
+    const btnDocs   = document.getElementById('btn-passports');
     if (btnAdmin) btnAdmin.style.display = isAdmin(window.currentUser) ? '' : 'none';
-    if (btnPolice) btnPolice.style.display = isPolice(window.currentUser) ? '' : 'none';
+    // Документы видят: полиция, медики, админы
+    const canSeeDocs = isAdmin(window.currentUser) || isPolice(window.currentUser) || isMedic(window.currentUser);
+    if (btnDocs) {
+        btnDocs.style.display = canSeeDocs ? '' : 'none';
+        // Подпись кнопки зависит от роли
+        if (isMedic(window.currentUser) && !isAdmin(window.currentUser) && !isPolice(window.currentUser)) {
+            btnDocs.textContent = '🏥 Мед. книжки';
+        } else {
+            btnDocs.textContent = '📋 Документы';
+        }
+    }
 }
  
 // ─── MODALS ───────────────────────────────────
@@ -752,32 +761,122 @@ window.reviewRequest = async function(id, status) {
  
 // ─── POLICE: PASSPORTS ────────────────────────
  
-window.loadPassports = async function() {
-    const listEl  = document.getElementById('passports-list');
-    const loadEl  = document.getElementById('passports-loading');
-    if (!isPolice(window.currentUser) && !isAdmin(window.currentUser)) return;
-    if (loadEl) loadEl.style.display = '';
+// ─── DOCS VIEWER (полиция / медики / админы) ──
  
-    const reqs = await db("requests?type=eq.passport&status=eq.approved&order=created_at.desc");
-    if (loadEl) loadEl.style.display = 'none';
-    if (!Array.isArray(reqs) || !reqs.length) {
-        if (listEl) listEl.innerHTML = '<div class="loading-text" style="opacity:0.5">Одобренных паспортов нет</div>';
+const MEDIC_FACTIONS = ['МЧС'];
+ 
+function isMedic(u) { return u && MEDIC_FACTIONS.includes(u.faction); }
+ 
+function docExpiryLine(r) {
+    if (!r.expires_at) return '';
+    const exp = new Date(r.expires_at);
+    const now = new Date();
+    const diff = Math.ceil((exp - now) / 86400000);
+    if (diff < 0) return `<span class="badge badge-rejected" style="margin-top:6px;display:inline-flex">⏰ Истёк ${exp.toLocaleDateString('ru-RU')}</span>`;
+    if (diff <= 5) return `<span class="badge badge-pending" style="margin-top:6px;display:inline-flex">⚠️ До ${exp.toLocaleDateString('ru-RU')} (${diff} дн.)</span>`;
+    return `<span class="badge badge-approved" style="margin-top:6px;display:inline-flex">📅 До ${exp.toLocaleDateString('ru-RU')}</span>`;
+}
+ 
+function renderDocCard(r, fields, icon, adminDelete = false) {
+    const expLine = docExpiryLine(r);
+    const isExpired = r.expires_at && new Date(r.expires_at) < new Date();
+    const statusBadge = isExpired
+        ? '<span class="badge badge-rejected">⏰ Истёк</span>'
+        : '<span class="badge badge-approved">✓ Действителен</span>';
+    const delBtn = adminDelete
+        ? `<button onclick="deleteRequest(${r.id})" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#f87171;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;padding:6px 14px;border-radius:8px;cursor:pointer;margin-top:10px">🗑 Удалить документ</button>` : '';
+    return `<div class="doc-card" style="flex-direction:column;align-items:stretch;gap:0;${isExpired?'opacity:0.6':''}">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff">${icon} ${r.char_name || r.username}</div>
+            <div style="text-align:right">${statusBadge}${expLine ? '<br>' + expLine : ''}</div>
+        </div>
+        <div style="color:var(--text);font-size:14px;line-height:1.9;margin-top:12px;border-top:1px solid var(--border);padding-top:12px">
+            ${fields}
+        </div>
+        ${delBtn}
+    </div>`;
+}
+ 
+window.loadPassports = async function() {
+    const listEl = document.getElementById('passports-list');
+    const loadEl = document.getElementById('passports-loading');
+    const u = window.currentUser;
+    if (!u) return;
+ 
+    const canSeeAll    = isAdmin(u) || isPolice(u);   // всё
+    const canSeeMedbok = isMedic(u);                   // только мед книжки
+ 
+    if (!canSeeAll && !canSeeMedbok) {
+        if (listEl) listEl.innerHTML = '<div class="empty"><div class="empty-icon">🔒</div><p>У вас нет доступа к этому разделу</p></div>';
         return;
     }
-    listEl.innerHTML = reqs.map(r => `
-        <div class="doc-card" style="flex-direction:column;align-items:flex-start;gap:10px">
-            <div style="display:flex;justify-content:space-between;width:100%;align-items:center">
-                <div style="font-weight:700;color:#fff;font-size:16px">🪪 ${r.char_name || r.username}</div>
-                <span class="badge badge-approved">✓ Действителен</span>
-            </div>
-            <div style="color:var(--text);font-size:14px;line-height:1.8">
-                <b>Игрок:</b> ${r.username}<br>
-                <b>Дата рождения:</b> ${r.dob || '—'}<br>
-                <b>Место рождения:</b> ${r.birthplace || '—'}<br>
-                <b>Адрес:</b> ${r.address || '—'}
-            </div>
-        </div>
-    `).join('');
+ 
+    if (loadEl) loadEl.style.display = '';
+    if (listEl) listEl.innerHTML = '';
+ 
+    // Заголовок раздела
+    let html = '';
+ 
+    if (canSeeAll) {
+        // ПАСПОРТА
+        const passports = await db('requests?type=eq.passport&status=eq.approved&order=created_at.desc');
+        html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;color:#fff;margin-bottom:16px">🪪 Паспорта граждан</div>`;
+        if (!passports?.length) {
+            html += '<div class="loading-text" style="opacity:0.5;margin-bottom:32px">Нет одобренных паспортов</div>';
+        } else {
+            html += '<div style="display:grid;gap:12px;margin-bottom:40px">' +
+                passports.map(r => renderDocCard(r,
+                    `<b>👤 Игрок:</b> ${r.username}<br>
+                     <b>📛 ФИО:</b> ${r.char_name || '—'}<br>
+                     <b>🎂 Дата рождения:</b> ${r.dob || '—'}<br>
+                     <b>⚧ Пол:</b> ${r.reason || '—'}<br>
+                     <b>💼 Место работы:</b> ${r.address || '—'}<br>
+                     <b>🏠 Адрес:</b> ${r.experience || '—'}`,
+                    '🪪', isAdmin(u)
+                )).join('') + '</div>';
+        }
+ 
+        // ЛИЦЕНЗИИ
+        const licenses = await db('requests?type=eq.license&status=eq.approved&order=created_at.desc');
+        html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;color:#fff;margin-bottom:16px">🔫 Лицензии на оружие</div>`;
+        if (!licenses?.length) {
+            html += '<div class="loading-text" style="opacity:0.5;margin-bottom:32px">Нет одобренных лицензий</div>';
+        } else {
+            html += '<div style="display:grid;gap:12px;margin-bottom:40px">' +
+                licenses.map(r => renderDocCard(r,
+                    `<b>👤 Игрок:</b> ${r.username}<br>
+                     <b>📛 ФИО:</b> ${r.char_name || '—'}<br>
+                     <b>🎂 Дата рождения:</b> ${r.dob || '—'}<br>
+                     <b>🏛️ Фракция:</b> ${r.faction || '—'}<br>
+                     <b>🔫 Оружие:</b> ${r.weapon_type || '—'}<br>
+                     <b>💼 Место работы:</b> ${r.address || '—'}`,
+                    '🔫', isAdmin(u)
+                )).join('') + '</div>';
+        }
+    }
+ 
+    // МЕД КНИЖКИ — видят все: полиция, медики, админы
+    if (canSeeAll || canSeeMedbok) {
+        const medbooks = await db('requests?type=eq.medbook&status=eq.approved&order=created_at.desc');
+        html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;color:#fff;margin-bottom:16px">🏥 Медицинские книжки</div>`;
+        if (!medbooks?.length) {
+            html += '<div class="loading-text" style="opacity:0.5">Нет одобренных мед. книжек</div>';
+        } else {
+            html += '<div style="display:grid;gap:12px">' +
+                medbooks.map(r => renderDocCard(r,
+                    `<b>👤 Игрок:</b> ${r.username}<br>
+                     <b>📛 ФИО:</b> ${r.char_name || '—'}<br>
+                     <b>🎂 Дата рождения:</b> ${r.dob || '—'}<br>
+                     <b>💼 Место работы:</b> ${r.address || '—'}<br>
+                     <b>🏷️ Должность:</b> ${r.reason || '—'}<br>
+                     <b>🏥 Болезнь:</b> ${r.note || '—'}`,
+                    '🏥', isAdmin(u)
+                )).join('') + '</div>';
+        }
+    }
+ 
+    if (loadEl) loadEl.style.display = 'none';
+    if (listEl) listEl.innerHTML = html;
 };
  
 // ─── INIT ─────────────────────────────────────
