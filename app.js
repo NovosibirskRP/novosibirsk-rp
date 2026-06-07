@@ -274,26 +274,39 @@ window.changePassword = async function() {
  
 // ─── USERS TABLE ──────────────────────────────
  
+const ALL_FACTIONS = [
+    '—', 'ФСБ', 'СОБР', 'Патрульная Полиция (ДПС)',
+    'Прокуратура', 'Адвокатура', 'Верховный Суд',
+    'ГТРК', 'МЧС', 'ОПГ (RUCH)', 'Правительство'
+];
+ 
+const SELECT_STYLE = `background:#1e293b;border:1px solid var(--border);color:#fff;padding:5px 8px;border-radius:8px;font-size:12px;font-family:'Rajdhani',sans-serif;max-width:160px`;
+ 
 window.loadUsersTable = async function() {
     const tbody = document.getElementById('users-table-body');
     if (!tbody) return;
-    tbody.innerHTML = '<tr><td colspan="4" style="padding:20px;text-align:center;color:var(--text)">Загрузка...</td></tr>';
+    tbody.innerHTML = `<tr><td colspan="5" style="padding:20px;text-align:center;color:var(--text)">Загрузка...</td></tr>`;
     const users = await db('users?order=username.asc');
     if (!Array.isArray(users) || !users.length) {
-        tbody.innerHTML = '<tr><td colspan="4" style="padding:20px;text-align:center;color:var(--text)">Нет пользователей</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="5" style="padding:20px;text-align:center;color:var(--text)">Нет пользователей</td></tr>`;
         return;
     }
     tbody.innerHTML = users.map(u => `
         <tr>
-            <td style="padding:12px 16px;font-weight:600">${u.username}</td>
-            <td style="padding:12px 16px;font-family:'JetBrains Mono',monospace;font-size:13px;color:#94a3b8">${u.password}</td>
-            <td style="padding:12px 16px">
-                <select onchange="changeRole(${u.id},this.value)" style="background:#1e293b;border:1px solid var(--border);color:#fff;padding:5px 10px;border-radius:8px;font-size:13px;font-family:'Rajdhani',sans-serif">
+            <td style="padding:10px 14px;font-weight:600;color:#fff">${u.username}</td>
+            <td style="padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#64748b">${u.password}</td>
+            <td style="padding:10px 14px">
+                <select onchange="changeRole(${u.id},this.value)" style="${SELECT_STYLE}">
                     ${ADMIN_RANKS.map(r => `<option value="${r}" ${u.role===r?'selected':''}>${r}</option>`).join('')}
                 </select>
             </td>
-            <td style="padding:12px 16px">
-                <button onclick="deleteUser(${u.id})" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#f87171;padding:6px 14px;border-radius:8px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:600">Удалить</button>
+            <td style="padding:10px 14px">
+                <select onchange="changeFaction(${u.id},this.value)" style="${SELECT_STYLE}">
+                    ${ALL_FACTIONS.map(f => `<option value="${f==='—'?'':f}" ${(u.faction||'')===(f==='—'?'':f)?'selected':''}>${f}</option>`).join('')}
+                </select>
+            </td>
+            <td style="padding:10px 14px">
+                <button onclick="deleteUser(${u.id})" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#f87171;padding:5px 12px;border-radius:8px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:600;white-space:nowrap">Удалить</button>
             </td>
         </tr>
     `).join('');
@@ -302,7 +315,16 @@ window.loadUsersTable = async function() {
 window.changeRole = async function(id, role) {
     await db(`users?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify({ role }) });
     notify('Роль обновлена');
-    loadUsersTable();
+};
+ 
+window.changeFaction = async function(id, faction) {
+    await db(`users?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify({ faction }) });
+    // Обновить currentUser если меняем себя
+    if (window.currentUser && window.currentUser.id === id) {
+        window.currentUser.faction = faction;
+        localStorage.setItem('nrp_user', JSON.stringify(window.currentUser));
+    }
+    notify('Фракция обновлена');
 };
  
 window.deleteUser = async function(id) {
