@@ -543,29 +543,8 @@ window.submitForm = async function(type) {
         webhookUrl = WEBHOOK_MEDBOOK;
     }
  
-    // Сохраняем в Supabase
-    const saved = await db('requests', { method: 'POST', body: JSON.stringify(data) });
- 
-    // Правило роутинга webhook по типу заявки — каждый тип идёт в свой канал
-    const WEBHOOK_BY_TYPE = {
-        passport:     WEBHOOK_PASSPORT_LICENSE,
-        license:      WEBHOOK_PASSPORT_LICENSE,
-        medbook:      WEBHOOK_MEDBOOK,
-        faction_join: WEBHOOK_MEDBOOK,      // меняй на свой webhook если создашь канал
-        court:        WEBHOOK_MEDBOOK,      // меняй на свой webhook если создашь канал
-        government:   WEBHOOK_PASSPORT_LICENSE,
-        lawyer:       WEBHOOK_MEDBOOK,
-    };
-    const finalWebhook = WEBHOOK_BY_TYPE[data.type] || WEBHOOK_PASSPORT_LICENSE;
- 
-    // Отправляем в Discord с меткой типа в заголовке чтобы не путалось
-    await sendDiscordWebhook(finalWebhook, {
-        title: embedTitle,
-        color: embedColor,
-        fields: embedFields,
-        footer: { text: `Novosibirsk RP • ${data.type?.toUpperCase()} • ID: ${saved?.[0]?.id || '?'} • Ожидает рассмотрения` },
-        timestamp: new Date().toISOString()
-    });
+    // Сохраняем в Supabase — в Discord НЕ пишем, только при одобрении/отказе
+    await db('requests', { method: 'POST', body: JSON.stringify(data) });
  
     closeModal(type);
     notify('Заявка отправлена! Ожидайте рассмотрения.');
@@ -721,12 +700,11 @@ window.loadAdminRequests = async function() {
 };
  
 window.reviewRequest = async function(id, status) {
-    // Получаем заявку чтобы знать тип и данные
     const reqs = await db(`requests?id=eq.${id}`);
     const req = reqs?.[0];
     if (!req) return notify('Заявка не найдена', false);
  
-    // Срок годности по умолчанию при одобрении
+    // Срок годности при одобрении
     const EXPIRY_DAYS_DEFAULT = { passport: 30, medbook: 60, license: 14 };
     let expiresAt = null;
     if (status === 'approved' && EXPIRY_DAYS_DEFAULT[req.type]) {
@@ -740,7 +718,7 @@ window.reviewRequest = async function(id, status) {
         body: JSON.stringify({ status, ...(expiresAt ? { expires_at: expiresAt } : {}) })
     });
  
-    // Каждый тип летит строго в свой webhook
+    // Webhook по типу
     const WEBHOOK_BY_TYPE = {
         passport:     WEBHOOK_PASSPORT_LICENSE,
         license:      WEBHOOK_PASSPORT_LICENSE,
@@ -758,26 +736,36 @@ window.reviewRequest = async function(id, status) {
         government: '📋 Обращение в правительство', lawyer: '👨‍⚖️ Адвокат'
     };
  
+    // Формируем поля с данными заявки
+    const dataFields = [];
+    if (req.char_name) dataFields.push({ name: '📛 ФИО', value: req.char_name, inline: true });
+    if (req.dob)       dataFields.push({ name: '🎂 Дата рождения', value: req.dob, inline: true });
+    if (req.reason)    dataFields.push({ name: '⚧ Пол / Цель', value: req.reason, inline: true });
+    if (req.address)   dataFields.push({ name: '💼 Место работы', value: req.address, inline: true });
+    if (req.faction)   dataFields.push({ name: '🏛️ Фракция', value: req.faction, inline: true });
+    if (req.weapon_type) dataFields.push({ name: '🔫 Оружие', value: req.weapon_type, inline: true });
+    if (req.note)      dataFields.push({ name: '📋 Доп. инфо', value: req.note, inline: false });
+    if (req.experience) dataFields.push({ name: '📖 Доп. данные', value: req.experience, inline: false });
+    if (req.claim)     dataFields.push({ name: '📜 Суть', value: req.claim, inline: false });
+    if (req.text)      dataFields.push({ name: '💬 Текст', value: req.text, inline: false });
+    if (expiresAt)     dataFields.push({ name: '📅 Действителен до', value: new Date(expiresAt).toLocaleDateString('ru-RU'), inline: true });
+ 
     const emoji = status === 'approved' ? '✅' : '❌';
     const label = status === 'approved' ? 'ОДОБРЕНО' : 'ОТКЛОНЕНО';
-    const fields = [
-        { name: '👤 Игрок', value: req.username || '—', inline: true },
-        { name: '📋 Тип', value: typeNames[req.type] || req.type, inline: true },
-        { name: '👮 Администратор', value: window.currentUser.username, inline: true },
-    ];
-    if (expiresAt) {
-        fields.push({ name: '📅 Действителен до', value: new Date(expiresAt).toLocaleDateString('ru-RU'), inline: true });
-    }
  
     await sendDiscordWebhook(webhook, {
         title: `${emoji} ${typeNames[req.type] || req.type} — ${label}`,
         color: status === 'approved' ? 0x22c55e : 0xef4444,
-        fields,
+        fields: [
+            { name: '👤 Игрок', value: req.username || '—', inline: true },
+            { name: '👮 Администратор', value: window.currentUser.username, inline: true },
+            ...dataFields
+        ],
         footer: { text: `Novosibirsk RP • ID: ${id}` },
         timestamp: new Date().toISOString()
     });
  
-    notify(label === 'ОДОБРЕНО' ? 'Одобрено!' : 'Отклонено!');
+    notify(status === 'approved' ? 'Одобрено!' : 'Отклонено!');
     loadAdminRequests();
 };
  
