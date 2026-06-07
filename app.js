@@ -608,13 +608,15 @@ window.loadMyDocs = async function() {
             ? '<span class="badge badge-rejected">✕ Отклонено</span>'
             : '<span class="badge badge-pending">⏳ На рассмотрении</span>';
  
-        const expiry = r.status === 'approved' ? expiryBadge(r.created_at, r.type) : '';
+        const expiry = r.status === 'approved' ? expiryBadge(r.expires_at || r.created_at, r.type) : '';
         const date = r.created_at ? new Date(r.created_at).toLocaleDateString('ru-RU') : '';
  
-        const adminActions = isAdmin(window.currentUser) ? `
+        // Кнопки только для полиции и админов — не для обычного игрока
+        const canManage = isAdmin(window.currentUser) || isPolice(window.currentUser);
+        const adminActions = canManage ? `
             <div style="display:flex;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
-                <button onclick="deleteRequest(${r.id})" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#f87171;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;text-transform:uppercase;padding:6px 14px;border-radius:8px;cursor:pointer">🗑 Удалить</button>
-                ${r.status === 'approved' ? `<button onclick="setExpiry(${r.id})" style="background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);color:#fbbf24;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;text-transform:uppercase;padding:6px 14px;border-radius:8px;cursor:pointer">📅 Изменить срок</button>` : ''}
+                <button onclick="deleteRequest(${r.id},'mydocs')" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#f87171;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;text-transform:uppercase;padding:6px 14px;border-radius:8px;cursor:pointer">🗑 Удалить</button>
+                ${r.status === 'approved' ? `<button onclick="setExpiry(${r.id},'mydocs')" style="background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);color:#fbbf24;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;text-transform:uppercase;padding:6px 14px;border-radius:8px;cursor:pointer">📅 Изменить срок</button>` : ''}
             </div>` : '';
  
         return `<div class="doc-card" style="flex-direction:column;align-items:stretch;gap:0">
@@ -636,26 +638,27 @@ window.loadMyDocs = async function() {
     }).join('');
 };
  
-window.deleteRequest = async function(id) {
-    if (!confirm('Удалить этот документ/заявку?')) return;
+// section = 'mydocs' или 'passports' — чтобы знать что перезагружать
+window.deleteRequest = async function(id, section) {
+    if (!confirm('Удалить этот документ?')) return;
     await db(`requests?id=eq.${id}`, { method: 'DELETE' });
     notify('Документ удалён');
-    loadMyDocs();
+    if (section === 'passports') loadPassports();
+    else loadMyDocs();
 };
  
-window.setExpiry = async function(id) {
+window.setExpiry = async function(id, section) {
     const days = prompt('Установить срок годности (дней от сегодня):');
     if (!days || isNaN(days)) return;
     const exp = new Date();
     exp.setDate(exp.getDate() + parseInt(days));
-    // Сохраняем дату создания как будто сейчас минус (стандарт - days)
-    // Реальнее — добавим поле expires_at
     await db(`requests?id=eq.${id}`, {
         method: 'PATCH',
         body: JSON.stringify({ expires_at: exp.toISOString() })
     });
-    notify(`Срок годности установлен до ${exp.toLocaleDateString('ru-RU')}`);
-    loadMyDocs();
+    notify(`Срок установлен до ${exp.toLocaleDateString('ru-RU')}`);
+    if (section === 'passports') loadPassports();
+    else loadMyDocs();
 };
  
 // ─── ADMIN REQUESTS ───────────────────────────
@@ -787,14 +790,21 @@ function docExpiryLine(r) {
     return `<span class="badge badge-approved" style="margin-top:6px;display:inline-flex">📅 До ${exp.toLocaleDateString('ru-RU')}</span>`;
 }
  
-function renderDocCard(r, fields, icon, adminDelete = false) {
+function renderDocCard(r, fields, icon, section) {
     const expLine = docExpiryLine(r);
     const isExpired = r.expires_at && new Date(r.expires_at) < new Date();
     const statusBadge = isExpired
         ? '<span class="badge badge-rejected">⏰ Истёк</span>'
         : '<span class="badge badge-approved">✓ Действителен</span>';
-    const delBtn = adminDelete
-        ? `<button onclick="deleteRequest(${r.id})" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#f87171;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;padding:6px 14px;border-radius:8px;cursor:pointer;margin-top:10px">🗑 Удалить документ</button>` : '';
+ 
+    // Кнопки — только для полиции и админов
+    const canManage = isAdmin(window.currentUser) || isPolice(window.currentUser);
+    const delBtn = canManage ? `
+        <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+            <button onclick="deleteRequest(${r.id},'${section}')" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#f87171;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;padding:6px 14px;border-radius:8px;cursor:pointer">🗑 Удалить</button>
+            <button onclick="setExpiry(${r.id},'${section}')" style="background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);color:#fbbf24;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;padding:6px 14px;border-radius:8px;cursor:pointer">📅 Изменить срок</button>
+        </div>` : '';
+ 
     return `<div class="doc-card" style="flex-direction:column;align-items:stretch;gap:0;${isExpired?'opacity:0.6':''}">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
             <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff">${icon} ${r.char_name || r.username}</div>
@@ -842,7 +852,7 @@ window.loadPassports = async function() {
                      <b>⚧ Пол:</b> ${r.reason || '—'}<br>
                      <b>💼 Место работы:</b> ${r.address || '—'}<br>
                      <b>🏠 Адрес:</b> ${r.experience || '—'}`,
-                    '🪪', isAdmin(u)
+                    '🪪', 'passports'
                 )).join('') + '</div>';
         }
  
@@ -860,7 +870,7 @@ window.loadPassports = async function() {
                      <b>🏛️ Фракция:</b> ${r.faction || '—'}<br>
                      <b>🔫 Оружие:</b> ${r.weapon_type || '—'}<br>
                      <b>💼 Место работы:</b> ${r.address || '—'}`,
-                    '🔫', isAdmin(u)
+                    '🔫', 'passports'
                 )).join('') + '</div>';
         }
     }
@@ -880,7 +890,7 @@ window.loadPassports = async function() {
                      <b>💼 Место работы:</b> ${r.address || '—'}<br>
                      <b>🏷️ Должность:</b> ${r.reason || '—'}<br>
                      <b>🏥 Болезнь:</b> ${r.note || '—'}`,
-                    '🏥', isAdmin(u)
+                    '🏥', 'passports'
                 )).join('') + '</div>';
         }
     }
