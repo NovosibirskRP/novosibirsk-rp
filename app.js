@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════
 //  NOVOSIBIRSK RP — app.js v3.0
 // ═══════════════════════════════════════════════
-
+ 
 const SUPABASE_URL = "https://aygqlldisjyeljgmwmec.supabase.co";
 const SUPABASE_KEY = "sb_publishable_fioN5iOmz3L-T8OurGPdYA_3IRN9K8n";
 const H = {
@@ -10,10 +10,10 @@ const H = {
     "Content-Type": "application/json",
     "Prefer": "return=representation"
 };
-
+ 
 const WEBHOOK_PASSPORT_LICENSE = "https://discord.com/api/webhooks/1512820632058986547/OniZFPqznfcU7vdI2vdRVWrpJ8k5JBL6v5BJZpLVLXYYa6p0TW5fs8TGuzklSAu18dlc";
 const WEBHOOK_MEDBOOK           = "https://discord.com/api/webhooks/1512820863924310270/8NT6tTfotF0iOlfavrKNVeSN4BF3Z1WgTDEa8EoVHZiVfgdrXdH8EfVqBc1qSrvTqZyQ";
-
+ 
 const WEBHOOK_BY_TYPE = {
     passport:     WEBHOOK_PASSPORT_LICENSE,
     license:      WEBHOOK_PASSPORT_LICENSE,
@@ -23,7 +23,7 @@ const WEBHOOK_BY_TYPE = {
     government:   WEBHOOK_PASSPORT_LICENSE,
     lawyer:       WEBHOOK_MEDBOOK,
 };
-
+ 
 const ADMIN_RANKS = [
     "Пользователь",
     "Вице Мэр","Мэр","Модерация","Администрация",
@@ -32,22 +32,22 @@ const ADMIN_RANKS = [
 ];
 const POLICE_FACTIONS = ["ФСБ","СОБР","Патрульная Полиция (ДПС)"];
 const MEDIC_FACTIONS  = ["МЧС"];
-
+ 
 const EXPIRY_DAYS_DEFAULT = { passport: 30, medbook: 60, license: 14 };
-
+ 
 window.currentUser = JSON.parse(localStorage.getItem('nrp_user') || 'null');
-
+ 
 // ─── HELPERS ──────────────────────────────────
-
+ 
 function isAdmin(u)  { return u && u.role && u.role !== 'Пользователь'; }
 function isPolice(u) { return u && POLICE_FACTIONS.includes(u.faction); }
 function isMedic(u)  { return u && MEDIC_FACTIONS.includes(u.faction); }
 function canManageDocs(u) { return isAdmin(u) || isPolice(u); }
-
+ 
 function db(path, opts) {
     return fetch(SUPABASE_URL + '/rest/v1/' + path, { headers: H, ...opts }).then(r => r.json());
 }
-
+ 
 async function sendDiscordWebhook(url, embed) {
     try {
         await fetch(url, {
@@ -57,7 +57,7 @@ async function sendDiscordWebhook(url, embed) {
         });
     } catch(e) { console.warn('Webhook error:', e); }
 }
-
+ 
 function notify(msg, ok = true) {
     const el = document.createElement('div');
     el.style.cssText = `position:fixed;bottom:24px;right:24px;z-index:9999;padding:14px 22px;border-radius:14px;font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:600;letter-spacing:0.5px;color:#fff;background:${ok?'rgba(34,197,94,0.15)':'rgba(239,68,68,0.15)'};border:1px solid ${ok?'rgba(34,197,94,0.4)':'rgba(239,68,68,0.4)'};backdrop-filter:blur(12px);box-shadow:0 8px 32px rgba(0,0,0,0.4);transition:all 0.3s`;
@@ -65,21 +65,40 @@ function notify(msg, ok = true) {
     document.body.appendChild(el);
     setTimeout(() => { el.style.opacity='0'; setTimeout(()=>el.remove(),300); }, 3200);
 }
-
+ 
+// ─── MOBILE MENU ──────────────────────────────
+ 
+window.toggleMobileMenu = function() {
+    const nav = document.getElementById('mobile-nav');
+    const btn = document.getElementById('burger-btn');
+    const open = nav.classList.toggle('open');
+    btn.textContent = open ? '✕' : '☰';
+};
+ 
+window.closeMobileMenu = function() {
+    const nav = document.getElementById('mobile-nav');
+    const btn = document.getElementById('burger-btn');
+    nav.classList.remove('open');
+    btn.textContent = '☰';
+};
+ 
 // ─── NAV ──────────────────────────────────────
-
+ 
 window.switchTab = function(tab) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.remove('active'));
     const t = document.getElementById('tab-' + tab);
     if (t) t.classList.add('active');
     const b = document.getElementById('nav-' + tab);
     if (b) b.classList.add('active');
+    const mb = document.getElementById('mnav-' + tab);
+    if (mb) mb.classList.add('active');
     if (tab === 'news')    loadNews();
     if (tab === 'profile') renderProfile();
     if (tab === 'portal')  initPortal();
 };
-
+ 
 window.switchPortal = function(section) {
     document.querySelectorAll('[id^="portal-"]').forEach(el => el.style.display = 'none');
     document.querySelectorAll('.portal-nav-btn').forEach(b => b.classList.remove('active'));
@@ -92,7 +111,7 @@ window.switchPortal = function(section) {
     if (section === 'admin-requests')  loadAdminRequests();
     if (section === 'passports')       loadPassports();
 };
-
+ 
 function initPortal() {
     const btnAdmin  = document.getElementById('btn-admin-requests');
     const btnDocs   = document.getElementById('btn-passports');
@@ -104,9 +123,9 @@ function initPortal() {
             ? '🏥 Мед. книжки' : '📋 Документы';
     }
 }
-
+ 
 // ─── MODALS ───────────────────────────────────
-
+ 
 window.openModal = function(id) {
     const m = document.getElementById('modal-' + id);
     if (m) m.classList.add('open');
@@ -117,32 +136,32 @@ window.openModal = function(id) {
         });
     }
 };
-
+ 
 window.closeModal = function(id) {
     const m = document.getElementById('modal-' + id);
     if (m) m.classList.remove('open');
 };
-
+ 
 document.addEventListener('click', e => {
     if (e.target.classList.contains('modal-overlay')) e.target.classList.remove('open');
 });
-
+ 
 window.requireAuth = function(fn) {
     if (!window.currentUser) { notify('Войдите в аккаунт', false); openModal('auth'); return; }
     fn();
 };
-
+ 
 window.showComingSoon = function() { openModal('coming-soon'); };
-
+ 
 window.switchAuthTab = function(tab) {
     document.getElementById('auth-login-form').style.display    = tab === 'login'    ? '' : 'none';
     document.getElementById('auth-register-form').style.display = tab === 'register' ? '' : 'none';
     document.getElementById('auth-tab-login').classList.toggle('active',    tab === 'login');
     document.getElementById('auth-tab-register').classList.toggle('active', tab === 'register');
 };
-
+ 
 // ─── AUTH ─────────────────────────────────────
-
+ 
 window.handleRegister = async function() {
     const u  = document.getElementById('reg-username').value.trim();
     const p  = document.getElementById('reg-password').value;
@@ -160,7 +179,7 @@ window.handleRegister = async function() {
         switchTab('profile');
     } else notify('Ошибка регистрации', false);
 };
-
+ 
 window.handleLogin = async function() {
     const u = document.getElementById('login-username').value.trim();
     const p = document.getElementById('login-password').value;
@@ -172,13 +191,13 @@ window.handleLogin = async function() {
     localStorage.setItem('nrp_user', JSON.stringify(users[0]));
     closeModal('auth'); updateAuthZone(); notify('Добро пожаловать, ' + u + '!'); renderProfile();
 };
-
+ 
 window.logout = function() {
     localStorage.removeItem('nrp_user');
     window.currentUser = null;
     updateAuthZone(); switchTab('main'); notify('Вы вышли из аккаунта');
 };
-
+ 
 function updateAuthZone() {
     const zone = document.getElementById('auth-zone');
     if (!zone) return;
@@ -191,9 +210,9 @@ function updateAuthZone() {
         zone.innerHTML = `<button class="btn-primary" onclick="openModal('auth')">Войти</button>`;
     }
 }
-
+ 
 // ─── PROFILE ──────────────────────────────────
-
+ 
 window.renderProfile = function() {
     const guest  = document.getElementById('profile-guest');
     const user   = document.getElementById('profile-user');
@@ -221,7 +240,7 @@ window.renderProfile = function() {
         if (adminN) adminN.style.display = 'none';
     }
 };
-
+ 
 window.togglePassword = function() {
     const el  = document.getElementById('profile-password');
     const btn = document.getElementById('toggle-pass-btn');
@@ -229,7 +248,7 @@ window.togglePassword = function() {
     if (el.textContent === '••••••••') { el.textContent = el.dataset.real; btn.textContent = 'СКРЫТЬ'; }
     else { el.textContent = '••••••••'; btn.textContent = 'ПОКАЗАТЬ'; }
 };
-
+ 
 window.changePassword = async function() {
     const np = document.getElementById('new-password').value;
     const cp = document.getElementById('confirm-password').value;
@@ -243,12 +262,12 @@ window.changePassword = async function() {
     document.getElementById('confirm-password').value = '';
     notify('Пароль изменён!'); renderProfile();
 };
-
+ 
 // ─── USERS TABLE ──────────────────────────────
-
+ 
 const ALL_FACTIONS = ['—','ФСБ','СОБР','Патрульная Полиция (ДПС)','Прокуратура','Адвокатура','Верховный Суд','ГТРК','МЧС','ОПГ (RUCH)','Правительство'];
 const SEL = `background:#1e293b;border:1px solid var(--border);color:#fff;padding:5px 8px;border-radius:8px;font-size:12px;font-family:'Rajdhani',sans-serif;max-width:160px`;
-
+ 
 window.loadUsersTable = async function() {
     const tbody = document.getElementById('users-table-body');
     if (!tbody) return;
@@ -277,7 +296,7 @@ window.loadUsersTable = async function() {
             </td>
         </tr>`).join('');
 };
-
+ 
 window.changeRole = async function(id, role) {
     await db(`users?id=eq.${id}`, { method:'PATCH', body: JSON.stringify({ role }) });
     notify('Роль обновлена');
@@ -295,12 +314,12 @@ window.deleteUser = async function(id) {
     await db(`users?id=eq.${id}`, { method:'DELETE' });
     notify('Пользователь удалён'); loadUsersTable();
 };
-
+ 
 // ─── NEWS ─────────────────────────────────────
-
+ 
 const TAG_STYLES = { 'Важно':'tag-important','Обновление':'tag-update','Мероприятие':'tag-event','Свой Вариант':'tag-custom' };
 const TAG_ICONS  = { 'Важно':'🔴','Обновление':'⚙️','Мероприятие':'🎉','Свой Вариант':'✏️' };
-
+ 
 window.loadNews = async function() {
     const feed = document.getElementById('news-feed');
     if (!feed) return;
@@ -318,7 +337,7 @@ window.loadNews = async function() {
         return `<div class="news-card"><span class="news-tag ${tc}">${ti} ${n.tag}</span><div class="news-title">${n.title}</div><div class="news-text">${n.text}</div><div class="news-date">${date}</div>${del}</div>`;
     }).join('');
 };
-
+ 
 window.createNews = async function() {
     const title = document.getElementById('news-title').value.trim();
     const tag   = document.getElementById('news-tag').value;
@@ -329,18 +348,18 @@ window.createNews = async function() {
     document.getElementById('news-text').value  = '';
     notify('Новость опубликована'); loadNews();
 };
-
+ 
 window.deleteNews = async function(id) {
     if (!confirm('Удалить новость?')) return;
     await db(`news?id=eq.${id}`, { method:'DELETE' });
     notify('Удалено'); loadNews();
 };
-
+ 
 // ─── SUBMIT FORM ──────────────────────────────
-
+ 
 window.submitForm = async function(type) {
     let data = {};
-
+ 
     if (type === 'passport') {
         const u   = document.getElementById('passport-username').value.trim();
         const n   = document.getElementById('passport-name').value.trim();
@@ -352,7 +371,7 @@ window.submitForm = async function(type) {
         const sgn = document.getElementById('passport-sign').value.trim();
         if (!u||!n||!d||!job||!gen) return notify('Заполните обязательные поля', false);
         data = { type:'passport', username:u, char_name:n, dob:d, address:job, reason:gen, note:bio, experience:adr, faction:sgn, status:'pending', user_id:window.currentUser?.id };
-
+ 
     } else if (type === 'medbook') {
         const u   = document.getElementById('medbook-username').value.trim();
         const n   = document.getElementById('medbook-name').value.trim();
@@ -364,7 +383,7 @@ window.submitForm = async function(type) {
         const nt  = document.getElementById('medbook-note').value.trim();
         if (!u||!n||!job||!pos||!gl) return notify('Заполните обязательные поля', false);
         data = { type:'medbook', username:u, char_name:n, dob, address:job, reason:pos, note:gl+'|'+dis+(nt?'|'+nt:''), status:'pending', user_id:window.currentUser?.id };
-
+ 
     } else if (type === 'license') {
         const u   = document.getElementById('license-username').value.trim();
         const n   = document.getElementById('license-name').value.trim();
@@ -376,7 +395,7 @@ window.submitForm = async function(type) {
         const sgn = document.getElementById('license-sign').value.trim();
         if (!u||!n||!job||!rsn) return notify('Заполните обязательные поля', false);
         data = { type:'license', username:u, char_name:n, dob, address:job, faction:fac, reason:rsn, weapon_type:wpn, note:sgn, status:'pending', user_id:window.currentUser?.id };
-
+ 
     } else if (type === 'faction-join') {
         const u   = document.getElementById('faction-username').value.trim();
         const rb  = document.getElementById('faction-roblox').value.trim();
@@ -386,7 +405,7 @@ window.submitForm = async function(type) {
         const bio = document.getElementById('faction-bio').value.trim();
         if (!u||!rb||!rn) return notify('Заполните обязательные поля', false);
         data = { type:'faction_join', username:u, char_name:rn, faction:fac, reason:rb, note:mb, experience:bio, status:'pending', user_id:window.currentUser?.id };
-
+ 
     } else if (type === 'court') {
         const pl = document.getElementById('court-plaintiff').value.trim();
         const df = document.getElementById('court-defendant').value.trim();
@@ -394,14 +413,14 @@ window.submitForm = async function(type) {
         const ev = document.getElementById('court-evidence').value.trim();
         if (!pl||!df||!cl) return notify('Заполните обязательные поля', false);
         data = { type:'court', username:pl, defendant:df, claim:cl, evidence:ev, status:'pending', user_id:window.currentUser?.id };
-
+ 
     } else if (type === 'government') {
         const u  = document.getElementById('gov-username').value.trim();
         const t  = document.getElementById('gov-type').value;
         const tx = document.getElementById('gov-text').value.trim();
         if (!u||!tx) return notify('Заполните обязательные поля', false);
         data = { type:'government', username:u, request_type:t, text:tx, status:'pending', user_id:window.currentUser?.id };
-
+ 
     } else if (type === 'lawyer') {
         const u  = document.getElementById('lawyer-username').value.trim();
         const s  = document.getElementById('lawyer-situation').value;
@@ -409,14 +428,14 @@ window.submitForm = async function(type) {
         if (!u||!tx) return notify('Заполните обязательные поля', false);
         data = { type:'lawyer', username:u, situation:s, text:tx, status:'pending', user_id:window.currentUser?.id };
     }
-
+ 
     await db('requests', { method:'POST', body: JSON.stringify(data) });
     closeModal(type);
     notify('Заявка отправлена! Ожидайте рассмотрения.');
 };
-
+ 
 // ─── EXPIRY HELPERS ───────────────────────────
-
+ 
 function docExpiryLine(r) {
     const dt = r.expires_at;
     if (!dt) return '';
@@ -426,7 +445,7 @@ function docExpiryLine(r) {
     if (diff <= 5) return `<span class="badge badge-pending"  style="margin-top:6px;display:inline-flex">⚠️ До ${exp.toLocaleDateString('ru-RU')} (${diff} дн.)</span>`;
     return `<span class="badge badge-approved" style="margin-top:6px;display:inline-flex">📅 До ${exp.toLocaleDateString('ru-RU')}</span>`;
 }
-
+ 
 function expiryBadge(r) {
     if (!r.expires_at) return '';
     const exp  = new Date(r.expires_at);
@@ -435,9 +454,9 @@ function expiryBadge(r) {
     if (diff <= 5) return `<span class="badge badge-pending">⚠️ ${diff} дн.</span>`;
     return `<span class="badge badge-approved">📅 До ${exp.toLocaleDateString('ru-RU')}</span>`;
 }
-
+ 
 // ─── MY DOCS ──────────────────────────────────
-
+ 
 window.loadMyDocs = async function() {
     const guestDiv = document.getElementById('mydocs-guest');
     const listDiv  = document.getElementById('mydocs-list');
@@ -476,14 +495,14 @@ window.loadMyDocs = async function() {
             </div>${btns}</div>`;
     }).join('');
 };
-
+ 
 window.deleteRequest = async function(id, section) {
     if (!confirm('Удалить этот документ?')) return;
     await db(`requests?id=eq.${id}`, { method:'DELETE' });
     notify('Документ удалён');
     if (section==='passports') loadPassports(); else loadMyDocs();
 };
-
+ 
 window.setExpiry = async function(id, section) {
     const days = prompt('Установить срок годности (дней от сегодня):');
     if (!days || isNaN(days)) return;
@@ -493,9 +512,9 @@ window.setExpiry = async function(id, section) {
     notify(`Срок установлен до ${exp.toLocaleDateString('ru-RU')}`);
     if (section==='passports') loadPassports(); else loadMyDocs();
 };
-
+ 
 // ─── ADMIN REQUESTS ───────────────────────────
-
+ 
 window.loadAdminRequests = async function() {
     const listEl = document.getElementById('admin-requests-list');
     const loadEl = document.getElementById('requests-loading');
@@ -531,31 +550,31 @@ window.loadAdminRequests = async function() {
         </div>`;
     }).join('');
 };
-
+ 
 window.reviewRequest = async function(id, status) {
     const reqs = await db(`requests?id=eq.${id}`);
     const req  = reqs?.[0];
     if (!req) return notify('Заявка не найдена', false);
-
+ 
     const cost = document.getElementById('cost-' + id)?.value || '0';
-
+ 
     let expiresAt = null;
     if (status==='approved' && EXPIRY_DAYS_DEFAULT[req.type]) {
         const exp = new Date();
         exp.setDate(exp.getDate() + EXPIRY_DAYS_DEFAULT[req.type]);
         expiresAt = exp.toISOString();
     }
-
+ 
     await db(`requests?id=eq.${id}`, {
         method:'PATCH',
         body: JSON.stringify({ status, ...(expiresAt?{expires_at:expiresAt}:{}) })
     });
-
+ 
     const webhook    = WEBHOOK_BY_TYPE[req.type] || WEBHOOK_PASSPORT_LICENSE;
     const typeNames  = { passport:'🪪 Паспорт', medbook:'🏥 Мед. книжка', license:'🔫 Лицензия', faction_join:'🏛️ Вступление во фракцию', court:'⚖️ Судебный иск', government:'📋 Правительство', lawyer:'👨‍⚖️ Адвокат' };
     const emoji      = status==='approved' ? '✅' : '❌';
     const label      = status==='approved' ? 'ОДОБРЕНО' : 'ОТКЛОНЕНО';
-
+ 
     const dataFields = [];
     if (req.char_name)   dataFields.push({ name:'📛 ФИО',           value:req.char_name,   inline:true });
     if (req.dob)         dataFields.push({ name:'🎂 Дата рождения', value:req.dob,         inline:true });
@@ -565,12 +584,12 @@ window.reviewRequest = async function(id, status) {
     if (req.weapon_type) dataFields.push({ name:'🔫 Оружие',        value:req.weapon_type, inline:true });
     if (req.note)        dataFields.push({ name:'📋 Примечание',    value:req.note,        inline:false });
     if (expiresAt)       dataFields.push({ name:'📅 Действителен до', value:new Date(expiresAt).toLocaleDateString('ru-RU'), inline:true });
-
+ 
     // Стоимость для UnbelievaBoat
     if (status==='approved' && cost && cost !== '0') {
         dataFields.push({ name:'💰 Стоимость', value:`${cost}€ — используй: \`/eco add ${req.username} ${cost}\``, inline:false });
     }
-
+ 
     await sendDiscordWebhook(webhook, {
         title:  `${emoji} ${typeNames[req.type]||req.type} — ${label}`,
         color:  status==='approved' ? 0x22c55e : 0xef4444,
@@ -582,13 +601,13 @@ window.reviewRequest = async function(id, status) {
         footer:    { text:`Novosibirsk RP • ID: ${id}` },
         timestamp: new Date().toISOString()
     });
-
+ 
     notify(status==='approved' ? 'Одобрено!' : 'Отклонено!');
     loadAdminRequests();
 };
-
+ 
 // ─── DOCUMENTS VIEWER ─────────────────────────
-
+ 
 function renderDocCard(r, fields, icon, section) {
     const expLine    = docExpiryLine(r);
     const isExpired  = r.expires_at && new Date(r.expires_at) < new Date();
@@ -609,7 +628,7 @@ function renderDocCard(r, fields, icon, section) {
         ${btns}
     </div>`;
 }
-
+ 
 window.loadPassports = async function() {
     const listEl = document.getElementById('passports-list');
     const loadEl = document.getElementById('passports-loading');
@@ -622,7 +641,7 @@ window.loadPassports = async function() {
     }
     if (loadEl) loadEl.style.display = '';
     let html = '';
-
+ 
     if (canSeeAll) {
         const passports = await db('requests?type=eq.passport&status=eq.approved&order=created_at.desc');
         html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;color:#fff;margin-bottom:16px">🪪 Паспорта граждан</div>`;
@@ -630,7 +649,7 @@ window.loadPassports = async function() {
             : '<div style="display:grid;gap:12px;margin-bottom:40px">' + passports.map(r=>renderDocCard(r,
                 `<b>👤 Игрок:</b> ${r.username}<br><b>📛 ФИО:</b> ${r.char_name||'—'}<br><b>🎂 Дата рождения:</b> ${r.dob||'—'}<br><b>⚧ Пол:</b> ${r.reason||'—'}<br><b>💼 Место работы:</b> ${r.address||'—'}<br><b>🏠 Адрес:</b> ${r.experience||'—'}`,
                 '🪪','passports')).join('') + '</div>';
-
+ 
         const licenses = await db('requests?type=eq.license&status=eq.approved&order=created_at.desc');
         html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;color:#fff;margin-bottom:16px">🔫 Лицензии на оружие</div>`;
         html += !licenses?.length ? '<div class="loading-text" style="opacity:0.5;margin-bottom:32px">Нет одобренных лицензий</div>'
@@ -638,7 +657,7 @@ window.loadPassports = async function() {
                 `<b>👤 Игрок:</b> ${r.username}<br><b>📛 ФИО:</b> ${r.char_name||'—'}<br><b>🏛️ Фракция:</b> ${r.faction||'—'}<br><b>🔫 Оружие:</b> ${r.weapon_type||'—'}`,
                 '🔫','passports')).join('') + '</div>';
     }
-
+ 
     if (canSeeAll || canMedbok) {
         const medbooks = await db('requests?type=eq.medbook&status=eq.approved&order=created_at.desc');
         html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;color:#fff;margin-bottom:16px">🏥 Медицинские книжки</div>`;
@@ -647,13 +666,13 @@ window.loadPassports = async function() {
                 `<b>👤 Игрок:</b> ${r.username}<br><b>📛 ФИО:</b> ${r.char_name||'—'}<br><b>💼 Место работы:</b> ${r.address||'—'}<br><b>🏥 Болезнь:</b> ${r.note||'—'}`,
                 '🏥','passports')).join('') + '</div>';
     }
-
+ 
     if (loadEl) loadEl.style.display = 'none';
     if (listEl) listEl.innerHTML = html;
 };
-
+ 
 // ─── INIT ─────────────────────────────────────
-
+ 
 document.addEventListener('DOMContentLoaded', () => {
     updateAuthZone();
     renderProfile();
@@ -661,3 +680,4 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('login-password')?.addEventListener('keydown', e=>{ if(e.key==='Enter') handleLogin(); });
     document.getElementById('reg-password2')?.addEventListener('keydown',  e=>{ if(e.key==='Enter') handleRegister(); });
 });
+ 
