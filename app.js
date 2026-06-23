@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════
 //  NOVOSIBIRSK RP — app.js v3.0
 // ═══════════════════════════════════════════════
- 
+
 const SUPABASE_URL = "https://aygqlldisjyeljgmwmec.supabase.co";
 const SUPABASE_KEY = "sb_publishable_fioN5iOmz3L-T8OurGPdYA_3IRN9K8n";
 const H = {
@@ -10,10 +10,10 @@ const H = {
     "Content-Type": "application/json",
     "Prefer": "return=representation"
 };
- 
+
 const WEBHOOK_PASSPORT_LICENSE = "https://discord.com/api/webhooks/1512820632058986547/OniZFPqznfcU7vdI2vdRVWrpJ8k5JBL6v5BJZpLVLXYYa6p0TW5fs8TGuzklSAu18dlc";
 const WEBHOOK_MEDBOOK           = "https://discord.com/api/webhooks/1512820863924310270/8NT6tTfotF0iOlfavrKNVeSN4BF3Z1WgTDEa8EoVHZiVfgdrXdH8EfVqBc1qSrvTqZyQ";
- 
+
 const WEBHOOK_BY_TYPE = {
     passport:     WEBHOOK_PASSPORT_LICENSE,
     license:      WEBHOOK_PASSPORT_LICENSE,
@@ -23,7 +23,7 @@ const WEBHOOK_BY_TYPE = {
     government:   WEBHOOK_PASSPORT_LICENSE,
     lawyer:       WEBHOOK_MEDBOOK,
 };
- 
+
 const ADMIN_RANKS = [
     "Пользователь",
     "Вице Мэр","Мэр","Модерация","Администрация",
@@ -32,22 +32,22 @@ const ADMIN_RANKS = [
 ];
 const POLICE_FACTIONS = ["ФСБ","СОБР","Патрульная Полиция (ДПС)"];
 const MEDIC_FACTIONS  = ["МЧС"];
- 
+
 const EXPIRY_DAYS_DEFAULT = { passport: 30, medbook: 60, license: 14 };
- 
+
 window.currentUser = JSON.parse(localStorage.getItem('nrp_user') || 'null');
- 
+
 // ─── HELPERS ──────────────────────────────────
- 
+
 function isAdmin(u)  { return u && u.role && u.role !== 'Пользователь'; }
 function isPolice(u) { return u && POLICE_FACTIONS.includes(u.faction); }
 function isMedic(u)  { return u && MEDIC_FACTIONS.includes(u.faction); }
 function canManageDocs(u) { return isAdmin(u) || isPolice(u); }
- 
+
 function db(path, opts) {
     return fetch(SUPABASE_URL + '/rest/v1/' + path, { headers: H, ...opts }).then(r => r.json());
 }
- 
+
 async function sendDiscordWebhook(url, embed) {
     try {
         await fetch(url, {
@@ -57,7 +57,7 @@ async function sendDiscordWebhook(url, embed) {
         });
     } catch(e) { console.warn('Webhook error:', e); }
 }
- 
+
 function notify(msg, ok = true) {
     const el = document.createElement('div');
     el.style.cssText = `position:fixed;bottom:24px;right:24px;z-index:9999;padding:14px 22px;border-radius:14px;font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:600;letter-spacing:0.5px;color:#fff;background:${ok?'rgba(34,197,94,0.15)':'rgba(239,68,68,0.15)'};border:1px solid ${ok?'rgba(34,197,94,0.4)':'rgba(239,68,68,0.4)'};backdrop-filter:blur(12px);box-shadow:0 8px 32px rgba(0,0,0,0.4);transition:all 0.3s`;
@@ -65,25 +65,25 @@ function notify(msg, ok = true) {
     document.body.appendChild(el);
     setTimeout(() => { el.style.opacity='0'; setTimeout(()=>el.remove(),300); }, 3200);
 }
- 
+
 // ─── MOBILE MENU ──────────────────────────────
- 
+
 window.toggleMobileMenu = function() {
     const nav = document.getElementById('mobile-nav');
     const btn = document.getElementById('burger-btn');
     const open = nav.classList.toggle('open');
     btn.textContent = open ? '✕' : '☰';
 };
- 
+
 window.closeMobileMenu = function() {
     const nav = document.getElementById('mobile-nav');
     const btn = document.getElementById('burger-btn');
     nav.classList.remove('open');
     btn.textContent = '☰';
 };
- 
+
 // ─── NAV ──────────────────────────────────────
- 
+
 window.switchTab = function(tab) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -98,7 +98,7 @@ window.switchTab = function(tab) {
     if (tab === 'profile') renderProfile();
     if (tab === 'portal')  initPortal();
 };
- 
+
 window.switchPortal = function(section) {
     document.querySelectorAll('[id^="portal-"]').forEach(el => el.style.display = 'none');
     document.querySelectorAll('.portal-nav-btn').forEach(b => b.classList.remove('active'));
@@ -111,7 +111,7 @@ window.switchPortal = function(section) {
     if (section === 'admin-requests')  loadAdminRequests();
     if (section === 'passports')       loadPassports();
 };
- 
+
 function initPortal() {
     const btnAdmin  = document.getElementById('btn-admin-requests');
     const btnDocs   = document.getElementById('btn-passports');
@@ -123,9 +123,9 @@ function initPortal() {
             ? '🏥 Мед. книжки' : '📋 Документы';
     }
 }
- 
+
 // ─── MODALS ───────────────────────────────────
- 
+
 window.openModal = function(id) {
     const m = document.getElementById('modal-' + id);
     if (m) m.classList.add('open');
@@ -136,32 +136,32 @@ window.openModal = function(id) {
         });
     }
 };
- 
+
 window.closeModal = function(id) {
     const m = document.getElementById('modal-' + id);
     if (m) m.classList.remove('open');
 };
- 
+
 document.addEventListener('click', e => {
     if (e.target.classList.contains('modal-overlay')) e.target.classList.remove('open');
 });
- 
+
 window.requireAuth = function(fn) {
     if (!window.currentUser) { notify('Войдите в аккаунт', false); openModal('auth'); return; }
     fn();
 };
- 
+
 window.showComingSoon = function() { openModal('coming-soon'); };
- 
+
 window.switchAuthTab = function(tab) {
     document.getElementById('auth-login-form').style.display    = tab === 'login'    ? '' : 'none';
     document.getElementById('auth-register-form').style.display = tab === 'register' ? '' : 'none';
     document.getElementById('auth-tab-login').classList.toggle('active',    tab === 'login');
     document.getElementById('auth-tab-register').classList.toggle('active', tab === 'register');
 };
- 
+
 // ─── AUTH ─────────────────────────────────────
- 
+
 window.handleRegister = async function() {
     const u  = document.getElementById('reg-username').value.trim();
     const p  = document.getElementById('reg-password').value;
@@ -179,7 +179,7 @@ window.handleRegister = async function() {
         switchTab('profile');
     } else notify('Ошибка регистрации', false);
 };
- 
+
 window.handleLogin = async function() {
     const u = document.getElementById('login-username').value.trim();
     const p = document.getElementById('login-password').value;
@@ -191,13 +191,13 @@ window.handleLogin = async function() {
     localStorage.setItem('nrp_user', JSON.stringify(users[0]));
     closeModal('auth'); updateAuthZone(); notify('Добро пожаловать, ' + u + '!'); renderProfile();
 };
- 
+
 window.logout = function() {
     localStorage.removeItem('nrp_user');
     window.currentUser = null;
     updateAuthZone(); switchTab('main'); notify('Вы вышли из аккаунта');
 };
- 
+
 function updateAuthZone() {
     const zone = document.getElementById('auth-zone');
     if (!zone) return;
@@ -210,9 +210,9 @@ function updateAuthZone() {
         zone.innerHTML = `<button class="btn-primary" onclick="openModal('auth')">Войти</button>`;
     }
 }
- 
+
 // ─── PROFILE ──────────────────────────────────
- 
+
 window.renderProfile = function() {
     const guest  = document.getElementById('profile-guest');
     const user   = document.getElementById('profile-user');
@@ -240,7 +240,7 @@ window.renderProfile = function() {
         if (adminN) adminN.style.display = 'none';
     }
 };
- 
+
 window.togglePassword = function() {
     const el  = document.getElementById('profile-password');
     const btn = document.getElementById('toggle-pass-btn');
@@ -248,7 +248,7 @@ window.togglePassword = function() {
     if (el.textContent === '••••••••') { el.textContent = el.dataset.real; btn.textContent = 'СКРЫТЬ'; }
     else { el.textContent = '••••••••'; btn.textContent = 'ПОКАЗАТЬ'; }
 };
- 
+
 window.changePassword = async function() {
     const np = document.getElementById('new-password').value;
     const cp = document.getElementById('confirm-password').value;
@@ -262,12 +262,12 @@ window.changePassword = async function() {
     document.getElementById('confirm-password').value = '';
     notify('Пароль изменён!'); renderProfile();
 };
- 
+
 // ─── USERS TABLE ──────────────────────────────
- 
+
 const ALL_FACTIONS = ['—','ФСБ','СОБР','Патрульная Полиция (ДПС)','Прокуратура','Адвокатура','Верховный Суд','ГТРК','МЧС','ОПГ (RUCH)','Правительство'];
 const SEL = `background:#1e293b;border:1px solid var(--border);color:#fff;padding:5px 8px;border-radius:8px;font-size:12px;font-family:'Rajdhani',sans-serif;max-width:160px`;
- 
+
 window.loadUsersTable = async function() {
     const tbody = document.getElementById('users-table-body');
     if (!tbody) return;
@@ -296,7 +296,7 @@ window.loadUsersTable = async function() {
             </td>
         </tr>`).join('');
 };
- 
+
 window.changeRole = async function(id, role) {
     await db(`users?id=eq.${id}`, { method:'PATCH', body: JSON.stringify({ role }) });
     notify('Роль обновлена');
@@ -314,12 +314,12 @@ window.deleteUser = async function(id) {
     await db(`users?id=eq.${id}`, { method:'DELETE' });
     notify('Пользователь удалён'); loadUsersTable();
 };
- 
+
 // ─── NEWS ─────────────────────────────────────
- 
+
 const TAG_STYLES = { 'Важно':'tag-important','Обновление':'tag-update','Мероприятие':'tag-event','Свой Вариант':'tag-custom' };
 const TAG_ICONS  = { 'Важно':'🔴','Обновление':'⚙️','Мероприятие':'🎉','Свой Вариант':'✏️' };
- 
+
 window.loadNews = async function() {
     const feed = document.getElementById('news-feed');
     if (!feed) return;
@@ -337,7 +337,7 @@ window.loadNews = async function() {
         return `<div class="news-card"><span class="news-tag ${tc}">${ti} ${n.tag}</span><div class="news-title">${n.title}</div><div class="news-text">${n.text}</div><div class="news-date">${date}</div>${del}</div>`;
     }).join('');
 };
- 
+
 window.createNews = async function() {
     const title = document.getElementById('news-title').value.trim();
     const tag   = document.getElementById('news-tag').value;
@@ -348,18 +348,18 @@ window.createNews = async function() {
     document.getElementById('news-text').value  = '';
     notify('Новость опубликована'); loadNews();
 };
- 
+
 window.deleteNews = async function(id) {
     if (!confirm('Удалить новость?')) return;
     await db(`news?id=eq.${id}`, { method:'DELETE' });
     notify('Удалено'); loadNews();
 };
- 
+
 // ─── SUBMIT FORM ──────────────────────────────
- 
+
 window.submitForm = async function(type) {
     let data = {};
- 
+
     if (type === 'passport') {
         const u   = document.getElementById('passport-username').value.trim();
         const n   = document.getElementById('passport-name').value.trim();
@@ -371,7 +371,7 @@ window.submitForm = async function(type) {
         const sgn = document.getElementById('passport-sign').value.trim();
         if (!u||!n||!d||!job||!gen) return notify('Заполните обязательные поля', false);
         data = { type:'passport', username:u, char_name:n, dob:d, address:job, reason:gen, note:bio, experience:adr, faction:sgn, status:'pending', user_id:window.currentUser?.id };
- 
+
     } else if (type === 'medbook') {
         const u   = document.getElementById('medbook-username').value.trim();
         const n   = document.getElementById('medbook-name').value.trim();
@@ -383,7 +383,7 @@ window.submitForm = async function(type) {
         const nt  = document.getElementById('medbook-note').value.trim();
         if (!u||!n||!job||!pos||!gl) return notify('Заполните обязательные поля', false);
         data = { type:'medbook', username:u, char_name:n, dob, address:job, reason:pos, note:gl+'|'+dis+(nt?'|'+nt:''), status:'pending', user_id:window.currentUser?.id };
- 
+
     } else if (type === 'license') {
         const u   = document.getElementById('license-username').value.trim();
         const n   = document.getElementById('license-name').value.trim();
@@ -395,7 +395,7 @@ window.submitForm = async function(type) {
         const sgn = document.getElementById('license-sign').value.trim();
         if (!u||!n||!job||!rsn) return notify('Заполните обязательные поля', false);
         data = { type:'license', username:u, char_name:n, dob, address:job, faction:fac, reason:rsn, weapon_type:wpn, note:sgn, status:'pending', user_id:window.currentUser?.id };
- 
+
     } else if (type === 'faction-join') {
         const u   = document.getElementById('faction-username').value.trim();
         const rb  = document.getElementById('faction-roblox').value.trim();
@@ -405,7 +405,7 @@ window.submitForm = async function(type) {
         const bio = document.getElementById('faction-bio').value.trim();
         if (!u||!rb||!rn) return notify('Заполните обязательные поля', false);
         data = { type:'faction_join', username:u, char_name:rn, faction:fac, reason:rb, note:mb, experience:bio, status:'pending', user_id:window.currentUser?.id };
- 
+
     } else if (type === 'court') {
         const pl = document.getElementById('court-plaintiff').value.trim();
         const df = document.getElementById('court-defendant').value.trim();
@@ -413,14 +413,14 @@ window.submitForm = async function(type) {
         const ev = document.getElementById('court-evidence').value.trim();
         if (!pl||!df||!cl) return notify('Заполните обязательные поля', false);
         data = { type:'court', username:pl, defendant:df, claim:cl, evidence:ev, status:'pending', user_id:window.currentUser?.id };
- 
+
     } else if (type === 'government') {
         const u  = document.getElementById('gov-username').value.trim();
         const t  = document.getElementById('gov-type').value;
         const tx = document.getElementById('gov-text').value.trim();
         if (!u||!tx) return notify('Заполните обязательные поля', false);
         data = { type:'government', username:u, request_type:t, text:tx, status:'pending', user_id:window.currentUser?.id };
- 
+
     } else if (type === 'lawyer') {
         const u  = document.getElementById('lawyer-username').value.trim();
         const s  = document.getElementById('lawyer-situation').value;
@@ -428,14 +428,14 @@ window.submitForm = async function(type) {
         if (!u||!tx) return notify('Заполните обязательные поля', false);
         data = { type:'lawyer', username:u, situation:s, text:tx, status:'pending', user_id:window.currentUser?.id };
     }
- 
+
     await db('requests', { method:'POST', body: JSON.stringify(data) });
     closeModal(type);
     notify('Заявка отправлена! Ожидайте рассмотрения.');
 };
- 
+
 // ─── EXPIRY HELPERS ───────────────────────────
- 
+
 function docExpiryLine(r) {
     const dt = r.expires_at;
     if (!dt) return '';
@@ -445,7 +445,7 @@ function docExpiryLine(r) {
     if (diff <= 5) return `<span class="badge badge-pending"  style="margin-top:6px;display:inline-flex">⚠️ До ${exp.toLocaleDateString('ru-RU')} (${diff} дн.)</span>`;
     return `<span class="badge badge-approved" style="margin-top:6px;display:inline-flex">📅 До ${exp.toLocaleDateString('ru-RU')}</span>`;
 }
- 
+
 function expiryBadge(r) {
     if (!r.expires_at) return '';
     const exp  = new Date(r.expires_at);
@@ -454,9 +454,9 @@ function expiryBadge(r) {
     if (diff <= 5) return `<span class="badge badge-pending">⚠️ ${diff} дн.</span>`;
     return `<span class="badge badge-approved">📅 До ${exp.toLocaleDateString('ru-RU')}</span>`;
 }
- 
+
 // ─── MY DOCS ──────────────────────────────────
- 
+
 window.loadMyDocs = async function() {
     const guestDiv = document.getElementById('mydocs-guest');
     const listDiv  = document.getElementById('mydocs-list');
@@ -495,14 +495,14 @@ window.loadMyDocs = async function() {
             </div>${btns}</div>`;
     }).join('');
 };
- 
+
 window.deleteRequest = async function(id, section) {
     if (!confirm('Удалить этот документ?')) return;
     await db(`requests?id=eq.${id}`, { method:'DELETE' });
     notify('Документ удалён');
     if (section==='passports') loadPassports(); else loadMyDocs();
 };
- 
+
 window.setExpiry = async function(id, section) {
     const days = prompt('Установить срок годности (дней от сегодня):');
     if (!days || isNaN(days)) return;
@@ -512,9 +512,9 @@ window.setExpiry = async function(id, section) {
     notify(`Срок установлен до ${exp.toLocaleDateString('ru-RU')}`);
     if (section==='passports') loadPassports(); else loadMyDocs();
 };
- 
+
 // ─── ADMIN REQUESTS ───────────────────────────
- 
+
 window.loadAdminRequests = async function() {
     const listEl = document.getElementById('admin-requests-list');
     const loadEl = document.getElementById('requests-loading');
@@ -550,31 +550,31 @@ window.loadAdminRequests = async function() {
         </div>`;
     }).join('');
 };
- 
+
 window.reviewRequest = async function(id, status) {
     const reqs = await db(`requests?id=eq.${id}`);
     const req  = reqs?.[0];
     if (!req) return notify('Заявка не найдена', false);
- 
+
     const cost = document.getElementById('cost-' + id)?.value || '0';
- 
+
     let expiresAt = null;
     if (status==='approved' && EXPIRY_DAYS_DEFAULT[req.type]) {
         const exp = new Date();
         exp.setDate(exp.getDate() + EXPIRY_DAYS_DEFAULT[req.type]);
         expiresAt = exp.toISOString();
     }
- 
+
     await db(`requests?id=eq.${id}`, {
         method:'PATCH',
         body: JSON.stringify({ status, ...(expiresAt?{expires_at:expiresAt}:{}) })
     });
- 
+
     const webhook    = WEBHOOK_BY_TYPE[req.type] || WEBHOOK_PASSPORT_LICENSE;
     const typeNames  = { passport:'🪪 Паспорт', medbook:'🏥 Мед. книжка', license:'🔫 Лицензия', faction_join:'🏛️ Вступление во фракцию', court:'⚖️ Судебный иск', government:'📋 Правительство', lawyer:'👨‍⚖️ Адвокат' };
     const emoji      = status==='approved' ? '✅' : '❌';
     const label      = status==='approved' ? 'ОДОБРЕНО' : 'ОТКЛОНЕНО';
- 
+
     const dataFields = [];
     if (req.char_name)   dataFields.push({ name:'📛 ФИО',           value:req.char_name,   inline:true });
     if (req.dob)         dataFields.push({ name:'🎂 Дата рождения', value:req.dob,         inline:true });
@@ -584,12 +584,12 @@ window.reviewRequest = async function(id, status) {
     if (req.weapon_type) dataFields.push({ name:'🔫 Оружие',        value:req.weapon_type, inline:true });
     if (req.note)        dataFields.push({ name:'📋 Примечание',    value:req.note,        inline:false });
     if (expiresAt)       dataFields.push({ name:'📅 Действителен до', value:new Date(expiresAt).toLocaleDateString('ru-RU'), inline:true });
- 
+
     // Стоимость для UnbelievaBoat
     if (status==='approved' && cost && cost !== '0') {
         dataFields.push({ name:'💰 Стоимость', value:`${cost}€ — используй: \`/eco add ${req.username} ${cost}\``, inline:false });
     }
- 
+
     await sendDiscordWebhook(webhook, {
         title:  `${emoji} ${typeNames[req.type]||req.type} — ${label}`,
         color:  status==='approved' ? 0x22c55e : 0xef4444,
@@ -601,13 +601,13 @@ window.reviewRequest = async function(id, status) {
         footer:    { text:`Novosibirsk RP • ID: ${id}` },
         timestamp: new Date().toISOString()
     });
- 
+
     notify(status==='approved' ? 'Одобрено!' : 'Отклонено!');
     loadAdminRequests();
 };
- 
+
 // ─── DOCUMENTS VIEWER ─────────────────────────
- 
+
 function renderDocCard(r, fields, icon, section) {
     const expLine    = docExpiryLine(r);
     const isExpired  = r.expires_at && new Date(r.expires_at) < new Date();
@@ -628,7 +628,7 @@ function renderDocCard(r, fields, icon, section) {
         ${btns}
     </div>`;
 }
- 
+
 window.loadPassports = async function() {
     const listEl = document.getElementById('passports-list');
     const loadEl = document.getElementById('passports-loading');
@@ -641,7 +641,7 @@ window.loadPassports = async function() {
     }
     if (loadEl) loadEl.style.display = '';
     let html = '';
- 
+
     if (canSeeAll) {
         const passports = await db('requests?type=eq.passport&status=eq.approved&order=created_at.desc');
         html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;color:#fff;margin-bottom:16px">🪪 Паспорта граждан</div>`;
@@ -649,7 +649,7 @@ window.loadPassports = async function() {
             : '<div style="display:grid;gap:12px;margin-bottom:40px">' + passports.map(r=>renderDocCard(r,
                 `<b>👤 Игрок:</b> ${r.username}<br><b>📛 ФИО:</b> ${r.char_name||'—'}<br><b>🎂 Дата рождения:</b> ${r.dob||'—'}<br><b>⚧ Пол:</b> ${r.reason||'—'}<br><b>💼 Место работы:</b> ${r.address||'—'}<br><b>🏠 Адрес:</b> ${r.experience||'—'}`,
                 '🪪','passports')).join('') + '</div>';
- 
+
         const licenses = await db('requests?type=eq.license&status=eq.approved&order=created_at.desc');
         html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;color:#fff;margin-bottom:16px">🔫 Лицензии на оружие</div>`;
         html += !licenses?.length ? '<div class="loading-text" style="opacity:0.5;margin-bottom:32px">Нет одобренных лицензий</div>'
@@ -657,7 +657,7 @@ window.loadPassports = async function() {
                 `<b>👤 Игрок:</b> ${r.username}<br><b>📛 ФИО:</b> ${r.char_name||'—'}<br><b>🏛️ Фракция:</b> ${r.faction||'—'}<br><b>🔫 Оружие:</b> ${r.weapon_type||'—'}`,
                 '🔫','passports')).join('') + '</div>';
     }
- 
+
     if (canSeeAll || canMedbok) {
         const medbooks = await db('requests?type=eq.medbook&status=eq.approved&order=created_at.desc');
         html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;color:#fff;margin-bottom:16px">🏥 Медицинские книжки</div>`;
@@ -666,13 +666,13 @@ window.loadPassports = async function() {
                 `<b>👤 Игрок:</b> ${r.username}<br><b>📛 ФИО:</b> ${r.char_name||'—'}<br><b>💼 Место работы:</b> ${r.address||'—'}<br><b>🏥 Болезнь:</b> ${r.note||'—'}`,
                 '🏥','passports')).join('') + '</div>';
     }
- 
+
     if (loadEl) loadEl.style.display = 'none';
     if (listEl) listEl.innerHTML = html;
 };
- 
+
 // ─── INIT ─────────────────────────────────────
- 
+
 document.addEventListener('DOMContentLoaded', () => {
     updateAuthZone();
     renderProfile();
@@ -680,4 +680,192 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('login-password')?.addEventListener('keydown', e=>{ if(e.key==='Enter') handleLogin(); });
     document.getElementById('reg-password2')?.addEventListener('keydown',  e=>{ if(e.key==='Enter') handleRegister(); });
 });
- 
+
+// ─── ПРАВИЛА ──────────────────────────────────
+
+const RULES_DATA = {
+    discord: [
+        { text: 'Запрещено неадекватное поведение, токсичность, спам, флуд, агрессия, угрозы, оскорбление родных', punishment: 'Предупреждение → мут (30 мин — 24 ч) → кик → перм бан', color: 'red' },
+        { text: 'Запрещена реклама сторонних проектов, платформ, ссылок или скам-ссылок', punishment: 'Предупреждение → мут (1 — 24 ч) → кик → перм бан', color: 'red' },
+        { text: 'Запрещено выдавать себя за администратора или модератора', punishment: 'Предупреждение → мут (1 — 24 ч) → кик → перм бан', color: 'red' },
+        { text: 'Запрещены оскорбления и неуважение к игрокам, администрации и модерации', punishment: 'Предупреждение → мут (1 — 24 ч) → кик → перм бан', color: 'red' },
+        { text: 'Мат разрешён только в рамках РП и без оскорблений личности', punishment: 'Предупреждение → мут (30 мин — 24 ч) → кик → перм бан', color: 'yellow' },
+        { text: 'Запрещено кричать, перекрикивать, перебивать, включать музыку, мешать другим играть', punishment: 'Предупреждение → мут (1 — 24 ч) → кик → перм бан', color: 'red' },
+        { text: 'Запрещено обсуждение пропагандных, национальных, политических и религиозных конфликтов', punishment: 'Предупреждение → мут (1 — 24 ч) → кик → перм бан', color: 'red' },
+        { text: 'Запрещена публикация приватных данных: фотографии, контакты и т.д.', punishment: 'Предупреждение → мут (12 — 24 ч) → кик → перм бан', color: 'red' },
+        { text: 'Запрещено препятствовать работе администрации и модерации, вмешательство или фейк жалобы', punishment: 'Предупреждение → мут (12 — 24 ч) → кик → перм бан', color: 'red' },
+    ],
+    rp: [
+        { title: 'NON RP', text: 'Неподобающее игровому миру поведение. Отыгрывайте роль максимально приближённо к реальной жизни. Для жалоб используйте знак /', punishment: 'Бан от 2 дней до перм бана', color: 'red' },
+        { title: 'Неподчинение старшему по званию', text: 'Неподчинение командам старшего по званию', punishment: '1 раз — предупреждение, 2 раз — бан от 2 дней', color: 'yellow' },
+        { title: 'Неадекватное поведение в суде', text: 'Неадекватное поведение в суде', punishment: '1 раз — предупреждение, 2 раз — бан от 2 дней', color: 'yellow' },
+        { title: 'Увольнение ради спасения', text: 'Увольняться с работы ради спасения кого-то', punishment: 'Бан от 3 дней', color: 'red' },
+        { title: 'Не остановка при просьбе админа', text: 'Не остановиться при просьбе администратора', punishment: 'Бан от 2 дней', color: 'red' },
+        { title: 'Перекрытие дороги', text: 'Перекрывать дорогу машиной или телом', punishment: '1 раз — предупреждение, 2 раз — бан от 2 дней', color: 'yellow' },
+        { title: 'Неподчинение полиции', text: 'Не подчиняться указаниям полиции: сесть в полицейскую машину и т.д.', punishment: 'Бан от 3 дней', color: 'red' },
+        { title: 'Грабёж без полиции', text: 'Грабить если полиции нет на сервере', punishment: '1 раз — предупреждение, 2 раз — бан от 4 дней', color: 'yellow' },
+        { title: 'Притворяться админом', text: 'Притворяться администратором', punishment: 'Бан от 3 дней', color: 'red' },
+        { title: 'Вмешательство в погони', text: 'Участвовать в погонях или перестрелках если ты не пострадавший', punishment: '1 раз — предупреждение, 2 раз — бан от 2 дней', color: 'yellow' },
+        { title: 'Троллинг и фейковые вызовы', text: 'Заниматься троллингом, фейковыми вызовами без причины', punishment: 'Бан от 5 дней', color: 'red' },
+        { title: 'Бессмысленные действия', text: 'Бег без причины, флуд сиренами, тараны, бессмысленные действия', punishment: '1 раз — предупреждение, 2 раз — бан от 2 дней', color: 'yellow' },
+        { title: 'Тиминг', text: 'Тиминг — полицейский не может помогать преступнику, скорая не должна помогать только преступникам', punishment: 'Бан от 4 дней', color: 'red' },
+        { title: 'Скутер при побеге', text: 'Использование скутера во время побега от полиции', punishment: '1 раз — предупреждение, 2 раз — бан от 2 дней', color: 'yellow' },
+        { title: 'Выход из игры в РП', text: 'Выходить из игры во время RP процесса без весомой причины', punishment: '1 раз — предупреждение, 2 раз — бан от 2 дней', color: 'yellow' },
+        { title: 'Грабёж свыше лимита', text: 'Грабить у игрока больше 8К в день', punishment: '1 раз — предупреждение, 2 раз — бан от 3 дней', color: 'yellow' },
+        { title: 'Преследование после ограбления', text: 'Останавливать, угрожать, убивать и преследовать игрока после ограбления на сумму 8К', punishment: '1 раз — предупреждение, 2 раз — бан от 3 дней', color: 'yellow' },
+        { title: 'Убийство ОПГ без причины', text: 'Убивать ОПГшников без причины и преследовать их после ограбления на 8К', punishment: '1 раз — предупреждение, 2 раз — бан от 3 дней', color: 'yellow' },
+        { title: 'КАФ без причины', text: 'Проверять наручниками или арестовывать без причины', punishment: '1 раз — предупреждение, 2 раз — бан от 3 дней', color: 'yellow' },
+        { title: 'Перестрелка ради фана', text: 'Создавать перестрелку ради фана и убивать в большом количестве', punishment: 'Бан от 4 дней', color: 'red' },
+        { title: 'Цена выкупа', text: 'Цена выкупа больше 18.000 Евро', punishment: '1 раз — предупреждение, 2 раз — бан от 2 дней', color: 'yellow' },
+        { title: 'Размер ОПГ', text: 'Больше 5 человек в ОПГ', punishment: '1 раз — предупреждение, 2 раз — бан от 3 дней', color: 'yellow' },
+        { title: 'Убийство после лечения', text: 'Убивать после лечения медика', punishment: '1 раз — предупреждение, 2 раз — бан от 2 дней', color: 'yellow' },
+        { title: 'Неоплата штрафа', text: 'Не оплата штрафа без розыска', punishment: '1 раз — предупреждение, 2 раз — бан от 2 дней', color: 'yellow' },
+        { title: 'Блокировка машин', text: 'Блокировать машины телом', punishment: '1 раз — предупреждение, 2 раз — бан от 2 дней', color: 'yellow' },
+        { title: 'Игнорирование вызовов', text: 'Не отвечать на вызовы диспетчера и игрока', punishment: '1 раз — предупреждение, 2 раз — бан от 2 дней', color: 'yellow' },
+        { title: 'Бомбы на транспорте', text: 'Клеить бомбы на транспортное средство и применять их как орудия убийства', punishment: 'Бан от 4 дней', color: 'red' },
+    ],
+    ic: [
+        { num: '1', title: 'Поведение персонажа', text: 'Твой персонаж обязан вести себя как реальный человек. Запрещено играть супергероя, бога, нарочно вести себя нереалистично', punishment: 'Бан 2 дня', color: 'red' },
+        { num: '2', title: 'Отыгрыш действий', text: 'Все ключевые действия персонажа отыгрываются через чат (/me, /do). Пример: /me достал кошелёк и передал деньги', punishment: '', color: 'blue' },
+        { num: '3', title: 'Совершеннолетие персонажа', text: 'Твой персонаж должен быть совершеннолетним. RP детей и подростков без разрешения сервера — запрещён', punishment: 'Бан 2 дня', color: 'red' },
+        { num: '4', title: 'Погоня окончена', text: 'Если преступник скрылся от полиции — полицейский прекращает задержание. Персонаж забывает номер, марку и цвет машины, и игрока которого преследовал', punishment: '', color: 'blue' },
+        { num: '5', title: 'Смерть персонажа', text: 'После смерти персонаж не помнит кто его убил и что произошло. Нельзя возвращаться на место смерти минимум 15 минут', punishment: 'Бан 3 дня', color: 'red' },
+        { num: '6', title: 'IC жалобы', text: 'IC-жалобы и разбирательства — через суд или мэрию, не в OOC-чате (Discord, микрофон, баги, реальная жизнь)', punishment: '', color: 'blue' },
+        { num: '7', title: 'Срыв мероприятий', text: 'Запрещено срывать мероприятия или ивенты', punishment: 'Бан 4 дня + запрет на ивенты', color: 'red' },
+        { num: '8', title: 'NON RP SKINS', text: 'Запрещены скины которые слишком большие, маленькие или дают преимущество', punishment: 'Предупреждение, бан 2 дня', color: 'yellow' },
+        { num: '9', title: 'SAVE ZONE', text: 'Запрещены убийства и перестрелки в безопасных зонах: больница, полицейский участок, пожарная часть, суд, автобусная станция, СТО', punishment: 'Предупреждение, бан 2 дня', color: 'yellow' },
+        { num: '10', title: 'Save Live RP', text: 'Бойтесь за свою сохранность и делайте всё возможное чтобы выжить. Подчиняйтесь если вас окружили', punishment: 'Бан 2 дня', color: 'red' },
+        { num: '11', title: 'Cheating', text: 'Использование читов — строжайший запрет', punishment: 'Перм бан', color: 'red' },
+        { num: '12', title: 'Токсичность на сервере', text: 'Токсичное и оскорбительное поведение в сторону игроков на сервере', punishment: 'Бан 2 дня', color: 'red' },
+        { num: '13', title: 'Spawn Kemp', text: 'Не выжидайте игроков на их спавне когда они не вышли из него', punishment: 'Бан 2 дня', color: 'red' },
+        { num: '14', title: 'MG (Metagaming)', text: 'Нельзя использовать информацию из Discord, стрима, OOC-чата если персонаж IC это не знает. Пример: если знаешь в Discord где кто-то прячется — твой персонаж не должен туда идти без причины', punishment: 'Бан 3 дня', color: 'red' },
+        { num: '15', title: 'RDM (Random Deathmatch)', text: 'Убийство без причины и отыгровки', punishment: 'Бан 2 дня', color: 'red' },
+        { num: '16', title: 'VDM (Vehicle Deathmatch)', text: 'Убийство машиной без причины и RP-ситуации', punishment: 'Бан 2 дня', color: 'red' },
+        { num: '17', title: 'Раздражение структур', text: 'Нельзя специально раздражать полицию, медиков или другие государственные структуры ради внимания', punishment: 'Бан 2 дня', color: 'red' },
+        { num: '18', title: 'Powergaming', text: 'Запрещены невозможные действия или не давать другим реагировать. Пример: /me быстро обездвижил 3 человек и убежал', punishment: 'Бан 2 дня', color: 'red' },
+        { num: '19', title: 'Реальные угрозы в IC', text: 'RP — это игра. Любые реальные угрозы, даже сказанные IC — запрещены', punishment: 'Бан 3 дня', color: 'red' },
+    ],
+    uk: [
+        { num: '1', title: 'Убийство (1 степень)', text: 'Умышленное лишение жизни другого персонажа', punishment: 'от 8 до 20 лет тюрьмы (по решению суда)', color: 'red' },
+        { num: '2', title: 'Покушение на убийство (2 степень)', text: 'Попытка убить другого без успеха (выстрел в голову, но не убил)', punishment: 'от 6 до 15 лет тюрьмы', color: 'red' },
+        { num: '3', title: 'Причинение тяжкого вреда здоровью', text: 'Серьёзные телесные повреждения, нанесённые умышленно', punishment: 'от 6 до 10 лет тюрьмы', color: 'red' },
+        { num: '4', title: 'Побои / нападение без оружия', text: 'Избиение без использования оружия', punishment: 'от 15 суток или исправительные работы', color: 'yellow' },
+        { num: '5', title: 'Кража', text: 'Похищение чужого имущества (без насилия)', punishment: 'Зависит от квалификации и решения суда', color: 'yellow' },
+        { num: '6', title: 'Разбой', text: 'Грабёж с применением оружия или угроз', punishment: 'от 5 до 15 лет тюрьмы', color: 'red' },
+        { num: '7', title: 'Неоплата штрафа', text: 'Всё зависит от суммы общего штрафа', punishment: 'от 6 до 10 лет тюрьмы', color: 'yellow' },
+        { num: '8', title: 'Хулиганство', text: 'Грубое нарушение общественного порядка (драки, маты, беспорядки)', punishment: 'от 5 лет тюрьмы', color: 'yellow' },
+        { num: '9', title: 'Неподчинение полиции', text: 'Отказ подчиняться приказам офицера', punishment: 'от 15 суток или штраф 6000€', color: 'yellow' },
+        { num: '10', title: 'Побег из-под стражи', text: 'Попытка сбежать из-под ареста или тюрьмы', punishment: 'от 4 лет тюрьмы', color: 'red' },
+        { num: '11', title: 'Уход от погони', text: 'Попытка скрыться от полиции на транспорте', punishment: 'от 15 суток тюрьмы', color: 'yellow' },
+        { num: '12', title: 'Нелегальное оружие', text: 'Хранение или использование незарегистрированного оружия', punishment: 'от 3 до 15 лет тюрьмы', color: 'red' },
+        { num: '13', title: 'Опасное вождение', text: 'Таран, дрифт, опасная езда', punishment: 'Штраф 5000€', color: 'yellow' },
+        { num: '14', title: 'Клевета', text: 'Распространение заведомо ложных сведений', punishment: 'от 5 лет тюрьмы', color: 'yellow' },
+        { num: '15', title: 'Захват заложника', text: 'Захват или удержание лица в качестве заложника', punishment: 'от 5 до 8 лет тюрьмы', color: 'red' },
+        { num: '16', title: 'Вандализм', text: 'Осквернение или порча имущества в общественных местах', punishment: 'от 2 лет тюрьмы', color: 'yellow' },
+        { num: '17', title: 'Уход с места ДТП', text: 'Покидание места Дорожно-Транспортного Происшествия', punishment: 'Штраф 5000€ и от 2 лет тюрьмы', color: 'yellow' },
+        { num: '18', title: 'Незаконное проникновение', text: 'Незаконное проникновение на охраняемый объект или служебную территорию', punishment: 'от 3 до 4 лет тюрьмы', color: 'yellow' },
+        { num: '19', title: 'Получение взятки', text: 'Получение должностным лицом взятки в виде денег, ценных бумаг или драгоценностей', punishment: 'от 4 до 6 лет тюрьмы', color: 'red' },
+        { num: '20', title: 'Дача взятки', text: 'Дача взятки должностному лицу', punishment: 'от 5 лет тюрьмы', color: 'red' },
+        { num: '21', title: 'Превышение должностных полномочий', text: 'Действия должностного лица явно выходящие за пределы его полномочий', punishment: 'от 6 до 8 лет тюрьмы', color: 'red' },
+        { num: '22', title: 'Похищение человека', text: 'Похищение человека', punishment: 'от 5 лет тюрьмы', color: 'red' },
+        { num: '23', title: 'Угрозы', text: 'Угрозы насилием или физической расправой', punishment: 'от 2 до 3 лет тюрьмы', color: 'yellow' },
+        { num: '24', title: 'Мошенничество (скам)', text: 'Скам на деньги', punishment: 'Штраф 3000€ + вернуть деньги или 3 года тюрьмы', color: 'red' },
+        { num: '25', title: 'Неподчинение и неоплата штрафа', text: 'Неподчинение и неоплата штрафа', punishment: '7 лет тюрьмы', color: 'red' },
+        { num: '26', title: 'Соучастие в преступлении', text: 'Зависит от преступления, срок немного уменьшен', punishment: 'Зависит от преступления', color: 'yellow' },
+        { num: '27', title: 'Самоуправство', text: 'Самовольное совершение действий правомерность которых оспаривается, если причинён существенный вред', punishment: 'По решению суда', color: 'yellow' },
+    ],
+    police: [
+        { title: 'Права задержанного', text: 'Каждый задержанный имеет право: на один звонок (до 3 минут), на молчание, на адвоката, на расшифровку статей, на отказ от судебного заседания', color: 'blue' },
+        { title: 'Основания для задержания', text: '1) Лицо застигнуто при совершении преступления\n2) Потерпевшие или очевидцы укажут на лицо как совершившее преступление\n3) На лице или его вещах обнаружены явные следы преступления', color: 'blue' },
+        { title: 'Порядок задержания', text: '1) Представиться (имя, фамилия, звание, ведомство)\n2) Сказать причину задержания\n3) Разъяснить права\n4) Установить личность в участке\n5) Реализовать законные права задержанного\n6) Вызвать судью (тикет)', color: 'blue' },
+        { title: 'Ожидание судьи и адвоката', text: 'Если судья не прибыл в течение 5 минут — разрешается доставить подозреваемого в тюрьму. Сотрудник обязан ждать адвоката 5 минут после его вызова', color: 'yellow' },
+        { title: 'Права защитника', text: '1) Конфиденциальный разговор с задержанным (не более 7 минут)\n2) Присутствовать при предъявлении обвинения\n3) Знакомиться с материалами уголовного дела\n4) Участвовать в допросе подозреваемого\nЗащитник может запросить видео-доказательства у сотрудника', color: 'blue' },
+        { title: 'Судебное разбирательство', text: 'Начинается только после начала заседания судьёй. Обязаны быть выслушаны обе стороны. Если ответчик не прибыл — суд рассматривает доказательства истца без него. Решение суда может быть оспорено через апелляционный суд', color: 'blue' },
+        { title: 'Гражданский арест', text: 'Сила при гражданском аресте соразмерна нарушению. После ареста — вызвать полицию или доставить преступника в суд. Задержанный освобождается если нет доказательств нарушения', color: 'yellow' },
+        { title: 'Следственные действия', text: 'Обыск, выемка, контроль и запись переговоров, допрос, проверка показаний на месте, осмотр', color: 'blue' },
+    ],
+    admin: [
+        { num: '1.1', title: 'Лицо сервера', text: 'Администрация/Модерация — лицо сервера. Каждый администратор обязан соблюдать нормы поведения, уважительно относиться к игрокам и коллегам', color: 'blue' },
+        { num: '1.2', title: 'Равенство перед правилами', text: 'Все администраторы равны перед правилами, независимо от ранга и стажа', color: 'blue' },
+        { num: '1.3', title: 'Задача администрации', text: 'Поддерживать RP-атмосферу, порядок и справедливость', color: 'blue' },
+        { num: '1.5', title: 'Транспорт', text: 'Администратор на сервере при использовании должностных полномочий обязан строго брать свою машину', color: 'yellow' },
+        { num: '2.1', title: 'Злоупотребление полномочиями', text: 'Запрещено злоупотребление полномочиями в личных целях: наказания «по знакомству», помощь друзьям, выдача преимуществ', punishment: 'Предупреждение → понижение → снятие', color: 'red' },
+        { num: '2.2', title: 'Провокации', text: 'Запрещено провоцировать игроков или участвовать в конфликтах вне административных рамок', punishment: 'Предупреждение → понижение', color: 'red' },
+        { num: '2.3', title: 'Нейтралитет', text: 'Администратор должен сохранять нейтралитет во всех RP-ситуациях. Личные симпатии не должны влиять на решения', color: 'blue' },
+        { num: '3.2', title: 'Обращения игроков', text: 'Не игнорируй обращения в репорт без причины', color: 'yellow' },
+        { num: '4.3', title: 'Fly запрещён', text: 'Запрещено использовать fly', punishment: 'Предупреждение', color: 'red' },
+        { num: '4.5', title: 'Строительство', text: 'Не строй без согласования главного администратора', punishment: 'Предупреждение → снятие', color: 'red' },
+        { num: '5.1', title: 'Субординация', text: 'Соблюдай субординацию — уважай старших по рангу и помогай младшим', color: 'blue' },
+        { num: '5.2', title: 'Конфиденциальность', text: 'Не выноси внутренние обсуждения и конфликты за пределы администрации', punishment: 'Понижение ранга или снятие', color: 'red' },
+        { num: '6.1', title: 'Ответственность', text: 'Нарушение правил влечёт предупреждение, понижение или снятие с должности. Повторное нарушение — блокировка доступа к административным функциям', color: 'red' },
+    ],
+    pdd: [
+        { num: '1', title: 'Езда по встречной полосе', text: 'Движение строго по правой полосе', punishment: 'Штраф 2000€ или 3000€ дискорд валютой', color: 'red' },
+        { num: '2', title: 'Обгон по двойной сплошной', text: 'Запрещён обгон по второй сплошной линии', punishment: 'Штраф 2500€ или 3500€ дискорд валютой', color: 'red' },
+        { num: '3', title: 'Разворот не в положенном месте', text: 'Разворот разрешён только в специально отведённых местах', punishment: 'Штраф 2000€ или 3000€ дискорд валютой', color: 'yellow' },
+        { num: '4', title: 'Езда по тротуарам', text: 'Запрещено движение по тротуарам', punishment: 'Штраф 1000€ или 2000€ дискорд валютой', color: 'yellow' },
+        { num: '5', title: 'Езда на красный сигнал', text: 'Запрещено проезжать на красный сигнал светофора', punishment: 'Штраф 1500€ или 2500€ дискорд валютой', color: 'red' },
+        { num: '6', title: 'Превышение скорости', text: 'Соблюдайте установленные скоростные ограничения', punishment: 'Штраф 2000€ или 3000€ дискорд валютой', color: 'yellow' },
+        { num: '7', title: 'Езда с выключенными фарами', text: 'Фары должны быть включены в тёмное время суток', punishment: 'Штраф 1700€ или 2700€ дискорд валютой', color: 'yellow' },
+        { num: '8', title: 'Неиспользование поворотников', text: 'Обязательно использовать поворотники при маневрировании', punishment: 'Штраф 1000€ или 2000€ дискорд валютой', color: 'yellow' },
+        { num: '9', title: 'Несоблюдение знаков', text: 'Соблюдение знаков дорожного движения обязательно', punishment: 'Штраф 1600€ или 2600€ дискорд валютой', color: 'yellow' },
+        { num: '10', title: 'Виновник — патрульный полицейский', text: 'Если виновник ДТП является патрульным полицейским', punishment: 'Штраф от 1000€–4000€ или 2000€–5000€ дискорд валютой + оплатить ремонт транспортного средства пострадавшему', color: 'red' },
+        { num: '11', title: 'Остановка в неположенном месте', text: 'Запрещена остановка на железных путях, тоннелях, мостах или на остановках для автобусов', punishment: 'Штраф 2500€ или 3500€ дискорд валютой', color: 'red' },
+        { num: '12', title: 'Вождение в нетрезвом виде', text: 'Езда в алкогольном опьянении строго запрещена', punishment: 'Арест на 15 суток', color: 'red' },
+        { num: '13', title: 'Парковка в неположенном месте', text: 'Парковаться только в разрешённых местах', punishment: 'Штраф 1500€ или 2500€ + машина на штраф-стоянку (HARS)', color: 'yellow' },
+        { num: '14', title: 'Алкотест и обыск', text: 'Водитель обязан по требованию полиции или ФСБ пройти алкотест, наркотест и обыск', color: 'blue' },
+        { num: '15', title: 'Предъявление документов', text: 'Водитель обязан показать документы при наличии весомых причин у сотрудника', color: 'blue' },
+        { num: '16', title: 'Беспричинный сигнал', text: 'Запрещено сигналить без причины', punishment: 'Штраф 1000€ или 2000€ дискорд валютой', color: 'yellow' },
+    ]
+};
+
+const RULE_COLORS = {
+    red:    { bg: 'rgba(239,68,68,0.06)',    border: 'rgba(239,68,68,0.2)',    badge: 'rgba(239,68,68,0.15)',    text: '#f87171' },
+    yellow: { bg: 'rgba(251,191,36,0.06)',   border: 'rgba(251,191,36,0.2)',   badge: 'rgba(251,191,36,0.15)',   text: '#fbbf24' },
+    blue:   { bg: 'rgba(14,165,233,0.06)',   border: 'rgba(14,165,233,0.2)',   badge: 'rgba(14,165,233,0.15)',   text: '#38bdf8' },
+    green:  { bg: 'rgba(34,197,94,0.06)',    border: 'rgba(34,197,94,0.2)',    badge: 'rgba(34,197,94,0.15)',    text: '#22c55e' },
+};
+
+function renderRuleCard(r, index) {
+    const c = RULE_COLORS[r.color] || RULE_COLORS.blue;
+    const num = r.num ? `<span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:${c.text};background:${c.badge};padding:2px 8px;border-radius:6px;margin-right:8px">§${r.num}</span>` : '';
+    const punishment = r.punishment ? `<div style="margin-top:8px;display:flex;align-items:flex-start;gap:8px"><span style="font-size:13px">⚠️</span><span style="font-size:13px;color:${c.text};font-weight:600">${r.punishment}</span></div>` : '';
+    const titleText = r.title || r.text.substring(0, 40) + '...';
+    const bodyText  = r.title ? r.text : '';
+    return `<div style="background:${c.bg};border:1px solid ${c.border};border-radius:14px;padding:16px 18px;margin-bottom:10px">
+        <div style="display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap">
+            <div style="flex:1;min-width:200px">
+                <div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:${bodyText?'6px':'0'}">${num}${titleText}</div>
+                ${bodyText ? `<div style="color:var(--text);font-size:14px;line-height:1.7;white-space:pre-line">${bodyText}</div>` : ''}
+                ${punishment}
+            </div>
+        </div>
+    </div>`;
+}
+
+function renderRuleSection(key, targetId) {
+    const el = document.getElementById(targetId);
+    if (!el || el.dataset.loaded) return;
+    const rules = RULES_DATA[key];
+    if (!rules) return;
+    el.innerHTML = rules.map((r, i) => renderRuleCard(r, i)).join('');
+    el.dataset.loaded = '1';
+}
+
+window.switchRules = function(section) {
+    document.querySelectorAll('.rules-section').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('[data-rules]').forEach(b => b.classList.remove('active'));
+    const el = document.getElementById('rules-' + section);
+    if (el) el.style.display = 'block';
+    document.querySelectorAll(`[data-rules="${section}"]`).forEach(b => b.classList.add('active'));
+    renderRuleSection(section, 'rules-' + section + '-list');
+};
+
+// Загружаем первый раздел при открытии вкладки
+const origSwitchTab = window.switchTab;
+window.switchTab = function(tab) {
+    origSwitchTab(tab);
+    if (tab === 'rules') {
+        renderRuleSection('discord', 'rules-discord-list');
+    }
+};
