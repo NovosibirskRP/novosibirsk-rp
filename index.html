@@ -203,6 +203,7 @@
             <button class="nav-btn" id="nav-portal" onclick="switchTab('portal')">Портал</button>
             <button class="nav-btn" id="nav-news" onclick="switchTab('news')">Новости</button>
             <button class="nav-btn" id="nav-team" onclick="switchTab('team')">Команда</button>
+            <button class="nav-btn" id="nav-rules" onclick="switchTab('rules')">Правила</button>
             <button class="nav-btn" id="nav-profile" onclick="switchTab('profile')">Профиль</button>
         </div>
         <div style="display:flex;align-items:center;gap:10px">
@@ -220,6 +221,7 @@
     <button class="mobile-nav-btn" id="mnav-portal" onclick="switchTab('portal');closeMobileMenu()">🏛️ Портал</button>
     <button class="mobile-nav-btn" id="mnav-news" onclick="switchTab('news');closeMobileMenu()">📰 Новости</button>
     <button class="mobile-nav-btn" id="mnav-team" onclick="switchTab('team');closeMobileMenu()">👥 Команда</button>
+    <button class="mobile-nav-btn" id="mnav-rules" onclick="switchTab('rules');closeMobileMenu()">📋 Правила</button>
     <button class="mobile-nav-btn" id="mnav-profile" onclick="switchTab('profile');closeMobileMenu()">👤 Профиль</button>
 </div>
 
@@ -231,7 +233,7 @@
         <div class="hero-grid"></div>
         <div style="position:relative">
             <div class="hero-tag">🚀 Сибирь на усиленном режиме</div>
-            <h1>Novosibirsk<br><span>RolePlay</span></h1>
+            <h1>Novosibirsk<br><span>Role Play</span></h1>
             <p>Суровый мегаполис, живые фракции, реальная экономика. Каждый выбор имеет последствия — стань частью города.</p>
             <div class="hero-btns">
                 <a href="https://discord.gg/rp9btukQV5" target="_blank" class="btn-discord">
@@ -546,7 +548,7 @@
             <option value="G8 — Пистолет-пулемёт">G8 — Пистолет-пулемёт</option>
             <option value="G9 — Гранатомёт">G9 — Гранатомёт</option>
             <option value="G10 — Тяжёлое вооружение">G10 — Тяжёлое вооружение</option>
-            <option value="G+ — Тяжёлое вооружение">G+ — Всё перечисленные оружия</option>
+            <option value="G+ — Тяжёлое вооружение">G+ — Всё оружие</option>
         </select>
         <div style="color:var(--text);font-size:11px;margin-top:4px">Зажмите Ctrl для выбора нескольких</div>
     </div>
@@ -702,6 +704,98 @@
         </div>
 
     </div>
+</div>
+</div>
+
+<!-- ПРАВИЛА -->
+<div class="tab" id="tab-rules">
+<div class="container" style="max-width:900px">
+    <div class="section-header">
+        <div class="section-title">Правила Сервера</div>
+        <div class="section-sub">Обязательно к прочтению — незнание не освобождает от ответственности</div>
+    </div>
+
+    <!-- Навигация по разделам правил -->
+    <div class="portal-nav" style="margin-bottom:28px">
+        <button class="portal-nav-btn active" data-rules="discord" onclick="switchRules('discord')">📕 Discord</button>
+        <button class="portal-nav-btn" data-rules="rp" onclick="switchRules('rp')">📄 Правила РП</button>
+        <button class="portal-nav-btn" data-rules="ic" onclick="switchRules('ic')">📘 IC Правила</button>
+        <button class="portal-nav-btn" data-rules="uk" onclick="switchRules('uk')">📗 УК РФ</button>
+        <button class="portal-nav-btn" data-rules="police" onclick="switchRules('police')">📙 Закон о полиции</button>
+        <button class="portal-nav-btn" data-rules="admin" onclick="switchRules('admin')">📜 Для администрации</button>
+        <button class="portal-nav-btn" data-rules="pdd" onclick="switchRules('pdd')">🚗 Правила ПДД</button>
+    </div>
+
+    <!-- DISCORD -->
+    <div id="rules-discord" class="rules-section">
+        <div style="background:rgba(88,101,242,0.08);border:1px solid rgba(88,101,242,0.25);border-radius:16px;padding:20px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
+            <span style="font-size:28px">📕</span>
+            <div><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff">Правила Discord сервера</div>
+            <div style="color:var(--text);font-size:13px">Нарушение = предупреждение → мут → кик → перм бан</div></div>
+        </div>
+        <div id="rules-discord-list"></div>
+    </div>
+
+    <!-- RP -->
+    <div id="rules-rp" class="rules-section" style="display:none">
+        <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:16px;padding:20px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
+            <span style="font-size:28px">📄</span>
+            <div><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff">Правила по РП</div>
+            <div style="color:var(--text);font-size:13px">NON RP — неподобающее игровому миру поведение</div></div>
+        </div>
+        <div id="rules-rp-list"></div>
+    </div>
+
+    <!-- IC -->
+    <div id="rules-ic" class="rules-section" style="display:none">
+        <div style="background:rgba(14,165,233,0.08);border:1px solid rgba(14,165,233,0.25);border-radius:16px;padding:20px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
+            <span style="font-size:28px">📘</span>
+            <div><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff">IC Правила</div>
+            <div style="color:var(--text);font-size:13px">Все игроки ведут себя как реальные люди в городе</div></div>
+        </div>
+        <div id="rules-ic-list"></div>
+    </div>
+
+    <!-- УК -->
+    <div id="rules-uk" class="rules-section" style="display:none">
+        <div style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.25);border-radius:16px;padding:20px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
+            <span style="font-size:28px">📗</span>
+            <div><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff">Уголовный Кодекс</div>
+            <div style="color:var(--text);font-size:13px">1 год = 1 минута &nbsp;•&nbsp; 1 сутки = 10 секунд</div></div>
+        </div>
+        <div id="rules-uk-list"></div>
+    </div>
+
+    <!-- ПОЛИЦИЯ -->
+    <div id="rules-police" class="rules-section" style="display:none">
+        <div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.25);border-radius:16px;padding:20px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
+            <span style="font-size:28px">📙</span>
+            <div><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff">Федеральный закон о полиции</div>
+            <div style="color:var(--text);font-size:13px">Уголовно-процессуальный кодекс</div></div>
+        </div>
+        <div id="rules-police-list"></div>
+    </div>
+
+    <!-- АДМИНИСТРАЦИЯ -->
+    <div id="rules-admin" class="rules-section" style="display:none">
+        <div style="background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.25);border-radius:16px;padding:20px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
+            <span style="font-size:28px">📜</span>
+            <div><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff">Правила для администрации</div>
+            <div style="color:var(--text);font-size:13px">Администрация — лицо сервера</div></div>
+        </div>
+        <div id="rules-admin-list"></div>
+    </div>
+
+    <!-- ПДД -->
+    <div id="rules-pdd" class="rules-section" style="display:none">
+        <div style="background:rgba(0,245,255,0.06);border:1px solid rgba(0,245,255,0.2);border-radius:16px;padding:20px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
+            <span style="font-size:28px">🚗</span>
+            <div><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff">Правила дорожного движения</div>
+            <div style="color:var(--text);font-size:13px">Движение строго по правой полосе</div></div>
+        </div>
+        <div id="rules-pdd-list"></div>
+    </div>
+
 </div>
 </div>
 
