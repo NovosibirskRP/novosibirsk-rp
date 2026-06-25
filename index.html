@@ -50,30 +50,16 @@
         .section-header{margin-bottom:32px}
         .section-title{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:3px;color:#fff}
         .section-sub{color:var(--text);font-size:15px;margin-top:4px}
-
-        /* FACTIONS GRID - improved */
-        .factions-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
-        .faction-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:22px;transition:all 0.3s;position:relative;overflow:hidden;cursor:pointer}
+        .factions-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px}
+        .faction-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px;transition:all 0.3s;position:relative;overflow:hidden}
         .faction-card::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity 0.3s;background:linear-gradient(135deg,rgba(0,245,255,0.05),transparent)}
-        .faction-card:hover{border-color:rgba(0,245,255,0.35);transform:translateY(-5px);box-shadow:0 20px 40px rgba(0,0,0,0.5)}
+        .faction-card:hover{border-color:rgba(0,245,255,0.3);transform:translateY(-4px);box-shadow:0 20px 40px rgba(0,0,0,0.4)}
         .faction-card:hover::before{opacity:1}
-        .faction-icon{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:14px;border:1px solid var(--border)}
-        .faction-name{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff;margin-bottom:6px}
-        .faction-desc{color:var(--text);font-size:13px;line-height:1.6}
-        .faction-tag{display:inline-block;margin-top:12px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--cyan);border:1px solid rgba(0,245,255,0.2);padding:3px 10px;border-radius:4px;letter-spacing:1px}
+        .faction-icon{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:16px;border:1px solid var(--border)}
+        .faction-name{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:#fff;margin-bottom:8px}
+        .faction-desc{color:var(--text);font-size:14px;line-height:1.6}
+        .faction-tag{display:inline-block;margin-top:14px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--cyan);border:1px solid rgba(0,245,255,0.2);padding:3px 10px;border-radius:4px;letter-spacing:1px}
         .faction-tag.criminal{color:#f87171;border-color:rgba(248,113,113,0.2)}
-        .faction-tag.mafia{color:#c084fc;border-color:rgba(192,132,252,0.2)}
-        .faction-arrow{position:absolute;bottom:16px;right:16px;color:rgba(0,245,255,0.3);font-size:18px;transition:all 0.2s}
-        .faction-card:hover .faction-arrow{color:var(--cyan);transform:translateX(3px)}
-
-        /* FACTION CATEGORIES */
-        .faction-category{margin-bottom:40px}
-        .faction-cat-title{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:3px;color:var(--text);margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--border);text-transform:uppercase}
-        .faction-cat-title.gov{color:var(--cyan)}
-        .faction-cat-title.crim{color:#f87171}
-        .faction-cat-title.service{color:#22c55e}
-
-        /* PORTAL */
         .portal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px}
         .portal-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px 20px;cursor:pointer;transition:all 0.25s;position:relative;overflow:hidden;text-align:center}
         .portal-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--cyan),var(--blue));transform:scaleX(0);transition:transform 0.3s}
@@ -82,21 +68,6 @@
         .portal-icon{font-size:40px;margin-bottom:16px;display:block}
         .portal-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:#fff;margin-bottom:6px}
         .portal-desc{color:var(--text);font-size:12px;line-height:1.5}
-
-        /* PORTAL - FACTION SECTION */
-        .faction-portal-header{display:flex;align-items:center;gap:16px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px 24px;margin-bottom:20px}
-        .faction-portal-icon{font-size:32px;width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border)}
-        .faction-portal-name{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:#fff}
-        .faction-portal-sub{color:var(--text);font-size:13px}
-        .faction-portal-back{margin-left:auto;background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:600;padding:8px 16px;border-radius:10px;cursor:pointer;transition:all 0.2s}
-        .faction-portal-back:hover{color:#fff;background:rgba(255,255,255,0.1)}
-        .opg-counter{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap}
-        .opg-counter-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 18px;text-align:center;flex:1;min-width:120px}
-        .opg-counter-num{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--cyan);line-height:1}
-        .opg-counter-num.red{color:#f87171}
-        .opg-counter-label{color:var(--text);font-size:11px;letter-spacing:1px;text-transform:uppercase;margin-top:4px}
-
-        /* MODALS */
         .modal-overlay{position:fixed;inset:0;z-index:500;background:rgba(3,7,18,0.92);backdrop-filter:blur(12px);display:none;align-items:center;justify-content:center;padding:20px}
         .modal-overlay.open{display:flex;animation:fadeIn 0.2s ease}
         @keyframes fadeIn{from{opacity:0}to{opacity:1}}
@@ -145,53 +116,22 @@
         .btn-approve:hover{background:rgba(34,197,94,0.2)}
         .btn-reject{flex:1;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#f87171;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:13px;letter-spacing:1px;text-transform:uppercase;padding:10px;border-radius:10px;cursor:pointer;transition:all 0.2s}
         .btn-reject:hover{background:rgba(239,68,68,0.2)}
-
-        /* PROFILE - improved */
         .profile-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:24px;margin-bottom:18px}
         .profile-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--border)}
         .profile-row:last-child{border-bottom:none}
         .profile-label{color:var(--text);font-size:12px;letter-spacing:1px;text-transform:uppercase}
         .profile-value{color:#fff;font-weight:600;font-size:15px}
-        .profile-avatar-wrap{position:relative;display:inline-block}
-        .profile-avatar-big{width:80px;height:80px;border-radius:20px;background:rgba(0,245,255,0.1);border:2px solid rgba(0,245,255,0.3);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:38px;color:var(--cyan);cursor:pointer;transition:all 0.2s;overflow:hidden}
-        .profile-avatar-big:hover{border-color:var(--cyan);box-shadow:0 0 20px rgba(0,245,255,0.2)}
-        .profile-avatar-big img{width:100%;height:100%;object-fit:cover;border-radius:18px}
-        .profile-avatar-badge{position:absolute;bottom:-4px;right:-4px;background:var(--cyan);color:#030712;border-radius:6px;font-size:10px;padding:2px 6px;font-family:'JetBrains Mono',monospace;font-weight:700}
-        .profile-stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
-        .profile-stat{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center}
-        .profile-stat-num{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--cyan);line-height:1}
-        .profile-stat-label{color:var(--text);font-size:11px;letter-spacing:1px;text-transform:uppercase;margin-top:4px}
-        .profile-role-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(0,245,255,0.1);border:1px solid rgba(0,245,255,0.25);color:var(--cyan);font-family:'JetBrains Mono',monospace;font-size:11px;padding:4px 12px;border-radius:8px;letter-spacing:1px}
-        .profile-faction-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.25);color:#c084fc;font-family:'JetBrains Mono',monospace;font-size:11px;padding:4px 12px;border-radius:8px;letter-spacing:1px;margin-top:6px}
-        .profile-action-btn{background:rgba(255,255,255,0.03);border:1px solid var(--border);color:var(--text);font-family:'Rajdhani',sans-serif;font-weight:600;font-size:14px;letter-spacing:0.5px;padding:12px 18px;border-radius:12px;cursor:pointer;transition:all 0.2s;width:100%;text-align:left;display:flex;align-items:center;gap:12px;margin-bottom:8px}
-        .profile-action-btn:hover{color:#fff;background:rgba(255,255,255,0.07);border-color:rgba(255,255,255,0.15)}
-        .profile-action-btn span{font-size:18px}
-
-        /* NEWS - improved */
-        .news-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px}
-        .news-card{background:var(--card);border:1px solid var(--border);border-radius:20px;overflow:hidden;transition:all 0.25s;display:flex;flex-direction:column}
-        .news-card:hover{border-color:rgba(0,245,255,0.3);transform:translateY(-3px);box-shadow:0 16px 40px rgba(0,0,0,0.5)}
-        .news-card-img{width:100%;height:180px;object-fit:cover;display:block;background:rgba(0,245,255,0.03)}
-        .news-card-img-placeholder{width:100%;height:180px;background:linear-gradient(135deg,rgba(0,245,255,0.05),rgba(14,165,233,0.05));display:flex;align-items:center;justify-content:center;font-size:48px;border-bottom:1px solid var(--border)}
-        .news-card-body{padding:20px;flex:1;display:flex;flex-direction:column}
+        .news-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:18px}
+        .news-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:22px;transition:all 0.2s}
+        .news-card:hover{border-color:rgba(0,245,255,0.25)}
         .news-tag{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:100px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px}
         .tag-important{background:rgba(239,68,68,0.1);color:#f87171;border:1px solid rgba(239,68,68,0.2)}
         .tag-update{background:rgba(0,245,255,0.1);color:var(--cyan);border:1px solid rgba(0,245,255,0.2)}
         .tag-event{background:rgba(168,85,247,0.1);color:#c084fc;border:1px solid rgba(168,85,247,0.2)}
         .tag-custom{background:rgba(251,191,36,0.1);color:#fbbf24;border:1px solid rgba(251,191,36,0.2)}
-        .news-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:#fff;margin-bottom:10px;line-height:1.2}
-        .news-text{color:var(--text);font-size:14px;line-height:1.7;flex:1}
-        .news-footer{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:12px;border-top:1px solid var(--border)}
-        .news-date{font-family:'JetBrains Mono',monospace;font-size:11px;color:#334155}
-        .news-author{font-family:'JetBrains Mono',monospace;font-size:11px;color:rgba(0,245,255,0.4)}
-
-        /* NEWS ADMIN PANEL */
-        .news-publish-panel{background:var(--card);border:1px solid rgba(0,245,255,0.2);border-radius:20px;padding:24px;margin-bottom:28px}
-        .news-publish-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
-        .news-tag-custom-row{display:none;margin-bottom:12px}
-        .news-image-row{margin-bottom:12px}
-        .news-img-preview{width:100%;max-height:200px;object-fit:cover;border-radius:12px;margin-top:10px;display:none;border:1px solid var(--border)}
-
+        .news-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:#fff;margin-bottom:10px}
+        .news-text{color:var(--text);font-size:14px;line-height:1.7}
+        .news-date{font-family:'JetBrains Mono',monospace;font-size:11px;color:#334155;margin-top:12px}
         .why-item{display:flex;gap:16px;margin-bottom:20px;align-items:flex-start}
         .why-num{font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--cyan);line-height:1;flex-shrink:0;width:32px}
         .why-text{color:var(--text);font-size:15px;line-height:1.6;padding-top:6px}
@@ -221,8 +161,8 @@
             .portal-icon{font-size:30px;margin-bottom:10px}
             .portal-title{font-size:14px}
             .portal-desc{font-size:11px}
-            .factions-grid{grid-template-columns:1fr 1fr;gap:10px}
-            .faction-card{padding:16px}
+            .factions-grid{grid-template-columns:1fr;gap:12px}
+            .faction-card{padding:18px}
             .news-grid{grid-template-columns:1fr}
             .modal-box{border-radius:16px;max-height:95vh}
             .modal-body{padding:16px 18px 20px}
@@ -236,8 +176,7 @@
             .doc-card{flex-direction:column;align-items:flex-start;gap:10px}
             .profile-card{padding:16px}
             .section-title{font-size:26px}
-            .news-publish-grid{grid-template-columns:1fr}
-            .profile-stats-grid{grid-template-columns:repeat(3,1fr)}
+            /* Мобильное меню бургер */
             .mobile-menu-btn{display:flex !important}
             .mobile-nav{display:none;position:fixed;inset:0;top:72px;background:rgba(3,7,18,0.98);backdrop-filter:blur(20px);z-index:99;flex-direction:column;padding:20px;gap:8px;border-top:1px solid var(--border)}
             .mobile-nav.open{display:flex}
@@ -256,16 +195,16 @@
 
 <nav>
     <div class="nav-inner">
-        <div class="logo" onclick="navigateTo('main');closeMobileMenu()">
+        <div class="logo" onclick="switchTab('main');closeMobileMenu()">
             <span class="logo-text">NOVOSIBIRSK RP</span>
         </div>
         <div class="nav-links">
-            <button class="nav-btn active" id="nav-main" onclick="navigateTo('main')">Главная</button>
-            <button class="nav-btn" id="nav-portal" onclick="navigateTo('portal')">Портал</button>
-            <button class="nav-btn" id="nav-news" onclick="navigateTo('news')">Новости</button>
-            <button class="nav-btn" id="nav-team" onclick="navigateTo('team')">Команда</button>
-            <button class="nav-btn" id="nav-rules" onclick="navigateTo('rules')">Правила</button>
-            <button class="nav-btn" id="nav-profile" onclick="navigateTo('profile')">Профиль</button>
+            <button class="nav-btn active" id="nav-main" onclick="switchTab('main')">Главная</button>
+            <button class="nav-btn" id="nav-portal" onclick="switchTab('portal')">Портал</button>
+            <button class="nav-btn" id="nav-news" onclick="switchTab('news')">Новости</button>
+            <button class="nav-btn" id="nav-team" onclick="switchTab('team')">Команда</button>
+            <button class="nav-btn" id="nav-rules" onclick="switchTab('rules')">Правила</button>
+            <button class="nav-btn" id="nav-profile" onclick="switchTab('profile')">Профиль</button>
         </div>
         <div style="display:flex;align-items:center;gap:10px">
             <div class="auth-zone" id="auth-zone">
@@ -278,12 +217,12 @@
 
 <!-- Мобильное меню -->
 <div class="mobile-nav" id="mobile-nav">
-    <button class="mobile-nav-btn active" id="mnav-main" onclick="navigateTo('main');closeMobileMenu()">🏠 Главная</button>
-    <button class="mobile-nav-btn" id="mnav-portal" onclick="navigateTo('portal');closeMobileMenu()">🏛️ Портал</button>
-    <button class="mobile-nav-btn" id="mnav-news" onclick="navigateTo('news');closeMobileMenu()">📰 Новости</button>
-    <button class="mobile-nav-btn" id="mnav-team" onclick="navigateTo('team');closeMobileMenu()">👥 Команда</button>
-    <button class="mobile-nav-btn" id="mnav-rules" onclick="navigateTo('rules');closeMobileMenu()">📋 Правила</button>
-    <button class="mobile-nav-btn" id="mnav-profile" onclick="navigateTo('profile');closeMobileMenu()">👤 Профиль</button>
+    <button class="mobile-nav-btn active" id="mnav-main" onclick="switchTab('main');closeMobileMenu()">🏠 Главная</button>
+    <button class="mobile-nav-btn" id="mnav-portal" onclick="switchTab('portal');closeMobileMenu()">🏛️ Портал</button>
+    <button class="mobile-nav-btn" id="mnav-news" onclick="switchTab('news');closeMobileMenu()">📰 Новости</button>
+    <button class="mobile-nav-btn" id="mnav-team" onclick="switchTab('team');closeMobileMenu()">👥 Команда</button>
+    <button class="mobile-nav-btn" id="mnav-rules" onclick="switchTab('rules');closeMobileMenu()">📋 Правила</button>
+    <button class="mobile-nav-btn" id="mnav-profile" onclick="switchTab('profile');closeMobileMenu()">👤 Профиль</button>
 </div>
 
 <!-- ГЛАВНАЯ -->
@@ -306,132 +245,23 @@
         </div>
     </div>
     <div class="stats">
-        <div class="stat-card"><div class="stat-num">14</div><div class="stat-label">Фракций</div></div>
+        <div class="stat-card"><div class="stat-num">8</div><div class="stat-label">Фракций</div></div>
         <div class="stat-card"><div class="stat-num">--/-</div><div class="stat-label">Онлайн</div></div>
-        <div class="stat-card"><div class="stat-num">52</div><div class="stat-label">Участников в Дискорд</div></div>
+        <div class="stat-card"><div class="stat-num">52</div><div class="stat-label">Участников в Дискорд Сервере</div></div>
     </div>
-
-    <!-- ГОСУДАРСТВЕННЫЕ ФРАКЦИИ -->
-    <div class="faction-category">
-        <div class="section-header" style="margin-bottom:16px">
-            <div class="section-title">Государственные Структуры</div>
-            <div class="section-sub">Правопорядок, правосудие и государственное управление</div>
-        </div>
-        <div class="factions-grid">
-            <div class="faction-card" onclick="goToFaction('fsb')">
-                <div class="faction-icon" style="background:rgba(234,179,8,0.08);border-color:rgba(234,179,8,0.2)">🕵️</div>
-                <div class="faction-name">ФСБ</div>
-                <div class="faction-desc">Федеральная служба безопасности. Контрразведка, оперативная работа и надзор за государственной безопасностью.</div>
-                <span class="faction-tag">ГОСУДАРСТВЕННАЯ</span>
-                <div class="faction-arrow">→</div>
-            </div>
-            <div class="faction-card" onclick="goToFaction('fso')">
-                <div class="faction-icon" style="background:rgba(234,179,8,0.08);border-color:rgba(234,179,8,0.2)">🛡️</div>
-                <div class="faction-name">ФСО</div>
-                <div class="faction-desc">Федеральная служба охраны. Обеспечение безопасности государственных объектов и VIP-персон.</div>
-                <span class="faction-tag">ГОСУДАРСТВЕННАЯ</span>
-                <div class="faction-arrow">→</div>
-            </div>
-            <div class="faction-card" onclick="goToFaction('sobr')">
-                <div class="faction-icon" style="background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.2)">🪖</div>
-                <div class="faction-name">СОБР</div>
-                <div class="faction-desc">Специальный отряд быстрого реагирования. Штурмы, захват преступников, поддержка силовых операций.</div>
-                <span class="faction-tag">ГОСУДАРСТВЕННАЯ</span>
-                <div class="faction-arrow">→</div>
-            </div>
-            <div class="faction-card" onclick="goToFaction('police')">
-                <div class="faction-icon" style="background:rgba(59,130,246,0.08);border-color:rgba(59,130,246,0.2)">🚔</div>
-                <div class="faction-name">Патрульная Полиция</div>
-                <div class="faction-desc">Обеспечение правопорядка, патрулирование улиц, перехват нарушителей и организация блокпостов.</div>
-                <span class="faction-tag">ГОСУДАРСТВЕННАЯ</span>
-                <div class="faction-arrow">→</div>
-            </div>
-            <div class="faction-card" onclick="goToFaction('prokuratura')">
-                <div class="faction-icon" style="background:rgba(59,130,246,0.08);border-color:rgba(59,130,246,0.2)">⚖️</div>
-                <div class="faction-name">Прокуратура</div>
-                <div class="faction-desc">Надзор за законностью, возбуждение уголовных дел, представление обвинения в суде.</div>
-                <span class="faction-tag">ГОСУДАРСТВЕННАЯ</span>
-                <div class="faction-arrow">→</div>
-            </div>
-            <div class="faction-card" onclick="goToFaction('advokatura')">
-                <div class="faction-icon" style="background:rgba(34,197,94,0.08);border-color:rgba(34,197,94,0.2)">👨‍⚖️</div>
-                <div class="faction-name">Адвокатура</div>
-                <div class="faction-desc">Защита прав граждан, юридическая помощь и представление интересов подзащитных в суде.</div>
-                <span class="faction-tag">ГОСУДАРСТВЕННАЯ</span>
-                <div class="faction-arrow">→</div>
-            </div>
-            <div class="faction-card" onclick="goToFaction('court')">
-                <div class="faction-icon" style="background:rgba(168,85,247,0.08);border-color:rgba(168,85,247,0.2)">🏛️</div>
-                <div class="faction-name">Верховный Суд</div>
-                <div class="faction-desc">Высшая судебная инстанция. Рассмотрение уголовных и гражданских дел, вынесение приговоров.</div>
-                <span class="faction-tag">ГОСУДАРСТВЕННАЯ</span>
-                <div class="faction-arrow">→</div>
-            </div>
-            <div class="faction-card" onclick="goToFaction('gtrk')">
-                <div class="faction-icon" style="background:rgba(14,165,233,0.08);border-color:rgba(14,165,233,0.2)">📺</div>
-                <div class="faction-name">ГТРК</div>
-                <div class="faction-desc">Государственная телерадиокомпания. Прямые эфиры, журналистские расследования и репортажи.</div>
-                <span class="faction-tag">ГОСУДАРСТВЕННАЯ</span>
-                <div class="faction-arrow">→</div>
-            </div>
-        </div>
+    <div class="section-header">
+        <div class="section-title">Фракции</div>
+        <div class="section-sub">Государственные структуры и криминальный мир Новосибирска</div>
     </div>
-
-    <!-- СЛУЖБЫ СПАСЕНИЯ -->
-    <div class="faction-category">
-        <div class="section-header" style="margin-bottom:16px">
-            <div class="section-title">Службы Спасения</div>
-            <div class="section-sub">Медицина, спасение и техническая помощь</div>
-        </div>
-        <div class="factions-grid">
-            <div class="faction-card" onclick="goToFaction('mchs')">
-                <div class="faction-icon" style="background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.2)">🚑</div>
-                <div class="faction-name">МЧС</div>
-                <div class="faction-desc">Министерство чрезвычайных ситуаций. Медицинская помощь, пожарные и спасательные операции.</div>
-                <span class="faction-tag" style="color:#22c55e;border-color:rgba(34,197,94,0.2)">ЭКСТРЕННАЯ СЛУЖБА</span>
-                <div class="faction-arrow">→</div>
-            </div>
-            <div class="faction-card" onclick="goToFaction('hospital')">
-                <div class="faction-icon" style="background:rgba(34,197,94,0.08);border-color:rgba(34,197,94,0.2)">🏥</div>
-                <div class="faction-name">Городская Больница</div>
-                <div class="faction-desc">Стационарное лечение, выдача медицинских книжек, оказание плановой помощи гражданам.</div>
-                <span class="faction-tag" style="color:#22c55e;border-color:rgba(34,197,94,0.2)">ЭКСТРЕННАЯ СЛУЖБА</span>
-                <div class="faction-arrow">→</div>
-            </div>
-            <div class="faction-card" onclick="goToFaction('hars')">
-                <div class="faction-icon" style="background:rgba(251,191,36,0.08);border-color:rgba(251,191,36,0.2)">🔧</div>
-                <div class="faction-name">ХАРС (HARS/ADAC)</div>
-                <div class="faction-desc">Служба дорожной помощи и эвакуации. Буксировка, техобслуживание, эвакуация на штраф-стоянку.</div>
-                <span class="faction-tag" style="color:#fbbf24;border-color:rgba(251,191,36,0.2)">ТЕХНИЧЕСКАЯ СЛУЖБА</span>
-                <div class="faction-arrow">→</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- КРИМИНАЛЬНЫЕ ФРАКЦИИ -->
-    <div class="faction-category">
-        <div class="section-header" style="margin-bottom:16px">
-            <div class="section-title">Криминальный Мир</div>
-            <div class="section-sub">Организованная преступность Новосибирска</div>
-        </div>
-        <div class="factions-grid">
-            <div class="faction-card" onclick="goToFaction('opg')">
-                <div class="faction-icon" style="background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.2)">💀</div>
-                <div class="faction-name">ОПГ</div>
-                <div class="faction-desc">Организованная преступная группировка. Теневой бизнес, уличный контроль, криминальные операции.</div>
-                <span class="faction-tag criminal">КРИМИНАЛЬНАЯ</span>
-                <div id="opg-counter-badge" style="margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text)">Загрузка...</div>
-                <div class="faction-arrow">→</div>
-            </div>
-            <div class="faction-card" onclick="goToFaction('mafia')">
-                <div class="faction-icon" style="background:rgba(168,85,247,0.08);border-color:rgba(168,85,247,0.2)">🤵</div>
-                <div class="faction-name">Мафия</div>
-                <div class="faction-desc">Итальянская организованная преступность. Контроль над бизнесом, коррупция и серые схемы.</div>
-                <span class="faction-tag mafia">КРИМИНАЛЬНАЯ</span>
-                <div id="mafia-counter-badge" style="margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text)">Загрузка...</div>
-                <div class="faction-arrow">→</div>
-            </div>
-        </div>
+    <div class="factions-grid">
+        <div class="faction-card"><div class="faction-icon" style="background:rgba(234,179,8,0.08);border-color:rgba(234,179,8,0.2)">🕵️</div><div class="faction-name">ФСБ</div><div class="faction-desc">Федеральная служба безопасности. Контрразведка, оперативная работа и надзор за государственной безопасностью.</div><span class="faction-tag">ГОСУДАРСТВЕННАЯ</span></div>
+        <div class="faction-card"><div class="faction-icon" style="background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.2)">🪖</div><div class="faction-name">СОБР</div><div class="faction-desc">Специальный отряд быстрого реагирования. Штурмы, захват преступников, поддержка силовых операций.</div><span class="faction-tag">ГОСУДАРСТВЕННАЯ</span></div>
+        <div class="faction-card"><div class="faction-icon" style="background:rgba(59,130,246,0.08);border-color:rgba(59,130,246,0.2)">🚔</div><div class="faction-name">Патрульная Полиция (ДПС)</div><div class="faction-desc">Обеспечение правопорядка, патрулирование улиц, перехват нарушителей и организация блокпостов.</div><span class="faction-tag">ГОСУДАРСТВЕННАЯ</span></div>
+        <div class="faction-card"><div class="faction-icon" style="background:rgba(59,130,246,0.08);border-color:rgba(59,130,246,0.2)">⚖️</div><div class="faction-name">Прокуратура</div><div class="faction-desc">Надзор за законностью, возбуждение уголовных дел, представление обвинения в суде.</div><span class="faction-tag">ГОСУДАРСТВЕННАЯ</span></div>
+        <div class="faction-card"><div class="faction-icon" style="background:rgba(34,197,94,0.08);border-color:rgba(34,197,94,0.2)">👨‍⚖️</div><div class="faction-name">Адвокатура</div><div class="faction-desc">Защита прав граждан, юридическая помощь и представление интересов подзащитных в суде.</div><span class="faction-tag">ГОСУДАРСТВЕННАЯ</span></div>
+        <div class="faction-card"><div class="faction-icon" style="background:rgba(168,85,247,0.08);border-color:rgba(168,85,247,0.2)">🏛️</div><div class="faction-name">Верховный Суд</div><div class="faction-desc">Высшая судебная инстанция. Рассмотрение уголовных и гражданских дел, вынесение приговоров.</div><span class="faction-tag">ГОСУДАРСТВЕННАЯ</span></div>
+        <div class="faction-card"><div class="faction-icon" style="background:rgba(14,165,233,0.08);border-color:rgba(14,165,233,0.2)">📺</div><div class="faction-name">ГТРК</div><div class="faction-desc">Государственная телерадиокомпания. Прямые эфиры, журналистские расследования и репортажи.</div><span class="faction-tag">ГОСУДАРСТВЕННАЯ</span></div>
+        <div class="faction-card"><div class="faction-icon" style="background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.2)">💀</div><div class="faction-name">ОПГ (RUCH)</div><div class="faction-desc">Организованная преступная группировка. Теневой бизнес, уличный контроль, криминальные операции.</div><span class="faction-tag criminal">КРИМИНАЛЬНАЯ</span></div>
     </div>
 </div>
 </div>
@@ -439,128 +269,108 @@
 <!-- ПОРТАЛ -->
 <div class="tab" id="tab-portal">
 <div class="container">
-    <!-- Обычный портал (по умолчанию) -->
-    <div id="portal-main-view">
-        <div class="section-header" style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:16px">
-            <div><div class="section-title">Городской Портал</div><div class="section-sub">Документы, лицензии, заявления и информация</div></div>
-        </div>
-        <div class="portal-nav">
-            <button class="portal-nav-btn active" data-section="services" onclick="switchPortal('services')">🏛️ Услуги</button>
-            <button class="portal-nav-btn" data-section="mydocs" onclick="switchPortal('mydocs')">📄 Мои документы</button>
-            <button class="portal-nav-btn" data-section="salary" onclick="switchPortal('salary')">💰 Зарплаты</button>
-            <button class="portal-nav-btn" data-section="ranks" onclick="switchPortal('ranks')">🏆 Звания</button>
-            <button class="portal-nav-btn admin-only" data-section="admin-requests" id="btn-admin-requests" style="display:none" onclick="switchPortal('admin-requests')">⚙️ Заявки</button>
-            <button class="portal-nav-btn police-only" data-section="passports" id="btn-passports" style="display:none" onclick="switchPortal('passports')">📋 Документы</button>
-        </div>
+    <div class="section-header" style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:16px">
+        <div><div class="section-title">Городской Портал</div><div class="section-sub">Документы, лицензии, заявления и информация</div></div>
+    </div>
+    <div class="portal-nav">
+        <button class="portal-nav-btn active" data-section="services" onclick="switchPortal('services')">🏛️ Услуги</button>
+        <button class="portal-nav-btn" data-section="mydocs" onclick="switchPortal('mydocs')">📄 Мои документы</button>
+        <button class="portal-nav-btn" data-section="salary" onclick="switchPortal('salary')">💰 Зарплаты</button>
+        <button class="portal-nav-btn" data-section="ranks" onclick="switchPortal('ranks')">🏆 Звания</button>
+        <button class="portal-nav-btn admin-only" data-section="admin-requests" id="btn-admin-requests" style="display:none" onclick="switchPortal('admin-requests')">⚙️ Заявки</button>
+        <button class="portal-nav-btn police-only" data-section="passports" id="btn-passports" style="display:none" onclick="switchPortal('passports')">📋 Документы</button>
+    </div>
 
-        <div id="portal-services">
-            <div class="portal-grid">
-                <div class="portal-card" onclick="requireAuth(function(){openModal('passport')})"><span class="portal-icon">🪪</span><div class="portal-title">Паспорт</div><div class="portal-desc">Оформить гражданский паспорт Новосибирска</div></div>
-                <div class="portal-card" onclick="requireAuth(function(){openModal('medbook')})"><span class="portal-icon">🏥</span><div class="portal-title">Мед. книжка</div><div class="portal-desc">Получить медицинскую книжку для работы</div></div>
-                <div class="portal-card" onclick="requireAuth(function(){openModal('license')})"><span class="portal-icon">🔫</span><div class="portal-title">Лицензия на оружие</div><div class="portal-desc">Подать заявку на владение оружием</div></div>
-                <div class="portal-card" onclick="requireAuth(function(){openModal('faction-join')})"><span class="portal-icon">🏛️</span><div class="portal-title">Вступить во фракцию</div><div class="portal-desc">Подать заявление в государственную структуру</div></div>
-                <div class="portal-card" onclick="requireAuth(function(){openModal('court')})"><span class="portal-icon">⚖️</span><div class="portal-title">Подать в суд</div><div class="portal-desc">Открыть судебное дело против игрока</div></div>
-                <div class="portal-card" onclick="requireAuth(function(){openModal('government')})"><span class="portal-icon">📋</span><div class="portal-title">Обращение в Правительство</div><div class="portal-desc">Официальная жалоба или предложение</div></div>
-                <div class="portal-card" onclick="requireAuth(function(){openModal('lawyer')})"><span class="portal-icon">👨‍⚖️</span><div class="portal-title">К Адвокату</div><div class="portal-desc">Запросить юридическую помощь</div></div>
-                <div class="portal-card" onclick="showComingSoon()"><span class="portal-icon">🏠</span><div class="portal-title">Дома</div><div class="portal-desc">Приобретение и управление недвижимостью</div></div>
-            </div>
-        </div>
-
-        <div id="portal-mydocs" style="display:none">
-            <div id="mydocs-guest" class="empty" style="display:none"><div class="empty-icon">🔒</div><p style="margin-bottom:16px">Войдите чтобы увидеть ваши документы</p><button class="btn-primary" onclick="openModal('auth')">Войти</button></div>
-            <div id="mydocs-list"></div>
-        </div>
-
-        <div id="portal-salary" style="display:none">
-            <div class="profile-card">
-                <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px"><span style="font-size:28px">💰</span><div><div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:#fff">Зарплаты фракций</div><div style="color:var(--text);font-size:13px">Актуальные ставки</div></div></div>
-                <table class="salary-table">
-                    <thead><tr><th>Фракция</th><th>Зарплата / час</th></tr></thead>
-                    <tbody>
-                        <tr><td>🏛️ Горадминистрация</td><td class="salary-amount">8,500€</td></tr>
-                        <tr><td>🏛️ Верховный Суд</td><td class="salary-amount">5,400€</td></tr>
-                        <tr><td>🪖 СОБР</td><td class="salary-amount">5,500€</td></tr>
-                        <tr><td>🛡️ ФСО</td><td class="salary-amount">5,200€</td></tr>
-                        <tr><td>🕵️ ФСБ</td><td class="salary-amount">5,000€</td></tr>
-                        <tr><td>⚖️ Прокуратура</td><td class="salary-amount">5,200€</td></tr>
-                        <tr><td>🚑 МЧС</td><td class="salary-amount">4,500€</td></tr>
-                        <tr><td>🏥 Городская Больница</td><td class="salary-amount">4,000€</td></tr>
-                        <tr><td>🔧 ХАРС</td><td class="salary-amount">3,800€</td></tr>
-                        <tr><td>💀 ОПГ</td><td><span class="salary-amount">5,500€</span> <span style="color:#f87171;font-size:11px;font-family:'JetBrains Mono',monospace">★ только Администрация</span></td></tr>
-                        <tr><td>🤵 Мафия</td><td><span class="salary-amount">6,000€</span> <span style="color:#f87171;font-size:11px;font-family:'JetBrains Mono',monospace">★ только Администрация</span></td></tr>
-                        <tr><td>🚔 Патрульная Полиция (ДПС)</td><td class="salary-amount">4,200€</td></tr>
-                        <tr><td>👨‍⚖️ Адвокатура</td><td class="salary-amount">5,000€</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div id="portal-ranks" style="display:none">
-            <div class="rank-section">
-                <div class="rank-section-title">🚔 Патрульная Полиция (ДПС)</div>
-                <div class="rank-item"><span class="rank-name">Офицер-стажёр (Trainee Officer)</span><span class="rank-xp">0–299 XP</span></div>
-                <div class="rank-item"><span class="rank-name">Полицейский (Police Constable)</span><span class="rank-xp">300–599 XP</span></div>
-                <div class="rank-item"><span class="rank-name">Старший констебль (Senior Constable)</span><span class="rank-xp">600–899 XP</span></div>
-                <div class="rank-item"><span class="rank-name">Главный констебль (Chief Constable)</span><span class="rank-xp">900–1199 XP</span></div>
-                <div class="rank-item"><span class="rank-name">Старший начальник констебль</span><span class="rank-xp">1200–1499 XP</span></div>
-                <div class="rank-item"><span class="rank-name">Инспектор (Inspector)</span><span class="rank-xp">1500–2199 XP</span></div>
-                <div class="rank-item"><span class="rank-name">Старший инспектор</span><span class="rank-xp">2200–2899 XP</span></div>
-                <div class="rank-item"><span class="rank-name">Главный инспектор</span><span class="rank-xp">2900–3599 XP</span></div>
-                <div class="rank-item"><span class="rank-name">Старший главный инспектор</span><span class="rank-xp">3600–4299 XP</span></div>
-                <div class="rank-item"><span class="rank-name">Суперинтендант</span><span class="rank-xp">4300–4999 XP</span></div>
-                <div class="rank-item"><span class="rank-name">Главный суперинтендант</span><span class="rank-xp">5000–7499 XP</span></div>
-                <div class="rank-item"><span class="rank-name">Директор</span><span class="rank-xp">7500–9999 XP</span></div>
-                <div class="rank-item"><span class="rank-name">Старший директор</span><span class="rank-xp">10000–12499 XP</span></div>
-                <div class="rank-item"><span class="rank-name">Заместитель начальника</span><span class="rank-xp">12500–14999 XP</span></div>
-                <div class="rank-item"><span class="rank-name">Начальник полиции</span><span class="rank-xp">15000–19999 XP</span></div>
-                <div class="rank-item"><span class="rank-name">Президент государственной полиции</span><span class="rank-xp">20000–24999 XP</span></div>
-                <div class="rank-item"><span class="rank-name">Инспектора полиции</span><span class="rank-xp">25000–29999 XP</span></div>
-                <div class="rank-item"><span class="rank-name">Генеральный инспектор</span><span class="rank-xp">30000+ XP</span></div>
-                <div class="rank-item" style="border-color:rgba(234,179,8,0.3)"><span class="rank-name" style="color:#fbbf24">ФСБ — геймпасс Undercover</span><span class="rank-xp">0+ XP</span></div>
-                <div class="rank-item" style="border-color:rgba(234,179,8,0.3)"><span class="rank-name" style="color:#fbbf24">СОБР — геймпасс S.E.K</span><span class="rank-xp">0+ XP</span></div>
-            </div>
-            <div class="rank-section">
-                <div class="rank-section-title">🚑 Медики (МЧС)</div>
-                <div class="rank-item"><span class="rank-name">Врач-ординатор (Rescue Service)</span><span class="rank-xp">0–500 XP</span></div>
-                <div class="rank-item"><span class="rank-name">Старший врач (Rescue Service)</span><span class="rank-xp">500–1500 XP</span></div>
-                <div class="rank-item"><span class="rank-name">Врач скорой помощи (Emergency Doctor)</span><span class="rank-xp">1500+ XP</span></div>
-            </div>
-            <div class="rank-section">
-                <div class="rank-section-title">🚒 Пожарные (МЧС)</div>
-                <div class="rank-item"><span class="rank-name">Рядовой внутренней службы</span><span class="rank-xp">0–250 XP</span></div>
-                <div class="rank-item"><span class="rank-name">Сержант внутренней службы</span><span class="rank-xp">250–500 XP</span></div>
-                <div class="rank-item"><span class="rank-name">Младший Лейтенант</span><span class="rank-xp">500–1500 XP</span></div>
-                <div class="rank-item"><span class="rank-name">Старший Лейтенант</span><span class="rank-xp">1500–2500 XP</span></div>
-                <div class="rank-item"><span class="rank-name">Младший Майор</span><span class="rank-xp">2500–4000 XP</span></div>
-                <div class="rank-item"><span class="rank-name">Старший Майор</span><span class="rank-xp">4000–7500 XP</span></div>
-                <div class="rank-item"><span class="rank-name">Подполковник</span><span class="rank-xp">7500–9500 XP</span></div>
-                <div class="rank-item"><span class="rank-name">Полковник</span><span class="rank-xp">9500–15000 XP</span></div>
-                <div class="rank-item"><span class="rank-name">Генерал МЧС (Fire Commander)</span><span class="rank-xp">15000+ XP</span></div>
-            </div>
-        </div>
-
-        <div id="portal-admin-requests" style="display:none">
-            <div class="loading-text" id="requests-loading">Загрузка заявок...</div>
-            <div class="admin-requests" id="admin-requests-list"></div>
-        </div>
-
-        <div id="portal-passports" style="display:none">
-            <div class="loading-text" id="passports-loading">Загрузка паспортов...</div>
-            <div id="passports-list"></div>
+    <div id="portal-services">
+        <div class="portal-grid">
+            <div class="portal-card" onclick="requireAuth(function(){openModal('passport')})"><span class="portal-icon">🪪</span><div class="portal-title">Паспорт</div><div class="portal-desc">Оформить гражданский паспорт Новосибирска</div></div>
+            <div class="portal-card" onclick="requireAuth(function(){openModal('medbook')})"><span class="portal-icon">🏥</span><div class="portal-title">Мед. книжка</div><div class="portal-desc">Получить медицинскую книжку для работы</div></div>
+            <div class="portal-card" onclick="requireAuth(function(){openModal('license')})"><span class="portal-icon">🔫</span><div class="portal-title">Лицензия на оружие</div><div class="portal-desc">Подать заявку на владение оружием</div></div>
+            <div class="portal-card" onclick="requireAuth(function(){openModal('faction-join')})"><span class="portal-icon">🏛️</span><div class="portal-title">Вступить во фракцию</div><div class="portal-desc">Подать заявление в государственную структуру</div></div>
+            <div class="portal-card" onclick="requireAuth(function(){openModal('court')})"><span class="portal-icon">⚖️</span><div class="portal-title">Подать в суд</div><div class="portal-desc">Открыть судебное дело против игрока</div></div>
+            <div class="portal-card" onclick="requireAuth(function(){openModal('government')})"><span class="portal-icon">📋</span><div class="portal-title">Обращение в Правительство</div><div class="portal-desc">Официальная жалоба или предложение</div></div>
+            <div class="portal-card" onclick="requireAuth(function(){openModal('lawyer')})"><span class="portal-icon">👨‍⚖️</span><div class="portal-title">К Адвокату</div><div class="portal-desc">Запросить юридическую помощь</div></div>
+            <div class="portal-card" onclick="showComingSoon()"><span class="portal-icon">🏠</span><div class="portal-title">Дома</div><div class="portal-desc">Приобретение и управление недвижимостью</div></div>
         </div>
     </div>
 
-    <!-- Фракционный портал (открывается при клике на фракцию) -->
-    <div id="portal-faction-view" style="display:none">
-        <div class="faction-portal-header" id="faction-portal-header">
-            <div class="faction-portal-icon" id="faction-portal-icon">🏛️</div>
-            <div>
-                <div class="faction-portal-name" id="faction-portal-name">Фракция</div>
-                <div class="faction-portal-sub" id="faction-portal-sub">Выберите действие</div>
-            </div>
-            <button class="faction-portal-back" onclick="closeFactionPortal()">← Назад</button>
+    <div id="portal-mydocs" style="display:none">
+        <div id="mydocs-guest" class="empty" style="display:none"><div class="empty-icon">🔒</div><p style="margin-bottom:16px">Войдите чтобы увидеть ваши документы</p><button class="btn-primary" onclick="openModal('auth')">Войти</button></div>
+        <div id="mydocs-list"></div>
+    </div>
+
+    <div id="portal-salary" style="display:none">
+        <div class="profile-card">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px"><span style="font-size:28px">💰</span><div><div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:#fff">Зарплаты фракций</div><div style="color:var(--text);font-size:13px">Актуальные ставки</div></div></div>
+            <table class="salary-table">
+                <thead><tr><th>Фракция</th><th>Зарплата / час</th></tr></thead>
+                <tbody>
+                    <tr><td>🏛️ Горадминистрация</td><td class="salary-amount">8,500€</td></tr>
+                    <tr><td>🏛️ Верховный Суд</td><td class="salary-amount">5,400€</td></tr>
+                    <tr><td>🪖 СОБР</td><td class="salary-amount">5,500€</td></tr>
+                    <tr><td>🕵️ ФСБ</td><td class="salary-amount">5,000€</td></tr>
+                    <tr><td>⚖️ Прокуратура</td><td class="salary-amount">5,200€</td></tr>
+                    <tr><td>🚑 МЧС</td><td class="salary-amount">4,500€</td></tr>
+                    <tr><td>💀 ОПГ (RUCH)</td><td><span class="salary-amount">5,500€</span> <span style="color:#f87171;font-size:11px;font-family:'JetBrains Mono',monospace">★ только Администрация</span></td></tr>
+                    <tr><td>🚔 Патрульная Полиция (ДПС)</td><td class="salary-amount">4,200€</td></tr>
+                    <tr><td>👨‍⚖️ Адвокатура</td><td class="salary-amount">5,000€</td></tr>
+                </tbody>
+            </table>
         </div>
-        <div id="faction-portal-content"></div>
+    </div>
+
+    <div id="portal-ranks" style="display:none">
+        <div class="rank-section">
+            <div class="rank-section-title">🚔 Патрульная Полиция (ДПС)</div>
+            <div class="rank-item"><span class="rank-name">Офицер-стажёр (Trainee Officer)</span><span class="rank-xp">0–299 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Полицейский (Police Constable)</span><span class="rank-xp">300–599 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Старший констебль (Senior Constable)</span><span class="rank-xp">600–899 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Главный констебль (Chief Constable)</span><span class="rank-xp">900–1199 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Старший начальник констебль</span><span class="rank-xp">1200–1499 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Инспектор (Inspector)</span><span class="rank-xp">1500–2199 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Старший инспектор</span><span class="rank-xp">2200–2899 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Главный инспектор</span><span class="rank-xp">2900–3599 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Старший главный инспектор</span><span class="rank-xp">3600–4299 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Суперинтендант</span><span class="rank-xp">4300–4999 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Главный суперинтендант</span><span class="rank-xp">5000–7499 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Директор</span><span class="rank-xp">7500–9999 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Старший директор</span><span class="rank-xp">10000–12499 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Заместитель начальника</span><span class="rank-xp">12500–14999 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Начальник полиции</span><span class="rank-xp">15000–19999 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Президент государственной полиции</span><span class="rank-xp">20000–24999 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Инспектора полиции</span><span class="rank-xp">25000–29999 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Генеральный инспектор</span><span class="rank-xp">30000+ XP</span></div>
+            <div class="rank-item" style="border-color:rgba(234,179,8,0.3)"><span class="rank-name" style="color:#fbbf24">ФСБ — геймпасс Undercover</span><span class="rank-xp">0+ XP</span></div>
+            <div class="rank-item" style="border-color:rgba(234,179,8,0.3)"><span class="rank-name" style="color:#fbbf24">СОБР — геймпасс S.E.K</span><span class="rank-xp">0+ XP</span></div>
+        </div>
+        <div class="rank-section">
+            <div class="rank-section-title">🚑 Медики (МЧС)</div>
+            <div class="rank-item"><span class="rank-name">Врач-ординатор (Rescue Service)</span><span class="rank-xp">0–500 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Старший врач (Rescue Service)</span><span class="rank-xp">500–1500 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Врач скорой помощи (Emergency Doctor)</span><span class="rank-xp">1500+ XP</span></div>
+        </div>
+        <div class="rank-section">
+            <div class="rank-section-title">🚒 Пожарные (МЧС)</div>
+            <div class="rank-item"><span class="rank-name">Рядовой внутренней службы</span><span class="rank-xp">0–250 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Сержант внутренней службы</span><span class="rank-xp">250–500 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Младший Лейтенант</span><span class="rank-xp">500–1500 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Старший Лейтенант</span><span class="rank-xp">1500–2500 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Младший Майор</span><span class="rank-xp">2500–4000 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Старший Майор</span><span class="rank-xp">4000–7500 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Подполковник</span><span class="rank-xp">7500–9500 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Полковник</span><span class="rank-xp">9500–15000 XP</span></div>
+            <div class="rank-item"><span class="rank-name">Генерал МЧС (Fire Commander)</span><span class="rank-xp">15000+ XP</span></div>
+        </div>
+    </div>
+
+    <div id="portal-admin-requests" style="display:none">
+        <div class="loading-text" id="requests-loading">Загрузка заявок...</div>
+        <div class="admin-requests" id="admin-requests-list"></div>
+    </div>
+
+    <div id="portal-passports" style="display:none">
+        <div class="loading-text" id="passports-loading">Загрузка паспортов...</div>
+        <div id="passports-list"></div>
     </div>
 </div>
 </div>
@@ -571,106 +381,39 @@
     <div class="section-header" style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:20px">
         <div><div class="section-title">Новости Сервера</div><div class="section-sub">Официальные объявления, патчи и события</div></div>
     </div>
-
-    <!-- ПАНЕЛЬ ПУБЛИКАЦИИ (только для админов) -->
-    <div id="admin-news-panel" style="display:none" class="news-publish-panel">
-        <div style="color:var(--cyan);font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;margin-bottom:16px">🛠️ Опубликовать новость</div>
-        <div class="news-publish-grid">
-            <input type="text" id="news-title" placeholder="Заголовок новости" class="form-input">
-            <select id="news-tag" class="form-input" onchange="handleNewsTagChange(this)">
-                <option value="Важно">🔴 Важно</option>
-                <option value="Обновление">⚙️ Обновление</option>
-                <option value="Мероприятие">🎉 Мероприятие</option>
-                <option value="Свой Вариант">✏️ Свой Вариант</option>
-            </select>
+    <div id="admin-news-panel" style="display:none" class="profile-card" style="border-color:rgba(0,245,255,0.2);margin-bottom:20px">
+        <div style="color:var(--cyan);font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;margin-bottom:14px">🛠️ Опубликовать новость</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+            <input type="text" id="news-title" placeholder="Заголовок" class="form-input">
+            <select id="news-tag" class="form-input"><option value="Важно">🔴 Важно</option><option value="Обновление">⚙️ Обновление</option><option value="Мероприятие">🎉 Мероприятие</option><option value="Свой Вариант">✏️ Свой Вариант</option></select>
         </div>
-        <div id="news-custom-tag-row" class="news-tag-custom-row">
-            <input type="text" id="news-custom-tag" placeholder="Название своего варианта тега..." class="form-input">
-        </div>
-        <textarea id="news-text" placeholder="Текст новости..." class="form-input" style="margin-bottom:12px;min-height:120px"></textarea>
-        <div class="news-image-row">
-            <label class="form-label">Изображение (ссылка или загрузка)</label>
-            <input type="text" id="news-image-url" placeholder="https://... или вставьте ссылку на изображение" class="form-input" oninput="previewNewsImage()" style="margin-bottom:8px">
-            <div style="display:flex;align-items:center;gap:10px">
-                <label style="background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:600;padding:8px 16px;border-radius:10px;cursor:pointer;transition:all 0.2s;display:inline-flex;align-items:center;gap:8px">
-                    📁 Загрузить файл
-                    <input type="file" id="news-image-file" accept="image/*" style="display:none" onchange="handleNewsImageFile(this)">
-                </label>
-                <span style="color:var(--text);font-size:12px">JPG, PNG, GIF, WebP</span>
-            </div>
-            <img id="news-img-preview" class="news-img-preview" alt="Предпросмотр">
-        </div>
+        <textarea id="news-text" placeholder="Текст новости..." class="form-input" style="margin-bottom:12px"></textarea>
         <button class="form-submit" onclick="createNews()">Опубликовать</button>
     </div>
-
     <div class="news-grid" id="news-feed"><div class="loading-text">Загрузка новостей...</div></div>
 </div>
 </div>
 
 <!-- ПРОФИЛЬ -->
 <div class="tab" id="tab-profile">
-<div class="container" style="max-width:720px">
+<div class="container" style="max-width:680px">
     <div class="section-header"><div class="section-title">Профиль</div></div>
     <div id="profile-guest" style="display:none" class="empty"><div class="empty-icon">🔒</div><p style="margin-bottom:16px">Войдите в аккаунт для доступа к профилю</p><button class="btn-primary" onclick="openModal('auth')">Войти / Зарегистрироваться</button></div>
     <div id="profile-user" style="display:none">
-
-        <!-- Карточка профиля -->
         <div class="profile-card">
-            <div style="display:flex;align-items:flex-start;gap:20px;margin-bottom:20px">
-                <div class="profile-avatar-wrap">
-                    <div class="profile-avatar-big" id="profile-avatar" onclick="triggerAvatarUpload()" title="Нажмите чтобы изменить фото">
-                        <span id="profile-avatar-letter">?</span>
-                        <img id="profile-avatar-img" src="" alt="" style="display:none">
-                    </div>
-                    <div class="profile-avatar-badge">ФОТО</div>
-                    <input type="file" id="avatar-file-input" accept="image/*" style="display:none" onchange="handleAvatarUpload(this)">
-                </div>
-                <div style="flex:1">
-                    <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;color:#fff;margin-bottom:6px" id="profile-username"></div>
-                    <div id="profile-role-badge" style="display:inline-flex;align-items:center;gap:6px;background:rgba(0,245,255,0.1);border:1px solid rgba(0,245,255,0.25);color:var(--cyan);font-family:'JetBrains Mono',monospace;font-size:11px;padding:4px 12px;border-radius:8px;letter-spacing:1px;margin-bottom:6px"></div>
-                    <br>
-                    <div id="profile-faction-badge" style="display:none;align-items:center;gap:6px;background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.25);color:#c084fc;font-family:'JetBrains Mono',monospace;font-size:11px;padding:4px 12px;border-radius:8px;letter-spacing:1px;margin-top:2px"></div>
-                </div>
+            <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px">
+                <div style="width:54px;height:54px;border-radius:14px;background:rgba(0,245,255,0.1);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--cyan)" id="profile-avatar">?</div>
+                <div><div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:#fff" id="profile-username"></div><div style="color:var(--cyan);font-size:13px;letter-spacing:1px" id="profile-role"></div></div>
             </div>
-            <div class="profile-row"><span class="profile-label">Роль</span><span class="profile-value" id="profile-role-value">—</span></div>
-            <div class="profile-row"><span class="profile-label">Фракция</span><span class="profile-value" id="profile-faction-value">—</span></div>
-            <div class="profile-row"><span class="profile-label">Пароль</span>
-                <div style="display:flex;align-items:center;gap:10px">
-                    <span class="profile-value mono" id="profile-password">••••••••</span>
-                    <button onclick="togglePassword()" id="toggle-pass-btn" style="background:none;border:none;color:var(--cyan);font-size:12px;cursor:pointer;font-family:'Rajdhani',sans-serif;letter-spacing:1px">ПОКАЗАТЬ</button>
-                </div>
-            </div>
-            <div class="profile-row" style="border-bottom:none"><span class="profile-label">Аккаунт создан</span><span class="profile-value" id="profile-created">—</span></div>
+            <div class="profile-row"><span class="profile-label">Пароль</span><div style="display:flex;align-items:center;gap:10px"><span class="profile-value mono" id="profile-password">••••••••</span><button onclick="togglePassword()" id="toggle-pass-btn" style="background:none;border:none;color:var(--cyan);font-size:12px;cursor:pointer;font-family:'Rajdhani',sans-serif;letter-spacing:1px">ПОКАЗАТЬ</button></div></div>
         </div>
-
-        <!-- Статистика -->
-        <div class="profile-stats-grid">
-            <div class="profile-stat"><div class="profile-stat-num" id="stat-docs">0</div><div class="profile-stat-label">Документов</div></div>
-            <div class="profile-stat"><div class="profile-stat-num" id="stat-approved">0</div><div class="profile-stat-label">Одобрено</div></div>
-            <div class="profile-stat"><div class="profile-stat-num" id="stat-pending">0</div><div class="profile-stat-label">На рассмотрении</div></div>
-        </div>
-
-        <!-- Быстрые действия -->
-        <div class="profile-card">
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff;margin-bottom:14px">⚡ Быстрые действия</div>
-            <button class="profile-action-btn" onclick="navigateTo('portal');switchPortal('mydocs')"><span>📄</span> Мои документы</button>
-            <button class="profile-action-btn" onclick="requireAuth(function(){openModal('passport')})"><span>🪪</span> Оформить паспорт</button>
-            <button class="profile-action-btn" onclick="requireAuth(function(){openModal('license')})"><span>🔫</span> Лицензия на оружие</button>
-            <button class="profile-action-btn" onclick="requireAuth(function(){openModal('faction-join')})"><span>🏛️</span> Вступить во фракцию</button>
-            <button class="profile-action-btn" onclick="navigateTo('rules')"><span>📋</span> Правила сервера</button>
-        </div>
-
-        <!-- Смена пароля -->
         <div class="profile-card">
             <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff;margin-bottom:14px">🔑 Сменить пароль</div>
             <div class="form-group"><input type="password" id="new-password" placeholder="Новый пароль" class="form-input"></div>
             <div class="form-group"><input type="password" id="confirm-password" placeholder="Подтвердите пароль" class="form-input"></div>
             <button class="form-submit" onclick="changePassword()">Сохранить</button>
         </div>
-
         <button onclick="logout()" style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);color:#f87171;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:14px;letter-spacing:2px;text-transform:uppercase;padding:12px 24px;border-radius:12px;cursor:pointer;transition:all 0.2s;width:100%;margin-bottom:24px">Выйти из аккаунта</button>
-
-        <!-- Панель администратора -->
         <div id="admin-users-panel" style="display:none">
             <div class="sep"></div>
             <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:#f87171;margin-bottom:4px">⚙️ Все пользователи</div>
@@ -682,140 +425,6 @@
                 </table>
             </div>
         </div>
-    </div>
-</div>
-</div>
-
-<!-- КОМАНДА -->
-<div class="tab" id="tab-team">
-<div class="container" style="max-width:900px">
-    <div class="section-header">
-        <div class="section-title">Команда & О Сервере</div>
-        <div class="section-sub">Администрация Novosibirsk RP</div>
-    </div>
-
-    <div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px;margin-bottom:32px">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:var(--cyan);margin-bottom:8px">О СЕРВЕРЕ</div>
-        <div style="color:var(--text);font-size:15px;line-height:1.8">
-            Novosibirsk RP — ролевой сервер в Roblox с проработанной системой фракций, реальной экономикой и живым комьюнити. Суровый сибирский мегаполис, где каждый выбор имеет последствия.<br><br>
-            Присоединяйся к нам в Discord и стань частью истории Новосибирска!
-        </div>
-        <a href="https://discord.gg/rp9btukQV5" target="_blank" class="btn-discord" style="display:inline-flex;margin-top:20px;text-decoration:none">
-            <svg width="18" height="18" viewBox="0 0 71 55" fill="white"><path d="M60.1 4.9A58.6 58.6 0 0 0 45.5.4a.2.2 0 0 0-.2.1 40.8 40.8 0 0 0-1.8 3.7 54.1 54.1 0 0 0-16.2 0 37.4 37.4 0 0 0-1.8-3.7.2.2 0 0 0-.2-.1A58.4 58.4 0 0 0 10.5 4.9a.2.2 0 0 0-.1.1C1.5 18.1-1 30.9.3 43.5a.2.2 0 0 0 .1.2 58.9 58.9 0 0 0 17.7 9 .2.2 0 0 0 .2-.1 42 42 0 0 0 3.6-5.9.2.2 0 0 0-.1-.3 38.7 38.7 0 0 1-5.5-2.6.2.2 0 0 1 0-.4l1.1-.8a.2.2 0 0 1 .2 0c11.5 5.3 24 5.3 35.4 0a.2.2 0 0 1 .2 0l1.1.8a.2.2 0 0 1 0 .4 36.3 36.3 0 0 1-5.5 2.6.2.2 0 0 0-.1.3 47.1 47.1 0 0 0 3.6 5.9.2.2 0 0 0 .2.1 58.7 58.7 0 0 0 17.8-9 .2.2 0 0 0 .1-.2C73.1 28.8 69.5 16 60.2 5a.2.2 0 0 0-.1-.1zM23.7 36.1c-3.5 0-6.4-3.2-6.4-7.2s2.8-7.2 6.4-7.2c3.6 0 6.5 3.3 6.4 7.2 0 4-2.8 7.2-6.4 7.2zm23.6 0c-3.5 0-6.4-3.2-6.4-7.2s2.8-7.2 6.4-7.2c3.6 0 6.5 3.3 6.4 7.2 0 4-2.8 7.2-6.4 7.2z"/></svg>
-            Зайти в Discord
-        </a>
-    </div>
-
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:#fff;margin-bottom:20px">Состав Администрации</div>
-    <div style="display:grid;gap:14px">
-        <div style="background:var(--card);border:1px solid rgba(0,245,255,0.25);border-radius:18px;padding:20px;display:flex;align-items:center;gap:16px">
-            <img src="https://www.roblox.com/headshot-thumbnail/image?userId=3608439415&width=100&height=100&format=png" style="width:60px;height:60px;border-radius:14px;border:2px solid rgba(0,245,255,0.4);object-fit:cover" onerror="this.style.display='none'">
-            <div style="flex:1"><div style="font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;color:var(--cyan);margin-bottom:3px">ГЛАВНЫЙ ВЛАДЕЛЕЦ</div><div style="font-size:18px;font-weight:700;color:#fff">RUBERS_SQ</div></div>
-            <a href="https://www.roblox.com/users/3608439415/profile" target="_blank" style="background:rgba(0,245,255,0.1);border:1px solid rgba(0,245,255,0.25);color:var(--cyan);font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;padding:7px 14px;border-radius:9px;text-decoration:none">Roblox →</a>
-        </div>
-        <div style="background:var(--card);border:1px solid rgba(251,191,36,0.2);border-radius:18px;padding:20px;display:flex;align-items:center;gap:16px">
-            <img src="https://www.roblox.com/headshot-thumbnail/image?userId=3294036144&width=100&height=100&format=png" style="width:60px;height:60px;border-radius:14px;border:2px solid rgba(251,191,36,0.4);object-fit:cover" onerror="this.style.display='none'">
-            <div style="flex:1"><div style="font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;color:#fbbf24;margin-bottom:3px">ЗАМЕСТИТЕЛЬ ГЛАВНОГО ВЛАДЕЛЬЦА</div><div style="font-size:18px;font-weight:700;color:#fff">RocFARYTV</div></div>
-            <a href="https://www.roblox.com/users/3294036144/profile" target="_blank" style="background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.25);color:#fbbf24;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;padding:7px 14px;border-radius:9px;text-decoration:none">Roblox →</a>
-        </div>
-        <div style="background:var(--card);border:1px solid rgba(168,85,247,0.2);border-radius:18px;padding:20px;display:flex;align-items:center;gap:16px">
-            <img src="https://www.roblox.com/headshot-thumbnail/image?userId=3259584287&width=100&height=100&format=png" style="width:60px;height:60px;border-radius:14px;border:2px solid rgba(168,85,247,0.4);object-fit:cover" onerror="this.style.display='none'">
-            <div style="flex:1"><div style="font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;color:#c084fc;margin-bottom:3px">АССИСТЕНТ ГЛАВНОГО ВЛАДЕЛЬЦА</div><div style="font-size:18px;font-weight:700;color:#fff">ggwp228pro <span style="font-size:11px;background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.3);padding:2px 8px;border-radius:6px;margin-left:6px;font-family:'JetBrains Mono',monospace;vertical-align:middle">в отставке</span></div></div>
-            <a href="https://www.roblox.com/users/3259584287/profile" target="_blank" style="background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.25);color:#c084fc;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;padding:7px 14px;border-radius:9px;text-decoration:none">Roblox →</a>
-        </div>
-        <div style="background:var(--card);border:1px solid rgba(14,165,233,0.2);border-radius:18px;padding:20px;display:flex;align-items:center;gap:16px">
-            <img src="https://www.roblox.com/headshot-thumbnail/image?userId=784438708&width=100&height=100&format=png" style="width:60px;height:60px;border-radius:14px;border:2px solid rgba(14,165,233,0.4);object-fit:cover" onerror="this.style.display='none'">
-            <div style="flex:1"><div style="font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;color:#38bdf8;margin-bottom:3px">СЕКРЕТАРЬ</div><div style="font-size:18px;font-weight:700;color:#fff">ZUMAXI</div></div>
-            <a href="https://www.roblox.com/users/784438708/profile" target="_blank" style="background:rgba(14,165,233,0.1);border:1px solid rgba(14,165,233,0.25);color:#38bdf8;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;padding:7px 14px;border-radius:9px;text-decoration:none">Roblox →</a>
-        </div>
-        <div style="background:var(--card);border:1px solid rgba(34,197,94,0.2);border-radius:18px;padding:20px;display:flex;align-items:center;gap:16px">
-            <img src="https://www.roblox.com/headshot-thumbnail/image?userId=7394244307&width=100&height=100&format=png" style="width:60px;height:60px;border-radius:14px;border:2px solid rgba(34,197,94,0.4);object-fit:cover" onerror="this.style.display='none'">
-            <div style="flex:1"><div style="font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;color:#22c55e;margin-bottom:3px">МЛАДШИЙ МОДЕРАТОР</div><div style="font-size:18px;font-weight:700;color:#fff">zhige774</div></div>
-            <a href="https://www.roblox.com/users/7394244307/profile" target="_blank" style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.25);color:#22c55e;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;padding:7px 14px;border-radius:9px;text-decoration:none">Roblox →</a>
-        </div>
-    </div>
-</div>
-</div>
-
-<!-- ПРАВИЛА -->
-<div class="tab" id="tab-rules">
-<div class="container" style="max-width:900px">
-    <div class="section-header">
-        <div class="section-title">Правила Сервера</div>
-        <div class="section-sub">Обязательно к прочтению — незнание не освобождает от ответственности</div>
-    </div>
-
-    <div class="portal-nav" style="margin-bottom:28px">
-        <button class="portal-nav-btn active" data-rules="discord" onclick="switchRules('discord')">📕 Discord</button>
-        <button class="portal-nav-btn" data-rules="rp" onclick="switchRules('rp')">📄 Правила РП</button>
-        <button class="portal-nav-btn" data-rules="ic" onclick="switchRules('ic')">📘 IC Правила</button>
-        <button class="portal-nav-btn" data-rules="uk" onclick="switchRules('uk')">📗 УК РФ</button>
-        <button class="portal-nav-btn" data-rules="police" onclick="switchRules('police')">📙 Закон о полиции</button>
-        <button class="portal-nav-btn" data-rules="admin" onclick="switchRules('admin')">📜 Для администрации</button>
-        <button class="portal-nav-btn" data-rules="pdd" onclick="switchRules('pdd')">🚗 Правила ПДД</button>
-    </div>
-
-    <div id="rules-discord" class="rules-section">
-        <div style="background:rgba(88,101,242,0.08);border:1px solid rgba(88,101,242,0.25);border-radius:16px;padding:20px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
-            <span style="font-size:28px">📕</span>
-            <div><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff">Правила Discord сервера</div>
-            <div style="color:var(--text);font-size:13px">Нарушение = предупреждение → мут → кик → перм бан</div></div>
-        </div>
-        <div id="rules-discord-list"></div>
-    </div>
-
-    <div id="rules-rp" class="rules-section" style="display:none">
-        <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:16px;padding:20px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
-            <span style="font-size:28px">📄</span>
-            <div><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff">Правила по РП</div>
-            <div style="color:var(--text);font-size:13px">NON RP — неподобающее игровому миру поведение</div></div>
-        </div>
-        <div id="rules-rp-list"></div>
-    </div>
-
-    <div id="rules-ic" class="rules-section" style="display:none">
-        <div style="background:rgba(14,165,233,0.08);border:1px solid rgba(14,165,233,0.25);border-radius:16px;padding:20px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
-            <span style="font-size:28px">📘</span>
-            <div><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff">IC Правила</div>
-            <div style="color:var(--text);font-size:13px">Все игроки ведут себя как реальные люди в городе</div></div>
-        </div>
-        <div id="rules-ic-list"></div>
-    </div>
-
-    <div id="rules-uk" class="rules-section" style="display:none">
-        <div style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.25);border-radius:16px;padding:20px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
-            <span style="font-size:28px">📗</span>
-            <div><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff">Уголовный Кодекс</div>
-            <div style="color:var(--text);font-size:13px">1 год = 1 минута &nbsp;•&nbsp; 1 сутки = 10 секунд</div></div>
-        </div>
-        <div id="rules-uk-list"></div>
-    </div>
-
-    <div id="rules-police" class="rules-section" style="display:none">
-        <div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.25);border-radius:16px;padding:20px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
-            <span style="font-size:28px">📙</span>
-            <div><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff">Федеральный закон о полиции</div>
-            <div style="color:var(--text);font-size:13px">Уголовно-процессуальный кодекс</div></div>
-        </div>
-        <div id="rules-police-list"></div>
-    </div>
-
-    <div id="rules-admin" class="rules-section" style="display:none">
-        <div style="background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.25);border-radius:16px;padding:20px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
-            <span style="font-size:28px">📜</span>
-            <div><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff">Правила для администрации</div>
-            <div style="color:var(--text);font-size:13px">Администрация — лицо сервера</div></div>
-        </div>
-        <div id="rules-admin-list"></div>
-    </div>
-
-    <div id="rules-pdd" class="rules-section" style="display:none">
-        <div style="background:rgba(0,245,255,0.06);border:1px solid rgba(0,245,255,0.2);border-radius:16px;padding:20px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
-            <span style="font-size:28px">🚗</span>
-            <div><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff">Правила дорожного движения</div>
-            <div style="color:var(--text);font-size:13px">Движение строго по правой полосе</div></div>
-        </div>
-        <div id="rules-pdd-list"></div>
     </div>
 </div>
 </div>
@@ -922,14 +531,13 @@
     <div class="form-group"><label class="form-label">Место работы *</label><input type="text" id="license-job" class="form-input" placeholder="Фракция / организация"></div>
     <div class="form-group"><label class="form-label">Фракция *</label><select id="license-faction" class="form-input">
         <option>Гражданский</option><option>Патрульная Полиция (ДПС)</option>
-        <option>ФСБ</option><option>ФСО</option><option>СОБР</option><option>Прокуратура</option>
+        <option>ФСБ</option><option>СОБР</option><option>Прокуратура</option>
         <option>Адвокатура</option><option>Верховный Суд</option><option>ГТРК</option>
-        <option>МЧС</option><option>Городская Больница</option><option>ХАРС</option>
-        <option>ОПГ</option><option>Мафия</option>
+        <option>МЧС</option><option>ОПГ (RUCH)</option>
     </select></div>
     <div class="form-group"><label class="form-label">Зачем вам нужно оружие? *</label><textarea id="license-reason" class="form-input" placeholder="Объясните причину..."></textarea></div>
     <div class="form-group"><label class="form-label">Выберите оружие *</label>
-        <select id="license-weapons" class="form-input" size="9" style="height:auto;padding:8px">
+        <select id="license-weapons" class="form-input" size="8" style="height:auto;padding:8px">
             <option value="G1 — Холодное оружие">G1 — Холодное оружие</option>
             <option value="G2 — Пистолет">G2 — Пистолет</option>
             <option value="G3 — Дробовик">G3 — Дробовик</option>
@@ -940,14 +548,13 @@
             <option value="G8 — Пистолет-пулемёт">G8 — Пистолет-пулемёт</option>
             <option value="G9 — Гранатомёт">G9 — Гранатомёт</option>
             <option value="G10 — Тяжёлое вооружение">G10 — Тяжёлое вооружение</option>
-            <option value="G+ — Всё оружие в игре">G+ — Всё оружие (все категории)</option>
+            <option value="G+ — Тяжёлое вооружение">G+ — Всё оружие</option>
         </select>
         <div style="color:var(--text);font-size:11px;margin-top:4px">Зажмите Ctrl для выбора нескольких</div>
     </div>
     <div class="form-group"><label class="form-label">Подпись (ваш ник)</label><input type="text" id="license-sign" class="form-input" placeholder="Ivan_Ivanov"></div>
     <div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.2);border-radius:10px;padding:12px;margin-bottom:14px;font-size:13px;color:#fbbf24;line-height:1.6">
-        ⚠️ Правительство может не согласиться с выбором оружия из-за фракции или не дать лицензию вообще.<br>
-        <span style="color:var(--text)">G+ даёт право на всё оружие в игре — требует специального разрешения.</span>
+        ⚠️ Правительство может не согласиться с выбором оружия из-за фракции или не дать лицензию вообще.
     </div>
     <button class="form-submit" onclick="submitForm('license')">Подать заявку</button>
 </div></div>
@@ -963,11 +570,10 @@
     <div class="form-group"><label class="form-label">Имя и фамилия из паспорта *</label><input type="text" id="faction-realname" class="form-input" placeholder="Иван Иванов"></div>
     <div class="form-group"><label class="form-label">Есть ли у вас мед. книжка? *</label><select id="faction-medbook" class="form-input"><option value="Да">Да</option><option value="Нет">Нет</option></select></div>
     <div class="form-group"><label class="form-label">В какую фракцию вступаете? *</label><select id="faction-name" class="form-input">
-        <option>ФСБ</option><option>ФСО</option><option>СОБР</option>
+        <option>ФСБ</option><option>СОБР</option>
         <option>Патрульная Полиция (ДПС)</option>
         <option>Прокуратура</option><option>Адвокатура</option>
-        <option>Верховный Суд</option><option>ГТРК</option>
-        <option>МЧС</option><option>Городская Больница</option><option>ХАРС</option>
+        <option>Верховный Суд</option><option>ГТРК</option><option>МЧС</option>
     </select></div>
     <div class="form-group"><label class="form-label">Био (не обязательно)</label><textarea id="faction-bio" class="form-input" placeholder="Расскажите о себе..."></textarea></div>
     <button class="form-submit" onclick="submitForm('faction-join')">Подать заявление</button>
@@ -1011,54 +617,6 @@
 </div></div>
 </div>
 
-<!-- OPG CREATE -->
-<div class="modal-overlay" id="modal-opg-create">
-<div class="modal-box"><button class="modal-close" onclick="closeModal('opg-create')">✕</button>
-<div class="modal-header"><div class="modal-title">💀 Создать ОПГ</div><div class="modal-sub">Регистрация новой банды</div></div>
-<div class="modal-body">
-    <div class="form-group"><label class="form-label">Ваш никнейм</label><input type="text" id="opg-create-username" class="form-input" placeholder="Ivan_Ivanov"></div>
-    <div class="form-group"><label class="form-label">Название ОПГ *</label><input type="text" id="opg-create-name" class="form-input" placeholder="Название вашей банды"></div>
-    <div class="form-group"><label class="form-label">Описание ОПГ</label><textarea id="opg-create-desc" class="form-input" placeholder="Кратко о вашей группировке..."></textarea></div>
-    <div class="form-group"><label class="form-label">Тег (3–4 символа)</label><input type="text" id="opg-create-tag" class="form-input" placeholder="NVK" maxlength="4"></div>
-    <button class="form-submit" onclick="submitCreateOpg()">Создать ОПГ</button>
-</div></div>
-</div>
-
-<!-- OPG JOIN -->
-<div class="modal-overlay" id="modal-opg-join">
-<div class="modal-box"><button class="modal-close" onclick="closeModal('opg-join')">✕</button>
-<div class="modal-header"><div class="modal-title">💀 Вступить в ОПГ</div><div class="modal-sub">Подать заявку на вступление в банду</div></div>
-<div class="modal-body">
-    <div class="form-group"><label class="form-label">Ваш никнейм</label><input type="text" id="opg-join-username" class="form-input" placeholder="Ivan_Ivanov"></div>
-    <div class="form-group"><label class="form-label">Выберите ОПГ *</label><select id="opg-join-select" class="form-input"><option value="">Загрузка...</option></select></div>
-    <div class="form-group"><label class="form-label">Почему хотите вступить?</label><textarea id="opg-join-reason" class="form-input" placeholder="Расскажите о себе..."></textarea></div>
-    <button class="form-submit" onclick="submitJoinOpg()">Подать заявку</button>
-</div></div>
-</div>
-
-<!-- MAFIA CREATE -->
-<div class="modal-overlay" id="modal-mafia-create">
-<div class="modal-box"><button class="modal-close" onclick="closeModal('mafia-create')">✕</button>
-<div class="modal-header"><div class="modal-title">🤵 Создать Мафию</div><div class="modal-sub">Регистрация криминальной организации</div></div>
-<div class="modal-body">
-    <div class="form-group"><label class="form-label">Ваш никнейм</label><input type="text" id="mafia-create-username" class="form-input" placeholder="Ivan_Ivanov"></div>
-    <div class="form-group"><label class="form-label">Название организации *</label><input type="text" id="mafia-create-name" class="form-input" placeholder="Famiglia ..."></div>
-    <div class="form-group"><label class="form-label">Описание</label><textarea id="mafia-create-desc" class="form-input" placeholder="История и цели организации..."></textarea></div>
-    <button class="form-submit" onclick="submitCreateMafia()">Создать Мафию</button>
-</div></div>
-</div>
-
-<!-- MAFIA JOIN -->
-<div class="modal-overlay" id="modal-mafia-join">
-<div class="modal-box"><button class="modal-close" onclick="closeModal('mafia-join')">✕</button>
-<div class="modal-header"><div class="modal-title">🤵 Вступить в Мафию</div><div class="modal-sub">Подать заявку на вступление</div></div>
-<div class="modal-body">
-    <div class="form-group"><label class="form-label">Ваш никнейм</label><input type="text" id="mafia-join-username" class="form-input" placeholder="Ivan_Ivanov"></div>
-    <div class="form-group"><label class="form-label">Почему хотите вступить?</label><textarea id="mafia-join-reason" class="form-input" placeholder="Расскажите о себе..."></textarea></div>
-    <button class="form-submit" onclick="submitJoinMafia()">Подать заявку</button>
-</div></div>
-</div>
-
 <!-- COMING SOON MODAL -->
 <div class="modal-overlay" id="modal-coming-soon">
 <div class="modal-box" style="text-align:center">
@@ -1069,6 +627,175 @@
         <div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--cyan);margin-bottom:16px">Coming Soon</div>
         <div style="color:var(--text);font-size:15px;line-height:1.6">Раздел аренды и покупки домов находится в разработке. Следите за новостями!</div>
     </div>
+</div>
+</div>
+
+<!-- TEAM TAB -->
+<div class="tab" id="tab-team">
+<div class="container" style="max-width:900px">
+    <div class="section-header">
+        <div class="section-title">Команда & О Сервере</div>
+        <div class="section-sub">Администрация Novosibirsk RP</div>
+    </div>
+
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px;margin-bottom:32px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:var(--cyan);margin-bottom:8px">О СЕРВЕРЕ</div>
+        <div style="color:var(--text);font-size:15px;line-height:1.8">
+            Novosibirsk RP — ролевой сервер в Roblox с проработанной системой фракций, реальной экономикой и живым комьюнити. Суровый сибирский мегаполис, где каждый выбор имеет последствия.<br><br>
+            Присоединяйся к нам в Discord и стань частью истории Новосибирска!
+        </div>
+        <a href="https://discord.gg/rp9btukQV5" target="_blank" class="btn-discord" style="display:inline-flex;margin-top:20px;text-decoration:none">
+            <svg width="18" height="18" viewBox="0 0 71 55" fill="white"><path d="M60.1 4.9A58.6 58.6 0 0 0 45.5.4a.2.2 0 0 0-.2.1 40.8 40.8 0 0 0-1.8 3.7 54.1 54.1 0 0 0-16.2 0 37.4 37.4 0 0 0-1.8-3.7.2.2 0 0 0-.2-.1A58.4 58.4 0 0 0 10.5 4.9a.2.2 0 0 0-.1.1C1.5 18.1-1 30.9.3 43.5a.2.2 0 0 0 .1.2 58.9 58.9 0 0 0 17.7 9 .2.2 0 0 0 .2-.1 42 42 0 0 0 3.6-5.9.2.2 0 0 0-.1-.3 38.7 38.7 0 0 1-5.5-2.6.2.2 0 0 1 0-.4l1.1-.8a.2.2 0 0 1 .2 0c11.5 5.3 24 5.3 35.4 0a.2.2 0 0 1 .2 0l1.1.8a.2.2 0 0 1 0 .4 36.3 36.3 0 0 1-5.5 2.6.2.2 0 0 0-.1.3 47.1 47.1 0 0 0 3.6 5.9.2.2 0 0 0 .2.1 58.7 58.7 0 0 0 17.8-9 .2.2 0 0 0 .1-.2C73.1 28.8 69.5 16 60.2 5a.2.2 0 0 0-.1-.1zM23.7 36.1c-3.5 0-6.4-3.2-6.4-7.2s2.8-7.2 6.4-7.2c3.6 0 6.5 3.3 6.4 7.2 0 4-2.8 7.2-6.4 7.2zm23.6 0c-3.5 0-6.4-3.2-6.4-7.2s2.8-7.2 6.4-7.2c3.6 0 6.5 3.3 6.4 7.2 0 4-2.8 7.2-6.4 7.2z"/></svg>
+            Зайти в Discord
+        </a>
+    </div>
+
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:#fff;margin-bottom:20px">Состав Администрации</div>
+    <div style="display:grid;gap:14px">
+
+        <!-- Главный Владелец -->
+        <div style="background:var(--card);border:1px solid rgba(0,245,255,0.25);border-radius:18px;padding:20px;display:flex;align-items:center;gap:16px">
+            <img src="https://www.roblox.com/headshot-thumbnail/image?userId=3608439415&width=100&height=100&format=png" style="width:60px;height:60px;border-radius:14px;border:2px solid rgba(0,245,255,0.4);object-fit:cover" onerror="this.style.display='none'">
+            <div style="flex:1">
+                <div style="font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;color:var(--cyan);margin-bottom:3px">ГЛАВНЫЙ ВЛАДЕЛЕЦ</div>
+                <div style="font-size:18px;font-weight:700;color:#fff">RUBERS_SQ</div>
+            </div>
+            <a href="https://www.roblox.com/users/3608439415/profile" target="_blank" style="background:rgba(0,245,255,0.1);border:1px solid rgba(0,245,255,0.25);color:var(--cyan);font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;padding:7px 14px;border-radius:9px;text-decoration:none">Roblox →</a>
+        </div>
+
+        <!-- Заместитель -->
+        <div style="background:var(--card);border:1px solid rgba(251,191,36,0.2);border-radius:18px;padding:20px;display:flex;align-items:center;gap:16px">
+            <img src="https://www.roblox.com/headshot-thumbnail/image?userId=3294036144&width=100&height=100&format=png" style="width:60px;height:60px;border-radius:14px;border:2px solid rgba(251,191,36,0.4);object-fit:cover" onerror="this.style.display='none'">
+            <div style="flex:1">
+                <div style="font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;color:#fbbf24;margin-bottom:3px">ЗАМЕСТИТЕЛЬ ГЛАВНОГО ВЛАДЕЛЬЦА</div>
+                <div style="font-size:18px;font-weight:700;color:#fff">RocFARYTV</div>
+            </div>
+            <a href="https://www.roblox.com/users/3294036144/profile" target="_blank" style="background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.25);color:#fbbf24;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;padding:7px 14px;border-radius:9px;text-decoration:none">Roblox →</a>
+        </div>
+
+        <!-- Ассистент -->
+        <div style="background:var(--card);border:1px solid rgba(168,85,247,0.2);border-radius:18px;padding:20px;display:flex;align-items:center;gap:16px">
+            <img src="https://www.roblox.com/headshot-thumbnail/image?userId=3259584287&width=100&height=100&format=png" style="width:60px;height:60px;border-radius:14px;border:2px solid rgba(168,85,247,0.4);object-fit:cover" onerror="this.style.display='none'">
+            <div style="flex:1">
+                <div style="font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;color:#c084fc;margin-bottom:3px">АССИСТЕНТ ГЛАВНОГО ВЛАДЕЛЬЦА</div>
+                <div style="font-size:18px;font-weight:700;color:#fff">ggwp228pro <span style="font-size:11px;background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.3);padding:2px 8px;border-radius:6px;margin-left:6px;font-family:'JetBrains Mono',monospace;vertical-align:middle">в отставке • ждёт экзамена</span></div>
+            </div>
+            <a href="https://www.roblox.com/users/3259584287/profile" target="_blank" style="background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.25);color:#c084fc;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;padding:7px 14px;border-radius:9px;text-decoration:none">Roblox →</a>
+        </div>
+
+        <!-- Секретарь -->
+        <div style="background:var(--card);border:1px solid rgba(14,165,233,0.2);border-radius:18px;padding:20px;display:flex;align-items:center;gap:16px">
+            <img src="https://www.roblox.com/headshot-thumbnail/image?userId=784438708&width=100&height=100&format=png" style="width:60px;height:60px;border-radius:14px;border:2px solid rgba(14,165,233,0.4);object-fit:cover" onerror="this.style.display='none'">
+            <div style="flex:1">
+                <div style="font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;color:#38bdf8;margin-bottom:3px">СЕКРЕТАРЬ</div>
+                <div style="font-size:18px;font-weight:700;color:#fff">ZUMAXI</div>
+            </div>
+            <a href="https://www.roblox.com/users/784438708/profile" target="_blank" style="background:rgba(14,165,233,0.1);border:1px solid rgba(14,165,233,0.25);color:#38bdf8;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;padding:7px 14px;border-radius:9px;text-decoration:none">Roblox →</a>
+        </div>
+
+        <!-- Младший Модератор -->
+        <div style="background:var(--card);border:1px solid rgba(34,197,94,0.2);border-radius:18px;padding:20px;display:flex;align-items:center;gap:16px">
+            <img src="https://www.roblox.com/headshot-thumbnail/image?userId=7394244307&width=100&height=100&format=png" style="width:60px;height:60px;border-radius:14px;border:2px solid rgba(34,197,94,0.4);object-fit:cover" onerror="this.style.display='none'">
+            <div style="flex:1">
+                <div style="font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;color:#22c55e;margin-bottom:3px">МЛАДШИЙ МОДЕРАТОР</div>
+                <div style="font-size:18px;font-weight:700;color:#fff">zhige774</div>
+            </div>
+            <a href="https://www.roblox.com/users/7394244307/profile" target="_blank" style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.25);color:#22c55e;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;padding:7px 14px;border-radius:9px;text-decoration:none">Roblox →</a>
+        </div>
+
+    </div>
+</div>
+</div>
+
+<!-- ПРАВИЛА -->
+<div class="tab" id="tab-rules">
+<div class="container" style="max-width:900px">
+    <div class="section-header">
+        <div class="section-title">Правила Сервера</div>
+        <div class="section-sub">Обязательно к прочтению — незнание не освобождает от ответственности</div>
+    </div>
+
+    <!-- Навигация по разделам правил -->
+    <div class="portal-nav" style="margin-bottom:28px">
+        <button class="portal-nav-btn active" data-rules="discord" onclick="switchRules('discord')">📕 Discord</button>
+        <button class="portal-nav-btn" data-rules="rp" onclick="switchRules('rp')">📄 Правила РП</button>
+        <button class="portal-nav-btn" data-rules="ic" onclick="switchRules('ic')">📘 IC Правила</button>
+        <button class="portal-nav-btn" data-rules="uk" onclick="switchRules('uk')">📗 УК РФ</button>
+        <button class="portal-nav-btn" data-rules="police" onclick="switchRules('police')">📙 Закон о полиции</button>
+        <button class="portal-nav-btn" data-rules="admin" onclick="switchRules('admin')">📜 Для администрации</button>
+        <button class="portal-nav-btn" data-rules="pdd" onclick="switchRules('pdd')">🚗 Правила ПДД</button>
+    </div>
+
+    <!-- DISCORD -->
+    <div id="rules-discord" class="rules-section">
+        <div style="background:rgba(88,101,242,0.08);border:1px solid rgba(88,101,242,0.25);border-radius:16px;padding:20px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
+            <span style="font-size:28px">📕</span>
+            <div><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff">Правила Discord сервера</div>
+            <div style="color:var(--text);font-size:13px">Нарушение = предупреждение → мут → кик → перм бан</div></div>
+        </div>
+        <div id="rules-discord-list"></div>
+    </div>
+
+    <!-- RP -->
+    <div id="rules-rp" class="rules-section" style="display:none">
+        <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:16px;padding:20px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
+            <span style="font-size:28px">📄</span>
+            <div><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff">Правила по РП</div>
+            <div style="color:var(--text);font-size:13px">NON RP — неподобающее игровому миру поведение</div></div>
+        </div>
+        <div id="rules-rp-list"></div>
+    </div>
+
+    <!-- IC -->
+    <div id="rules-ic" class="rules-section" style="display:none">
+        <div style="background:rgba(14,165,233,0.08);border:1px solid rgba(14,165,233,0.25);border-radius:16px;padding:20px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
+            <span style="font-size:28px">📘</span>
+            <div><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff">IC Правила</div>
+            <div style="color:var(--text);font-size:13px">Все игроки ведут себя как реальные люди в городе</div></div>
+        </div>
+        <div id="rules-ic-list"></div>
+    </div>
+
+    <!-- УК -->
+    <div id="rules-uk" class="rules-section" style="display:none">
+        <div style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.25);border-radius:16px;padding:20px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
+            <span style="font-size:28px">📗</span>
+            <div><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff">Уголовный Кодекс</div>
+            <div style="color:var(--text);font-size:13px">1 год = 1 минута &nbsp;•&nbsp; 1 сутки = 10 секунд</div></div>
+        </div>
+        <div id="rules-uk-list"></div>
+    </div>
+
+    <!-- ПОЛИЦИЯ -->
+    <div id="rules-police" class="rules-section" style="display:none">
+        <div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.25);border-radius:16px;padding:20px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
+            <span style="font-size:28px">📙</span>
+            <div><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff">Федеральный закон о полиции</div>
+            <div style="color:var(--text);font-size:13px">Уголовно-процессуальный кодекс</div></div>
+        </div>
+        <div id="rules-police-list"></div>
+    </div>
+
+    <!-- АДМИНИСТРАЦИЯ -->
+    <div id="rules-admin" class="rules-section" style="display:none">
+        <div style="background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.25);border-radius:16px;padding:20px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
+            <span style="font-size:28px">📜</span>
+            <div><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff">Правила для администрации</div>
+            <div style="color:var(--text);font-size:13px">Администрация — лицо сервера</div></div>
+        </div>
+        <div id="rules-admin-list"></div>
+    </div>
+
+    <!-- ПДД -->
+    <div id="rules-pdd" class="rules-section" style="display:none">
+        <div style="background:rgba(0,245,255,0.06);border:1px solid rgba(0,245,255,0.2);border-radius:16px;padding:20px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
+            <span style="font-size:28px">🚗</span>
+            <div><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff">Правила дорожного движения</div>
+            <div style="color:var(--text);font-size:13px">Движение строго по правой полосе</div></div>
+        </div>
+        <div id="rules-pdd-list"></div>
+    </div>
+
 </div>
 </div>
 
