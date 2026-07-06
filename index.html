@@ -79,6 +79,28 @@
         .modal-overlay{position:fixed;inset:0;z-index:500;background:rgba(3,7,18,0.92);backdrop-filter:blur(12px);display:none;align-items:center;justify-content:center;padding:20px}
         .modal-overlay.open{display:flex;animation:fadeIn 0.2s ease}
         @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+        .fullscreen-cs{position:fixed;inset:0;z-index:600;background:radial-gradient(ellipse 80% 60% at 50% 30%,rgba(0,245,255,0.08) 0%,var(--dark) 70%);display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px}
+        .fullscreen-cs.open{display:flex;animation:fadeIn 0.25s ease}
+        .fullscreen-cs-icon{font-size:88px;margin-bottom:24px}
+        .fullscreen-cs-title{font-family:'Bebas Neue',sans-serif;font-size:56px;letter-spacing:5px;color:#fff;margin-bottom:14px}
+        .fullscreen-cs-desc{color:var(--text);font-size:17px;max-width:520px;line-height:1.7;margin-bottom:32px}
+        .fullscreen-cs-close{background:rgba(255,255,255,0.05);border:1px solid var(--border);color:#fff;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:14px;letter-spacing:1px;text-transform:uppercase;padding:14px 32px;border-radius:14px;cursor:pointer;transition:all 0.2s}
+        .fullscreen-cs-close:hover{background:rgba(255,255,255,0.1)}
+        .fullscreen-cs-x{position:absolute;top:24px;right:24px;width:44px;height:44px;padding:0;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:16px}
+        .portal-card.highlight{border-color:rgba(56,189,248,0.4);box-shadow:0 0 0 1px rgba(56,189,248,0.15) inset}
+        .portal-badge-new{position:absolute;top:12px;right:12px;background:rgba(56,189,248,0.15);color:#38bdf8;border:1px solid rgba(56,189,248,0.35);font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1px;padding:3px 8px;border-radius:6px}
+        .requests-toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
+        .requests-toolbar .form-input{margin-bottom:0}
+        .requests-count-pill{background:rgba(0,245,255,0.08);border:1px solid var(--border);color:var(--cyan);font-family:'JetBrains Mono',monospace;font-size:12px;padding:11px 16px;border-radius:12px;white-space:nowrap}
+        .request-card{transition:border-color 0.2s,box-shadow 0.2s}
+        .request-card:hover{border-color:rgba(0,245,255,0.25);box-shadow:0 10px 24px rgba(0,0,0,0.35)}
+        .request-card-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+        .request-time{color:#334155;font-family:'JetBrains Mono',monospace;font-size:11px;white-space:nowrap}
+        @media(max-width:768px){
+            .fullscreen-cs-title{font-size:32px;letter-spacing:3px}
+            .fullscreen-cs-icon{font-size:56px;margin-bottom:16px}
+            .fullscreen-cs-desc{font-size:15px}
+        }
         .modal-box{background:#0d1117;border:1px solid var(--border);border-radius:24px;width:100%;max-width:520px;position:relative;max-height:90vh;overflow-y:auto;scrollbar-width:thin}
         .modal-header{padding:28px 28px 0;border-bottom:1px solid var(--border)}
         .modal-title{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;color:#fff;margin-bottom:4px}
@@ -102,8 +124,9 @@
         .badge-pending{background:rgba(251,191,36,0.1);color:#fbbf24;border:1px solid rgba(251,191,36,0.2)}
         .badge-approved{background:rgba(34,197,94,0.1);color:#22c55e;border:1px solid rgba(34,197,94,0.2)}
         .badge-rejected{background:rgba(239,68,68,0.1);color:#f87171;border:1px solid rgba(239,68,68,0.2)}
-        .doc-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:10px}
-        .doc-icon{width:42px;height:42px;border-radius:12px;background:rgba(0,245,255,0.08);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+        .doc-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:10px;transition:border-color 0.2s,box-shadow 0.2s}
+        .doc-card:hover{border-color:rgba(0,245,255,0.25);box-shadow:0 10px 26px rgba(0,0,0,0.35)}
+        .doc-icon{width:46px;height:46px;border-radius:13px;background:rgba(0,245,255,0.08);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0}
         .salary-table{width:100%;border-collapse:collapse}
         .salary-table th{padding:12px 16px;text-align:left;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--text);border-bottom:1px solid var(--border)}
         .salary-table td{padding:13px 16px;border-bottom:1px solid rgba(255,255,255,0.03);font-size:15px}
@@ -114,7 +137,14 @@
         .rank-item{display:flex;align-items:center;justify-content:space-between;padding:11px 16px;border-radius:10px;margin-bottom:5px;background:rgba(255,255,255,0.02);border:1px solid var(--border)}
         .rank-name{font-size:14px;font-weight:600;color:#fff}
         .rank-xp{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--cyan)}
-        .admin-requests{display:grid;gap:14px}
+        .admin-requests{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(360px,1fr))}
+        .notify-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#f87171;margin-left:6px;vertical-align:middle;animation:dotPulse 1.6s infinite}
+        @keyframes dotPulse{0%{box-shadow:0 0 0 0 rgba(248,113,113,0.55)}70%{box-shadow:0 0 0 8px rgba(248,113,113,0)}100%{box-shadow:0 0 0 0 rgba(248,113,113,0)}}
+        .owner-panel-banner{background:linear-gradient(135deg,rgba(56,189,248,0.14),rgba(0,245,255,0.03));border:1px solid rgba(56,189,248,0.3);border-radius:16px;padding:16px 20px;margin-bottom:18px;animation:ownerGlow 2.4s ease-in-out infinite}
+        @keyframes ownerGlow{0%,100%{box-shadow:0 0 0 rgba(56,189,248,0)}50%{box-shadow:0 0 26px rgba(56,189,248,0.22)}}
+        .owner-toggle{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-size:13px;color:var(--text);cursor:pointer;transition:all 0.2s}
+        .owner-toggle:hover{border-color:rgba(0,245,255,0.25)}
+        .owner-toggle input{accent-color:var(--cyan);width:16px;height:16px;flex-shrink:0}
         .request-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px}
         .request-type{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--cyan);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
         .request-player{font-size:18px;font-weight:700;color:#fff;margin-bottom:6px}
@@ -211,11 +241,11 @@
     <div class="logo" onclick="navigateTo('main');closeMobileMenu()"><span class="logo-text">NOVOSIBIRSK RP</span></div>
     <div class="nav-links">
       <button class="nav-btn active" id="nav-main" onclick="navigateTo('main')">Главная</button>
-      <button class="nav-btn" id="nav-portal" onclick="navigateTo('portal')">Портал</button>
-      <button class="nav-btn" id="nav-news" onclick="navigateTo('news')">Новости</button>
-      <button class="nav-btn" id="nav-team" onclick="navigateTo('team')">Команда</button>
-      <button class="nav-btn" id="nav-rules" onclick="navigateTo('rules')">Правила</button>
-      <button class="nav-btn" id="nav-profile" onclick="navigateTo('profile')">Профиль</button>
+      <button class="nav-btn" id="nav-portal" data-flag-tab="portal" onclick="navigateTo('portal')">Портал</button>
+      <button class="nav-btn" id="nav-news" data-flag-tab="news" onclick="navigateTo('news')">Новости</button>
+      <button class="nav-btn" id="nav-team" data-flag-tab="team" onclick="navigateTo('team')">Команда</button>
+      <button class="nav-btn" id="nav-rules" data-flag-tab="rules" onclick="navigateTo('rules')">Правила</button>
+      <button class="nav-btn" id="nav-profile" onclick="navigateTo('profile')">Профиль<span class="notify-dot" id="profile-notify-dot" style="display:none"></span></button>
     </div>
     <div style="display:flex;align-items:center;gap:10px">
       <div class="auth-zone" id="auth-zone"><button class="btn-primary" onclick="openModal('auth')">Войти</button></div>
@@ -225,11 +255,11 @@
 </nav>
 <div class="mobile-nav" id="mobile-nav">
   <button class="mobile-nav-btn active" id="mnav-main" onclick="navigateTo('main');closeMobileMenu()">🏠 Главная</button>
-  <button class="mobile-nav-btn" id="mnav-portal" onclick="navigateTo('portal');closeMobileMenu()">🏛️ Портал</button>
-  <button class="mobile-nav-btn" id="mnav-news" onclick="navigateTo('news');closeMobileMenu()">📰 Новости</button>
-  <button class="mobile-nav-btn" id="mnav-team" onclick="navigateTo('team');closeMobileMenu()">👥 Команда</button>
-  <button class="mobile-nav-btn" id="mnav-rules" onclick="navigateTo('rules');closeMobileMenu()">📋 Правила</button>
-  <button class="mobile-nav-btn" id="mnav-profile" onclick="navigateTo('profile');closeMobileMenu()">👤 Профиль</button>
+  <button class="mobile-nav-btn" id="mnav-portal" data-flag-tab="portal" onclick="navigateTo('portal');closeMobileMenu()">🏛️ Портал</button>
+  <button class="mobile-nav-btn" id="mnav-news" data-flag-tab="news" onclick="navigateTo('news');closeMobileMenu()">📰 Новости</button>
+  <button class="mobile-nav-btn" id="mnav-team" data-flag-tab="team" onclick="navigateTo('team');closeMobileMenu()">👥 Команда</button>
+  <button class="mobile-nav-btn" id="mnav-rules" data-flag-tab="rules" onclick="navigateTo('rules');closeMobileMenu()">📋 Правила</button>
+  <button class="mobile-nav-btn" id="mnav-profile" onclick="navigateTo('profile');closeMobileMenu()">👤 Профиль<span class="notify-dot" id="profile-notify-dot-m" style="display:none"></span></button>
 </div>
 
 <!-- ГЛАВНАЯ -->
@@ -294,14 +324,15 @@
     </div>
     <div id="portal-services">
       <div class="portal-grid">
-        <div class="portal-card" onclick="requireAuth(function(){openModal('passport')})"><span class="portal-icon">🪪</span><div class="portal-title">Паспорт</div><div class="portal-desc">Оформить гражданский паспорт Новосибирска</div></div>
-        <div class="portal-card" onclick="requireAuth(function(){openModal('medbook')})"><span class="portal-icon">🏥</span><div class="portal-title">Мед. книжка</div><div class="portal-desc">Получить медицинскую книжку для работы</div></div>
-        <div class="portal-card" onclick="requireAuth(function(){openModal('license')})"><span class="portal-icon">🔫</span><div class="portal-title">Лицензия на оружие</div><div class="portal-desc">Подать заявку на владение оружием</div></div>
-        <div class="portal-card" onclick="requireAuth(function(){openModal('faction-join')})"><span class="portal-icon">🏛️</span><div class="portal-title">Вступить во фракцию</div><div class="portal-desc">Подать заявление в государственную структуру</div></div>
-        <div class="portal-card" onclick="requireAuth(function(){openModal('court')})"><span class="portal-icon">⚖️</span><div class="portal-title">Подать в суд</div><div class="portal-desc">Открыть судебное дело против игрока</div></div>
-        <div class="portal-card" onclick="requireAuth(function(){openModal('government')})"><span class="portal-icon">📋</span><div class="portal-title">Обращение в Правительство</div><div class="portal-desc">Официальная жалоба или предложение</div></div>
-        <div class="portal-card" onclick="requireAuth(function(){openModal('lawyer')})"><span class="portal-icon">👨‍⚖️</span><div class="portal-title">К Адвокату</div><div class="portal-desc">Запросить юридическую помощь</div></div>
-        <div class="portal-card" onclick="showComingSoon()"><span class="portal-icon">🏠</span><div class="portal-title">Дома</div><div class="portal-desc">Приобретение и управление недвижимостью</div></div>
+        <div class="portal-card" data-flag-service="passport" onclick="requireAuth(function(){openModal('passport')})"><span class="portal-icon">🪪</span><div class="portal-title">Паспорт</div><div class="portal-desc">Оформить гражданский паспорт Новосибирска</div></div>
+        <div class="portal-card" data-flag-service="medbook" onclick="requireAuth(function(){openModal('medbook')})"><span class="portal-icon">🏥</span><div class="portal-title">Мед. книжка</div><div class="portal-desc">Получить медицинскую книжку для работы</div></div>
+        <div class="portal-card" data-flag-service="license" onclick="requireAuth(function(){openModal('license')})"><span class="portal-icon">🔫</span><div class="portal-title">Лицензия на оружие</div><div class="portal-desc">Подать заявку на владение оружием</div></div>
+        <div class="portal-card" data-flag-service="faction-join" onclick="requireAuth(function(){openModal('faction-join')})"><span class="portal-icon">🏛️</span><div class="portal-title">Вступить во фракцию</div><div class="portal-desc">Подать заявление в государственную структуру</div></div>
+        <div class="portal-card" data-flag-service="court" onclick="requireAuth(function(){openModal('court')})"><span class="portal-icon">⚖️</span><div class="portal-title">Подать в суд</div><div class="portal-desc">Открыть судебное дело против игрока</div></div>
+        <div class="portal-card" data-flag-service="government" onclick="requireAuth(function(){openModal('government')})"><span class="portal-icon">📋</span><div class="portal-title">Обращение в Правительство</div><div class="portal-desc">Официальная жалоба или предложение</div></div>
+        <div class="portal-card" data-flag-service="lawyer" onclick="requireAuth(function(){openModal('lawyer')})"><span class="portal-icon">👨‍⚖️</span><div class="portal-title">К Адвокату</div><div class="portal-desc">Запросить юридическую помощь</div></div>
+        <div class="portal-card highlight" data-flag-service="home" style="position:relative" onclick="showComingSoon('home')"><span class="portal-badge-new">СКОРО</span><span class="portal-icon">🏠</span><div class="portal-title">Дома</div><div class="portal-desc">Приобретение и управление недвижимостью</div></div>
+        <div class="portal-card highlight" data-flag-service="credit" style="position:relative" onclick="showComingSoon('credit')"><span class="portal-badge-new">СКОРО</span><span class="portal-icon">💳</span><div class="portal-title">Кредиты</div><div class="portal-desc">Оформление кредита на жильё, авто или бизнес</div></div>
       </div>
     </div>
     <div id="portal-mydocs" style="display:none">
@@ -321,8 +352,8 @@
           <tr><td>🚑 МЧС</td><td class="salary-amount">4,500€</td></tr>
           <tr><td>🏥 Городская Больница</td><td class="salary-amount">4,000€</td></tr>
           <tr><td>🔧 ХАРС</td><td class="salary-amount">3,800€</td></tr>
-          <tr><td>💀 ОПГ</td><td><span class="salary-amount">5,500€</span> <span style="color:#f87171;font-size:11px;font-family:'JetBrains Mono',monospace">★ только Администрация</span></td></tr>
-          <tr><td>🤵 Мафия</td><td><span class="salary-amount">6,000€</span> <span style="color:#f87171;font-size:11px;font-family:'JetBrains Mono',monospace">★ только Администрация</span></td></tr>
+          <tr><td>💀 ОПГ</td><td class="salary-amount">5,500€</td></tr>
+          <tr><td>🤵 Мафия</td><td class="salary-amount">6,000€</td></tr>
           <tr><td>🚔 Патрульная Полиция (ДПС)</td><td class="salary-amount">4,200€</td></tr>
           <tr><td>👨‍⚖️ Адвокатура</td><td class="salary-amount">5,000€</td></tr>
         </tbody></table>
@@ -372,10 +403,35 @@
       </div>
     </div>
     <div id="portal-admin-requests" style="display:none">
+      <div class="requests-toolbar">
+        <input type="text" id="requests-search" class="form-input" placeholder="🔍 Поиск по нику..." style="flex:2;min-width:200px" oninput="filterRequests()">
+        <select id="requests-filter" class="form-input" style="flex:1;min-width:180px" onchange="filterRequests()">
+          <option value="all">Все типы заявок</option>
+          <option value="passport">🪪 Паспорт</option>
+          <option value="medbook">🏥 Мед. книжка</option>
+          <option value="license">🔫 Лицензия на оружие</option>
+          <option value="faction-join">🏛️ Вступление во фракцию</option>
+          <option value="court">⚖️ Суд</option>
+          <option value="government">📋 Обращение в Правительство</option>
+          <option value="lawyer">👨‍⚖️ К адвокату</option>
+          <option value="credit">💳 Кредит</option>
+        </select>
+        <div class="requests-count-pill" id="requests-count">Загрузка...</div>
+      </div>
       <div class="loading-text" id="requests-loading">Загрузка заявок...</div>
       <div class="admin-requests" id="admin-requests-list"></div>
     </div>
     <div id="portal-passports" style="display:none">
+      <div class="requests-toolbar">
+        <input type="text" id="passports-search" class="form-input" placeholder="🔍 Поиск по нику..." style="flex:2;min-width:200px" oninput="filterPassports()">
+        <select id="passports-filter" class="form-input" style="flex:1;min-width:180px" onchange="filterPassports()">
+          <option value="all">Все типы документов</option>
+          <option value="passport">🪪 Паспорт</option>
+          <option value="license">🔫 Лицензия на оружие</option>
+          <option value="medbook">🏥 Мед. книжка</option>
+        </select>
+        <div class="requests-count-pill" id="passports-count">Загрузка...</div>
+      </div>
       <div class="loading-text" id="passports-loading" style="display:none">Загрузка...</div>
       <div id="passports-list"></div>
     </div>
@@ -438,6 +494,7 @@
       <div class="profile-row"><span class="profile-label">Пароль</span><div style="display:flex;align-items:center;gap:10px"><span class="profile-value" style="font-family:'JetBrains Mono',monospace" id="profile-password">••••••••</span><button onclick="togglePassword()" id="toggle-pass-btn" style="background:none;border:none;color:var(--cyan);font-size:12px;cursor:pointer;font-family:'Rajdhani',sans-serif;letter-spacing:1px">ПОКАЗАТЬ</button></div></div>
       <div class="profile-row" style="border-bottom:none"><span class="profile-label">Аккаунт создан</span><span class="profile-value" id="profile-created">—</span></div>
     </div>
+    <div id="profile-notifications"></div>
     <div class="profile-stats-grid">
       <div class="profile-stat"><div class="profile-stat-num" id="stat-docs">0</div><div class="profile-stat-label">Документов</div></div>
       <div class="profile-stat"><div class="profile-stat-num" id="stat-approved">0</div><div class="profile-stat-label">Одобрено</div></div>
@@ -447,9 +504,15 @@
       <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff;margin-bottom:14px">⚡ Быстрые действия</div>
       <button class="profile-action-btn" onclick="navigateTo('portal');switchPortal('mydocs')"><span>📄</span> Мои документы</button>
       <button class="profile-action-btn" onclick="requireAuth(function(){openModal('passport')})"><span>🪪</span> Оформить паспорт</button>
+      <button class="profile-action-btn" onclick="requireAuth(function(){openModal('medbook')})"><span>🏥</span> Мед. книжка</button>
       <button class="profile-action-btn" onclick="requireAuth(function(){openModal('license')})"><span>🔫</span> Лицензия на оружие</button>
       <button class="profile-action-btn" onclick="requireAuth(function(){openModal('faction-join')})"><span>🏛️</span> Вступить во фракцию</button>
+      <button class="profile-action-btn" onclick="requireAuth(function(){openModal('court')})"><span>⚖️</span> Подать в суд</button>
+      <button class="profile-action-btn" onclick="requireAuth(function(){openModal('government')})"><span>📋</span> Обращение в Правительство</button>
+      <button class="profile-action-btn" onclick="requireAuth(function(){openModal('lawyer')})"><span>👨‍⚖️</span> К адвокату</button>
+      <button class="profile-action-btn" onclick="navigateTo('news')"><span>📰</span> Новости сервера</button>
       <button class="profile-action-btn" onclick="navigateTo('rules')"><span>📋</span> Правила сервера</button>
+      <button class="profile-action-btn" onclick="copyProfileLink()"><span>🔗</span> Скопировать ссылку на профиль</button>
     </div>
     <div class="profile-card">
       <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff;margin-bottom:14px">🔑 Сменить пароль</div>
@@ -458,6 +521,58 @@
       <button class="form-submit" onclick="changePassword()">Сохранить</button>
     </div>
     <button onclick="logout()" style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);color:#f87171;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:14px;letter-spacing:2px;text-transform:uppercase;padding:12px 24px;border-radius:12px;cursor:pointer;width:100%;margin-bottom:24px">Выйти из аккаунта</button>
+    <div id="owner-panel" style="display:none">
+      <div class="sep"></div>
+      <div class="owner-panel-banner">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><span style="font-size:22px">👑</span><div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:#38bdf8">Панель Владельца</div><span class="portal-badge-new" style="position:static">NEW</span></div>
+        <div style="color:var(--text);font-size:13px">Расширенные инструменты — доступны только Главному Владельцу и Заместителю Главного Владельца</div>
+      </div>
+      <div class="profile-card">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:#fff;margin-bottom:4px">✏️ Сменить никнейм пользователю</div>
+        <div style="color:var(--text);font-size:12px;margin-bottom:12px">Меняет ник сразу, без подтверждения игрока</div>
+        <div class="form-group"><label class="form-label">Текущий никнейм</label><input type="text" id="owner-rename-current" class="form-input" placeholder="Ivan_Ivanov"></div>
+        <div class="form-group"><label class="form-label">Новый никнейм</label><input type="text" id="owner-rename-new" class="form-input" placeholder="NewNickname"></div>
+        <button class="form-submit" onclick="ownerRenameUser()">Сменить никнейм</button>
+      </div>
+      <div class="profile-card">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:#fff;margin-bottom:4px">📨 Запросить смену никнейма</div>
+        <div style="color:var(--text);font-size:12px;margin-bottom:12px">Игроку придёт уведомление в профиле, и он сам сменит ник</div>
+        <div class="form-group"><label class="form-label">Никнейм игрока</label><input type="text" id="notify-target-username" class="form-input" placeholder="Ivan_Ivanov"></div>
+        <div class="form-group"><label class="form-label">Текст сообщения</label><textarea id="notify-target-text" class="form-input" placeholder="Например: смените никнейм, он не соответствует правилам сервера"></textarea></div>
+        <button class="form-submit" onclick="sendRenameRequest()">Отправить запрос</button>
+      </div>
+      <div class="profile-card">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:#fff;margin-bottom:4px">⏰ Просроченные документы</div>
+        <div style="color:var(--text);font-size:13px;margin-bottom:14px">Автоматически: паспорта и мед. книжки с истёкшим сроком действия</div>
+        <div id="owner-expiring-docs"><div class="loading-text" style="opacity:0.5">Загрузка...</div></div>
+      </div>
+      <div class="profile-card">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:#fff;margin-bottom:4px">🧯 Экстренное отключение</div>
+        <div style="color:var(--text);font-size:13px;margin-bottom:14px">Быстро скрыть раздел сайта при обнаружении критического бага — данные не удаляются</div>
+        <div style="font-size:12px;color:var(--cyan);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Разделы сайта</div>
+        <div id="owner-toggle-tabs" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px;margin-bottom:18px">
+          <label class="owner-toggle"><input type="checkbox" data-flag-tab="portal" checked> Портал</label>
+          <label class="owner-toggle"><input type="checkbox" data-flag-tab="news" checked> Новости</label>
+          <label class="owner-toggle"><input type="checkbox" data-flag-tab="team" checked> Команда</label>
+          <label class="owner-toggle"><input type="checkbox" data-flag-tab="rules" checked> Правила</label>
+        </div>
+        <div style="font-size:12px;color:var(--cyan);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Услуги портала</div>
+        <div id="owner-toggle-services" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px;margin-bottom:16px">
+          <label class="owner-toggle"><input type="checkbox" data-flag-service="passport" checked> Паспорт</label>
+          <label class="owner-toggle"><input type="checkbox" data-flag-service="medbook" checked> Мед. книжка</label>
+          <label class="owner-toggle"><input type="checkbox" data-flag-service="license" checked> Лицензия на оружие</label>
+          <label class="owner-toggle"><input type="checkbox" data-flag-service="faction-join" checked> Вступить во фракцию</label>
+          <label class="owner-toggle"><input type="checkbox" data-flag-service="court" checked> Подать в суд</label>
+          <label class="owner-toggle"><input type="checkbox" data-flag-service="government" checked> Обращение в Правительство</label>
+          <label class="owner-toggle"><input type="checkbox" data-flag-service="lawyer" checked> К адвокату</label>
+          <label class="owner-toggle"><input type="checkbox" data-flag-service="home" checked> Дома</label>
+          <label class="owner-toggle"><input type="checkbox" data-flag-service="credit" checked> Кредиты</label>
+          <label class="owner-toggle"><input type="checkbox" data-flag-service="opg-mafia" checked> ОПГ / Мафия</label>
+        </div>
+        <label class="owner-toggle" style="margin-bottom:16px;max-width:340px"><input type="checkbox" id="owner-toggle-registration" checked> ✅ Регистрация новых пользователей разрешена</label>
+        <button class="form-submit" onclick="saveOwnerSettings()">Сохранить настройки</button>
+      </div>
+    </div>
     <div id="admin-users-panel" style="display:none">
       <div class="sep"></div>
       <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:#f87171;margin-bottom:4px">⚙️ Все пользователи</div>
@@ -478,9 +593,9 @@
   </div>
   <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:#fff;margin-bottom:20px">Состав Администрации</div>
   <div style="display:grid;gap:14px">
-    <div style="background:var(--card);border:1px solid rgba(0,245,255,0.25);border-radius:18px;padding:20px;display:flex;align-items:center;gap:16px"><img src="https://www.roblox.com/headshot-thumbnail/image?userId=3608439415&width=100&height=100&format=png" style="width:60px;height:60px;border-radius:14px;border:2px solid rgba(0,245,255,0.4);object-fit:cover" onerror="this.style.display='none'"><div style="flex:1"><div style="font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;color:var(--cyan);margin-bottom:3px">ГЛАВНЫЙ ВЛАДЕЛЕЦ</div><div style="font-size:18px;font-weight:700;color:#fff">RUBERS_SQ</div></div><a href="https://www.roblox.com/users/3608439415/profile" target="_blank" style="background:rgba(0,245,255,0.1);border:1px solid rgba(0,245,255,0.25);color:var(--cyan);font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;padding:7px 14px;border-radius:9px;text-decoration:none">Roblox →</a></div>
+    <div style="background:var(--card);border:1px solid rgba(0,245,255,0.25);border-radius:18px;padding:20px;display:flex;align-items:center;gap:16px"><img src="https://www.roblox.com/headshot-thumbnail/image?userId=3608439415&width=100&height=100&format=png" style="width:60px;height:60px;border-radius:14px;border:2px solid rgba(0,245,255,0.4);object-fit:cover" onerror="this.style.display='none'"><div style="flex:1"><div style="font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;color:var(--cyan);margin-bottom:3px">ГЛАВНЫЙ ВЛАДЕЛЕЦ</div><div style="font-size:18px;font-weight:700;color:#fff">RUBERS_SQ <span style="font-size:11px;background:rgba(56,189,248,0.15);color:#38bdf8;border:1px solid rgba(56,189,248,0.3);padding:2px 8px;border-radius:6px;margin-left:6px;font-family:'JetBrains Mono',monospace;vertical-align:middle">🏖 в отпуске: 13.07.26 – 21.07.26</span></div></div><a href="https://www.roblox.com/users/3608439415/profile" target="_blank" style="background:rgba(0,245,255,0.1);border:1px solid rgba(0,245,255,0.25);color:var(--cyan);font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;padding:7px 14px;border-radius:9px;text-decoration:none">Roblox →</a></div>
     <div style="background:var(--card);border:1px solid rgba(251,191,36,0.2);border-radius:18px;padding:20px;display:flex;align-items:center;gap:16px"><img src="https://www.roblox.com/headshot-thumbnail/image?userId=3294036144&width=100&height=100&format=png" style="width:60px;height:60px;border-radius:14px;border:2px solid rgba(251,191,36,0.4);object-fit:cover" onerror="this.style.display='none'"><div style="flex:1"><div style="font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;color:#fbbf24;margin-bottom:3px">ЗАМЕСТИТЕЛЬ ГЛАВНОГО ВЛАДЕЛЬЦА</div><div style="font-size:18px;font-weight:700;color:#fff">RocFARYTV</div></div><a href="https://www.roblox.com/users/3294036144/profile" target="_blank" style="background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.25);color:#fbbf24;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;padding:7px 14px;border-radius:9px;text-decoration:none">Roblox →</a></div>
-    <div style="background:var(--card);border:1px solid rgba(168,85,247,0.2);border-radius:18px;padding:20px;display:flex;align-items:center;gap:16px"><img src="https://www.roblox.com/headshot-thumbnail/image?userId=3259584287&width=100&height=100&format=png" style="width:60px;height:60px;border-radius:14px;border:2px solid rgba(168,85,247,0.4);object-fit:cover" onerror="this.style.display='none'"><div style="flex:1"><div style="font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;color:#c084fc;margin-bottom:3px">АССИСТЕНТ ГЛАВНОГО ВЛАДЕЛЬЦА</div><div style="font-size:18px;font-weight:700;color:#fff">ggwp228pro <span style="font-size:11px;background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.3);padding:2px 8px;border-radius:6px;margin-left:6px;font-family:'JetBrains Mono',monospace;vertical-align:middle">в отставке</span></div></div><a href="https://www.roblox.com/users/3259584287/profile" target="_blank" style="background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.25);color:#c084fc;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;padding:7px 14px;border-radius:9px;text-decoration:none">Roblox →</a></div>
+    <div style="background:var(--card);border:1px solid rgba(168,85,247,0.2);border-radius:18px;padding:20px;display:flex;align-items:center;gap:16px"><img src="https://www.roblox.com/headshot-thumbnail/image?userId=3259584287&width=100&height=100&format=png" style="width:60px;height:60px;border-radius:14px;border:2px solid rgba(168,85,247,0.4);object-fit:cover" onerror="this.style.display='none'"><div style="flex:1"><div style="font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;color:#c084fc;margin-bottom:3px">АССИСТЕНТ ГЛАВНОГО ВЛАДЕЛЬЦА</div><div style="font-size:18px;font-weight:700;color:#fff">ggwp228pro</div></div><a href="https://www.roblox.com/users/3259584287/profile" target="_blank" style="background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.25);color:#c084fc;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;padding:7px 14px;border-radius:9px;text-decoration:none">Roblox →</a></div>
     <div style="background:var(--card);border:1px solid rgba(14,165,233,0.2);border-radius:18px;padding:20px;display:flex;align-items:center;gap:16px"><img src="https://www.roblox.com/headshot-thumbnail/image?userId=784438708&width=100&height=100&format=png" style="width:60px;height:60px;border-radius:14px;border:2px solid rgba(14,165,233,0.4);object-fit:cover" onerror="this.style.display='none'"><div style="flex:1"><div style="font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;color:#38bdf8;margin-bottom:3px">СЕКРЕТАРЬ</div><div style="font-size:18px;font-weight:700;color:#fff">ZUMAXI</div></div><a href="https://www.roblox.com/users/784438708/profile" target="_blank" style="background:rgba(14,165,233,0.1);border:1px solid rgba(14,165,233,0.25);color:#38bdf8;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;padding:7px 14px;border-radius:9px;text-decoration:none">Roblox →</a></div>
     <div style="background:var(--card);border:1px solid rgba(34,197,94,0.2);border-radius:18px;padding:20px;display:flex;align-items:center;gap:16px"><img src="https://www.roblox.com/headshot-thumbnail/image?userId=7394244307&width=100&height=100&format=png" style="width:60px;height:60px;border-radius:14px;border:2px solid rgba(34,197,94,0.4);object-fit:cover" onerror="this.style.display='none'"><div style="flex:1"><div style="font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;color:#22c55e;margin-bottom:3px">МЛАДШИЙ МОДЕРАТОР</div><div style="font-size:18px;font-weight:700;color:#fff">zhige774</div></div><a href="https://www.roblox.com/users/7394244307/profile" target="_blank" style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.25);color:#22c55e;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;padding:7px 14px;border-radius:9px;text-decoration:none">Roblox →</a></div>
   </div>
@@ -533,8 +648,8 @@
   <button class="modal-close" onclick="closeModal('auth')">&#10005;</button>
   <div class="modal-header"><div class="auth-tabs"><button class="auth-tab active" id="auth-tab-login" onclick="switchAuthTab('login')">&#1042;&#1086;&#1081;&#1090;&#1080;</button><button class="auth-tab" id="auth-tab-register" onclick="switchAuthTab('register')">&#1056;&#1077;&#1075;&#1080;&#1089;&#1090;&#1088;&#1072;&#1094;&#1080;&#1103;</button></div></div>
   <div class="modal-body">
-    <div id="auth-login-form"><div class="modal-title">&#1042;&#1093;&#1086;&#1076;</div><div class="modal-sub">&#1042;&#1074;&#1077;&#1076;&#1080;&#1090;&#1077; &#1076;&#1072;&#1085;&#1085;&#1099;&#1077; &#1072;&#1082;&#1082;&#1072;&#1091;&#1085;&#1090;&#1072;</div><div class="form-group"><label class="form-label">&#1053;&#1080;&#1082;&#1085;&#1077;&#1081;&#1084;</label><input type="text" id="login-username" placeholder="Ivan_Ivanov" class="form-input"></div><div class="form-group"><label class="form-label">&#1055;&#1072;&#1088;&#1086;&#1083;&#1100;</label><input type="password" id="login-password" class="form-input"></div><button class="form-submit" onclick="handleLogin()">&#1042;&#1086;&#1081;&#1090;&#1080;</button></div>
-    <div id="auth-register-form" style="display:none"><div class="modal-title">&#1056;&#1077;&#1075;&#1080;&#1089;&#1090;&#1088;&#1072;&#1094;&#1080;&#1103;</div><div class="form-group"><label class="form-label">&#1053;&#1080;&#1082;&#1085;&#1077;&#1081;&#1084;</label><input type="text" id="reg-username" placeholder="Ivan_Ivanov" class="form-input"></div><div class="form-group"><label class="form-label">&#1055;&#1072;&#1088;&#1086;&#1083;&#1100;</label><input type="password" id="reg-password" class="form-input"></div><div class="form-group"><label class="form-label">&#1055;&#1086;&#1074;&#1090;&#1086;&#1088;&#1080;&#1090;&#1077;</label><input type="password" id="reg-password2" class="form-input"></div><button class="form-submit" onclick="handleRegister()">&#1047;&#1072;&#1088;&#1077;&#1075;&#1080;&#1089;&#1090;&#1088;&#1080;&#1088;&#1086;&#1074;&#1072;&#1090;&#1100;&#1089;&#1103;</button></div>
+    <div id="auth-login-form"><div class="modal-title">&#1042;&#1093;&#1086;&#1076;</div><div class="modal-sub">&#1042;&#1074;&#1077;&#1076;&#1080;&#1090;&#1077; &#1076;&#1072;&#1085;&#1085;&#1099;&#1077; &#1072;&#1082;&#1082;&#1072;&#1091;&#1085;&#1090;&#1072;</div><div class="form-group"><label class="form-label">Discord Никнейм</label><input type="text" id="login-username" placeholder="ivan_ivanov" class="form-input"><div style="color:var(--text);font-size:11px;margin-top:5px">Укажите ваш ник в Discord-сервере</div></div><div class="form-group"><label class="form-label">&#1055;&#1072;&#1088;&#1086;&#1083;&#1100;</label><input type="password" id="login-password" class="form-input"></div><button class="form-submit" onclick="handleLogin()">&#1042;&#1086;&#1081;&#1090;&#1080;</button></div>
+    <div id="auth-register-form" style="display:none"><div class="modal-title">&#1056;&#1077;&#1075;&#1080;&#1089;&#1090;&#1088;&#1072;&#1094;&#1080;&#1103;</div><div class="form-group"><label class="form-label">Discord Никнейм</label><input type="text" id="reg-username" placeholder="ivan_ivanov" class="form-input"><div style="color:var(--text);font-size:11px;margin-top:5px">Укажите ваш ник в Discord-сервере</div></div><div class="form-group"><label class="form-label">&#1055;&#1072;&#1088;&#1086;&#1083;&#1100;</label><input type="password" id="reg-password" class="form-input"></div><div class="form-group"><label class="form-label">&#1055;&#1086;&#1074;&#1090;&#1086;&#1088;&#1080;&#1090;&#1077;</label><input type="password" id="reg-password2" class="form-input"></div><button class="form-submit" onclick="handleRegister()">&#1047;&#1072;&#1088;&#1077;&#1075;&#1080;&#1089;&#1090;&#1088;&#1080;&#1088;&#1086;&#1074;&#1072;&#1090;&#1100;&#1089;&#1103;</button></div>
   </div>
 </div></div>
 <div class="modal-overlay" id="modal-why"><div class="modal-box"><button class="modal-close" onclick="closeModal('why')">&#10005;</button><div class="modal-body" style="padding-top:28px"><div class="modal-title">&#1047;&#1072;&#1095;&#1077;&#1084; &#1079;&#1072;&#1093;&#1086;&#1076;&#1080;&#1090;&#1100;?</div><div class="why-item"><div class="why-num">01</div><div class="why-text"><strong>&#1046;&#1080;&#1074;&#1086;&#1081; &#1075;&#1086;&#1088;&#1086;&#1076;.</strong> &#1056;&#1077;&#1072;&#1083;&#1100;&#1085;&#1072;&#1103; &#1101;&#1082;&#1086;&#1085;&#1086;&#1084;&#1080;&#1082;&#1072;, &#1073;&#1072;&#1085;&#1082;&#1080;, &#1073;&#1080;&#1079;&#1085;&#1077;&#1089;.</div></div><div class="why-item"><div class="why-num">02</div><div class="why-text"><strong>&#1060;&#1088;&#1072;&#1082;&#1094;&#1080;&#1080;.</strong> &#1054;&#1090; &#1087;&#1086;&#1083;&#1080;&#1094;&#1080;&#1080; &#1076;&#1086; &#1054;&#1055;&#1043;.</div></div><div class="why-item"><div class="why-num">03</div><div class="why-text"><strong>&#1057;&#1086;&#1073;&#1099;&#1090;&#1080;&#1103;.</strong> &#1055;&#1086;&#1075;&#1086;&#1085;&#1080;, &#1089;&#1091;&#1076;&#1099;, &#1088;&#1077;&#1081;&#1076;&#1099;.</div></div><a href="https://discord.gg/rp9btukQV5" target="_blank" class="btn-discord" style="width:100%;justify-content:center;margin-top:8px;text-decoration:none">&#1047;&#1072;&#1081;&#1090;&#1080; &#1074; Discord</a></div></div></div>
@@ -576,7 +691,26 @@
 
 <div class="modal-overlay" id="modal-mafia-join"><div class="modal-box"><button class="modal-close" onclick="closeModal('mafia-join')">&#10005;</button><div class="modal-header"><div class="modal-title">&#1042;&#1089;&#1090;&#1091;&#1087;&#1080;&#1090;&#1100; &#1074; &#1052;&#1072;&#1092;&#1080;&#1102;</div></div><div class="modal-body"><div class="form-group"><label class="form-label">&#1053;&#1080;&#1082;</label><input type="text" id="mafia-join-username" class="form-input"></div><div class="form-group"><label class="form-label">&#1055;&#1086;&#1095;&#1077;&#1084;&#1091; &#1093;&#1086;&#1090;&#1080;&#1090;&#1077; &#1074;&#1089;&#1090;&#1091;&#1087;&#1080;&#1090;&#1100;?</label><textarea id="mafia-join-reason" class="form-input"></textarea></div><button class="form-submit" onclick="submitJoinMafia()">&#1055;&#1086;&#1076;&#1072;&#1090;&#1100; &#1079;&#1072;&#1103;&#1074;&#1082;&#1091;</button></div></div></div>
 
-<div class="modal-overlay" id="modal-coming-soon"><div class="modal-box" style="text-align:center"><button class="modal-close" onclick="closeModal('coming-soon')">&#10005;</button><div class="modal-body" style="padding:48px 28px"><div style="font-size:56px;margin-bottom:20px">&#127968;</div><div style="font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:4px;color:#fff;margin-bottom:8px">&#1057;&#1082;&#1086;&#1088;&#1086;!</div><div style="color:var(--text);font-size:15px">&#1056;&#1072;&#1079;&#1076;&#1077;&#1083; &#1074; &#1088;&#1072;&#1079;&#1088;&#1072;&#1073;&#1086;&#1090;&#1082;&#1077;.</div></div></div></div>
+<div class="modal-overlay" id="modal-credit"><div class="modal-box"><button class="modal-close" onclick="closeModal('credit')">&#10005;</button><div class="modal-header"><div class="modal-title">Заявка на кредит</div><div class="modal-sub">Кредитование граждан и организаций</div></div><div class="modal-body">
+<div class="form-group"><label class="form-label">Ваш Nickname</label><input type="text" id="credit-username" class="form-input" placeholder="Ivan_Ivanov"></div>
+<div class="form-group"><label class="form-label">Ваша фракция и занимаемая должность</label><input type="text" id="credit-faction" class="form-input" placeholder="Например: Горадминистрация, Мэр"></div>
+<div class="form-group"><label class="form-label">Ксерокопия паспорта и трудовой книжки</label><input type="text" id="credit-docs" class="form-input" placeholder="Ссылка на скриншот документов (Imgur, Discord)"></div>
+<div class="form-group"><label class="form-label">Желаемая сумма кредита (€)</label><input type="number" id="credit-amount" class="form-input" placeholder="10000"></div>
+<div class="form-group"><label class="form-label">Срок кредита</label><select id="credit-term" class="form-input"><option value="1 неделя">1 неделя</option><option value="2 недели">2 недели</option><option value="3 недели">3 недели</option></select></div>
+<div class="form-group"><label class="form-label">Цель получения кредита</label><input type="text" id="credit-purpose" class="form-input" placeholder="Покупка дома, авто, бизнес"></div>
+<div class="form-group"><label class="form-label">Согласие с условиями</label><select id="credit-agree" class="form-input"><option value="Да">Да, согласен(а) — при неуплате имущество конфискуется, наступает уголовная ответственность</option><option value="Нет">Нет</option></select></div>
+<div class="form-group"><label class="form-label">Подпись</label><input type="text" id="credit-sign" class="form-input" placeholder="Ivan_Ivanov"></div>
+<div class="form-group"><label class="form-label">Дата</label><input type="date" id="credit-date" class="form-input"></div>
+<button class="form-submit" onclick="submitForm('credit')">Подать заявку на кредит</button>
+</div></div></div>
+
+<div class="fullscreen-cs" id="fullscreen-cs">
+  <button class="fullscreen-cs-close fullscreen-cs-x" onclick="closeComingSoon()">&#10005;</button>
+  <div class="fullscreen-cs-icon" id="fs-cs-icon">🏠</div>
+  <div class="fullscreen-cs-title" id="fs-cs-title">Скоро!</div>
+  <div class="fullscreen-cs-desc" id="fs-cs-desc">Раздел в разработке.</div>
+  <button class="fullscreen-cs-close" onclick="closeComingSoon()">← Вернуться в портал</button>
+</div>
 
 <script src="app.js"></script>
 </body>
