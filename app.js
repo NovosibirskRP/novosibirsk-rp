@@ -70,11 +70,77 @@ window.currentUser = JSON.parse(localStorage.getItem('nrp_user') || 'null');
 
 // ─── HELPERS ──────────────────────────────────
 
-function isAdmin(u)      { return u && u.role && u.role !== 'Пользователь'; }
+// FIX 7: Мэр/Вице Мэр — это городская власть (RP-роль), а не администрация сайта.
+// Админ-доступ (заявки, документы, панель пользователей) — только у реального стаффа.
+const ADMIN_STAFF_ROLES = [
+    "Модерация",
+    "Администрация",
+    "Команда технического администрирования",
+    "Секретарь",
+    "Ассистент Главного Владельца",
+    "Заместитель Главного Владельца",
+    "Главный Владелец"
+];
+function isAdmin(u)      { return u && u.role && ADMIN_STAFF_ROLES.includes(u.role); }
 function isPolice(u)     { return u && POLICE_FACTIONS.includes(u.faction); }
 function isMedic(u)      { return u && MEDIC_FACTIONS.includes(u.faction); }
 function isService(u)    { return u && SERVICE_FACTIONS.includes(u.faction); }
 function canManageDocs(u){ return isAdmin(u) || isPolice(u); }
+
+// FIX 5: Панель Владельца — доступна только Главному Владельцу и Заместителю
+const OWNER_ROLES = ["Главный Владелец", "Заместитель Главного Владельца"];
+function isOwner(u) { return u && OWNER_ROLES.includes(u.role); }
+
+// ─── SITE SETTINGS (экстренное отключение разделов) ──
+const DEFAULT_SITE_FLAGS = {
+    tabs: { portal:true, news:true, team:true, rules:true },
+    services: { passport:true, medbook:true, license:true, 'faction-join':true, court:true, government:true, lawyer:true, home:true, credit:true, 'opg-mafia':true },
+    registration_open: true
+};
+window.siteFlags = DEFAULT_SITE_FLAGS;
+
+async function loadSiteSettings() {
+    try {
+        const rows = await db('site_settings?id=eq.1');
+        if (Array.isArray(rows) && rows[0] && rows[0].flags) {
+            window.siteFlags = Object.assign({}, DEFAULT_SITE_FLAGS, rows[0].flags, {
+                tabs: Object.assign({}, DEFAULT_SITE_FLAGS.tabs, rows[0].flags.tabs || {}),
+                services: Object.assign({}, DEFAULT_SITE_FLAGS.services, rows[0].flags.services || {})
+            });
+        } else {
+            await db('site_settings', { method:'POST', body: JSON.stringify({ id:1, flags: DEFAULT_SITE_FLAGS }) }).catch(()=>{});
+        }
+    } catch(e) { console.warn('site_settings load error', e); }
+    applySiteFlags();
+}
+
+function applySiteFlags() {
+    const f = window.siteFlags || DEFAULT_SITE_FLAGS;
+    document.querySelectorAll('.nav-btn[data-flag-tab], .mobile-nav-btn[data-flag-tab]').forEach(el => {
+        const key = el.dataset.flagTab;
+        const enabled = f.tabs ? f.tabs[key] !== false : true;
+        el.style.display = enabled ? '' : 'none';
+    });
+    document.querySelectorAll('.portal-card[data-flag-service]').forEach(el => {
+        const key = el.dataset.flagService;
+        const enabled = f.services ? f.services[key] !== false : true;
+        el.style.display = enabled ? '' : 'none';
+    });
+    const canRegister = f.registration_open !== false;
+    const regTabBtn = document.getElementById('auth-tab-register');
+    if (regTabBtn) regTabBtn.style.display = canRegister ? '' : 'none';
+    // Если владелец отключил вкладку, в которой сейчас находится обычный пользователь — вернуть на главную
+    const activeTab = document.querySelector('.tab.active');
+    if (activeTab && !isOwner(window.currentUser)) {
+        const tabId = activeTab.id.replace('tab-', '');
+        if (f.tabs && f.tabs[tabId] === false) switchTab('main');
+    }
+}
+
+function canRegisterNow() {
+    const f = window.siteFlags || DEFAULT_SITE_FLAGS;
+    return f.registration_open !== false;
+}
 
 function db(path, opts) {
     return fetch(SUPABASE_URL + '/rest/v1/' + path, { headers: H, ...opts }).then(r => r.json());
@@ -389,7 +455,27 @@ window.requireAuth = function(fn) {
     fn();
 };
 
-window.showComingSoon = function() { openModal('coming-soon'); };
+const COMING_SOON_INFO = {
+    home:   { icon:'🏠', title:'Скоро!', desc:'Приобретение и управление недвижимостью появится на портале в ближайших обновлениях.' },
+    credit: { icon:'💳', title:'Скоро!', desc:'Оформление кредита на жильё, авто или бизнес появится на портале в ближайших обновлениях.' },
+};
+
+window.showComingSoon = function(key) {
+    const info = COMING_SOON_INFO[key] || { icon:'🏗️', title:'Скоро!', desc:'Раздел в разработке.' };
+    const el = document.getElementById('fullscreen-cs');
+    if (!el) return;
+    const iconEl  = document.getElementById('fs-cs-icon');
+    const titleEl = document.getElementById('fs-cs-title');
+    const descEl  = document.getElementById('fs-cs-desc');
+    if (iconEl)  iconEl.textContent  = info.icon;
+    if (titleEl) titleEl.textContent = info.title;
+    if (descEl)  descEl.textContent  = info.desc;
+    el.classList.add('open');
+};
+
+window.closeComingSoon = function() {
+    document.getElementById('fullscreen-cs')?.classList.remove('open');
+};
 
 window.switchAuthTab = function(tab) {
     document.getElementById('auth-login-form').style.display    = tab === 'login'    ? '' : 'none';
@@ -401,6 +487,7 @@ window.switchAuthTab = function(tab) {
 // ─── AUTH ─────────────────────────────────────
 
 window.handleRegister = async function() {
+    if (!canRegisterNow()) return notify('Регистрация временно отключена администрацией', false);
     const u  = document.getElementById('reg-username').value.trim();
     const p  = document.getElementById('reg-password').value;
     const p2 = document.getElementById('reg-password2').value;
@@ -468,6 +555,7 @@ window.renderProfile = async function() {
         if (adminP) adminP.style.display = 'none'; return;
     }
     guest.style.display = 'none'; user.style.display = '';
+    loadUserNotifications();
 
     const avatarLetter = document.getElementById('profile-avatar-letter');
     const avatarImg    = document.getElementById('profile-avatar-img');
@@ -510,6 +598,8 @@ window.renderProfile = async function() {
 
     if (isAdmin(window.currentUser)) { if (adminP) adminP.style.display = ''; loadUsersTable(); }
     else { if (adminP) adminP.style.display = 'none'; }
+
+    showOwnerPanelIfNeeded();
 };
 
 window.triggerAvatarUpload = function() { document.getElementById('avatar-file-input')?.click(); };
@@ -589,6 +679,175 @@ window.deleteUser = async function(id) {
     if (!confirm('Удалить пользователя?')) return;
     await db(`users?id=eq.${id}`, { method:'DELETE' });
     notify('Пользователь удалён'); loadUsersTable();
+};
+
+// ─── OWNER PANEL ──────────────────────────────
+
+function showOwnerPanelIfNeeded() {
+    const panel = document.getElementById('owner-panel');
+    if (!panel) return;
+    if (isOwner(window.currentUser)) {
+        panel.style.display = '';
+        syncOwnerCheckboxes();
+        loadOwnerExpiringDocs();
+    } else {
+        panel.style.display = 'none';
+    }
+}
+
+function syncOwnerCheckboxes() {
+    const f = window.siteFlags || DEFAULT_SITE_FLAGS;
+    document.querySelectorAll('#owner-toggle-tabs input[data-flag-tab]').forEach(cb => {
+        cb.checked = f.tabs ? f.tabs[cb.dataset.flagTab] !== false : true;
+    });
+    document.querySelectorAll('#owner-toggle-services input[data-flag-service]').forEach(cb => {
+        cb.checked = f.services ? f.services[cb.dataset.flagService] !== false : true;
+    });
+    const regCb = document.getElementById('owner-toggle-registration');
+    if (regCb) regCb.checked = f.registration_open !== false;
+}
+
+window.saveOwnerSettings = async function() {
+    if (!isOwner(window.currentUser)) return notify('Нет доступа', false);
+    const tabs = {};
+    document.querySelectorAll('#owner-toggle-tabs input[data-flag-tab]').forEach(cb => { tabs[cb.dataset.flagTab] = cb.checked; });
+    const services = {};
+    document.querySelectorAll('#owner-toggle-services input[data-flag-service]').forEach(cb => { services[cb.dataset.flagService] = cb.checked; });
+    const registration_open = document.getElementById('owner-toggle-registration')?.checked !== false;
+    const flags = { tabs, services, registration_open };
+    window.siteFlags = flags;
+    try {
+        const existing = await db('site_settings?id=eq.1');
+        if (Array.isArray(existing) && existing.length) {
+            await db('site_settings?id=eq.1', { method:'PATCH', body: JSON.stringify({ flags }) });
+        } else {
+            await db('site_settings', { method:'POST', body: JSON.stringify({ id:1, flags }) });
+        }
+    } catch(e) { console.warn('saveOwnerSettings error', e); }
+    applySiteFlags();
+    notify('Настройки сайта сохранены');
+};
+
+window.ownerRenameUser = async function() {
+    if (!isOwner(window.currentUser)) return notify('Нет доступа', false);
+    const curEl  = document.getElementById('owner-rename-current');
+    const newEl  = document.getElementById('owner-rename-new');
+    const cur = curEl.value.trim();
+    const next = newEl.value.trim();
+    if (!cur || !next) return notify('Заполните оба поля', false);
+    const users = await db(`users?username=eq.${encodeURIComponent(cur)}`);
+    if (!Array.isArray(users) || !users.length) return notify('Пользователь не найден', false);
+    const clash = await db(`users?username=eq.${encodeURIComponent(next)}`);
+    if (Array.isArray(clash) && clash.length) return notify('Этот никнейм уже занят', false);
+    await db(`users?id=eq.${users[0].id}`, { method:'PATCH', body: JSON.stringify({ username: next }) });
+    if (window.currentUser && window.currentUser.id === users[0].id) {
+        window.currentUser.username = next;
+        localStorage.setItem('nrp_user', JSON.stringify(window.currentUser));
+        updateAuthZone();
+    }
+    curEl.value = ''; newEl.value = '';
+    notify(`Никнейм изменён: ${cur} → ${next}`);
+    loadUsersTable();
+};
+
+window.loadOwnerExpiringDocs = async function() {
+    const el = document.getElementById('owner-expiring-docs');
+    if (!el || !isOwner(window.currentUser)) return;
+    el.innerHTML = '<div class="loading-text" style="opacity:0.5">Загрузка...</div>';
+    try {
+        const rows = await db('requests?status=eq.approved&expires_at=not.is.null&order=expires_at.asc');
+        const soon = new Date(); soon.setDate(soon.getDate() + 5);
+        const list = Array.isArray(rows) ? rows.filter(r => r.expires_at && new Date(r.expires_at) <= soon) : [];
+        if (!list.length) { el.innerHTML = '<div class="loading-text" style="opacity:0.5">Нет истекающих документов</div>'; return; }
+        const typeNames = { passport:'🪪 Паспорт', medbook:'🏥 Мед. книжка', license:'🔫 Лицензия' };
+        el.innerHTML = list.map(r => {
+            const exp = new Date(r.expires_at);
+            const expired = exp < new Date();
+            return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px"><span>${typeNames[r.type]||r.type} — <b>${escHtml(r.username||r.char_name||'—')}</b></span><span style="color:${expired?'#f87171':'#fbbf24'}">${expired?'⏰ Истёк':'⚠️ До'} ${exp.toLocaleDateString('ru-RU')}</span></div>`;
+        }).join('');
+    } catch(e) { el.innerHTML = '<div class="loading-text" style="opacity:0.5">Ошибка загрузки</div>'; }
+};
+
+window.copyProfileLink = function() {
+    if (!window.currentUser) return notify('Войдите в аккаунт', false);
+    const url = location.origin + location.pathname + '#profile';
+    navigator.clipboard?.writeText(url).then(
+        () => notify('Ссылка скопирована!'),
+        () => notify('Не удалось скопировать', false)
+    );
+};
+
+// ─── УВЕДОМЛЕНИЯ ПОЛЬЗОВАТЕЛЮ (напр. просьба сменить ник) ──
+// Требуется таблица в Supabase: notifications (id, user_id, type text, text text, read bool default false, created_at timestamptz default now())
+
+window.sendRenameRequest = async function() {
+    if (!isOwner(window.currentUser)) return notify('Нет доступа', false);
+    const uEl = document.getElementById('notify-target-username');
+    const tEl = document.getElementById('notify-target-text');
+    const username = uEl.value.trim();
+    const text = tEl.value.trim() || 'Пожалуйста, смените ваш никнейм в соответствии с требованиями сервера.';
+    if (!username) return notify('Введите никнейм игрока', false);
+    const users = await db(`users?username=eq.${encodeURIComponent(username)}`);
+    if (!Array.isArray(users) || !users.length) return notify('Пользователь не найден', false);
+    try {
+        const res = await db('notifications', { method:'POST', body: JSON.stringify({ user_id: users[0].id, type:'rename_request', text, read:false }) });
+        if (!res || res.error) throw new Error('insert failed');
+        notify('Запрос отправлен игроку ' + username);
+        uEl.value = ''; tEl.value = '';
+    } catch(e) {
+        console.warn('sendRenameRequest error', e);
+        notify('Ошибка отправки — проверьте таблицу notifications в Supabase', false);
+    }
+};
+
+async function loadUserNotifications() {
+    const container = document.getElementById('profile-notifications');
+    if (!window.currentUser) { updateNotifyDot(false); if (container) container.innerHTML = ''; return; }
+    try {
+        const rows = await db(`notifications?user_id=eq.${window.currentUser.id}&read=eq.false&order=created_at.desc`);
+        const list = Array.isArray(rows) ? rows : [];
+        updateNotifyDot(list.length > 0);
+        if (container) container.innerHTML = list.map(n => renderNotificationCard(n)).join('');
+    } catch(e) { updateNotifyDot(false); }
+}
+
+function updateNotifyDot(show) {
+    const d1 = document.getElementById('profile-notify-dot');
+    const d2 = document.getElementById('profile-notify-dot-m');
+    if (d1) d1.style.display = show ? '' : 'none';
+    if (d2) d2.style.display = show ? '' : 'none';
+}
+
+function renderNotificationCard(n) {
+    if (n.type === 'rename_request') {
+        return `<div class="profile-card" style="border-color:rgba(251,191,36,0.35);background:rgba(251,191,36,0.05)">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><span style="font-size:20px">✏️</span><div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;color:#fbbf24">Администрация просит сменить никнейм</div></div>
+            <div style="color:var(--text);font-size:14px;margin-bottom:14px;line-height:1.6">${escHtml(n.text||'')}</div>
+            <div class="form-group"><input type="text" id="notif-rename-${n.id}" placeholder="Новый никнейм" class="form-input"></div>
+            <button class="form-submit" onclick="respondRenameRequest(${n.id})">Сменить никнейм</button>
+        </div>`;
+    }
+    return `<div class="profile-card"><div style="color:var(--text);font-size:14px;line-height:1.6">${escHtml(n.text||'')}</div><button onclick="dismissNotification(${n.id})" style="margin-top:10px;background:none;border:none;color:var(--cyan);font-size:12px;cursor:pointer;letter-spacing:1px">ПОНЯТНО, СКРЫТЬ</button></div>`;
+}
+
+window.respondRenameRequest = async function(notifId) {
+    const input = document.getElementById('notif-rename-' + notifId);
+    const next = input?.value.trim();
+    if (!next) return notify('Введите новый никнейм', false);
+    const clash = await db(`users?username=eq.${encodeURIComponent(next)}`);
+    if (Array.isArray(clash) && clash.length) return notify('Этот никнейм уже занят', false);
+    await db(`users?id=eq.${window.currentUser.id}`, { method:'PATCH', body: JSON.stringify({ username: next }) });
+    window.currentUser.username = next;
+    localStorage.setItem('nrp_user', JSON.stringify(window.currentUser));
+    await db(`notifications?id=eq.${notifId}`, { method:'PATCH', body: JSON.stringify({ read:true }) }).catch(()=>{});
+    updateAuthZone();
+    notify('Никнейм изменён на ' + next);
+    renderProfile();
+};
+
+window.dismissNotification = async function(id) {
+    try { await db(`notifications?id=eq.${id}`, { method:'PATCH', body: JSON.stringify({ read:true }) }); } catch(e) {}
+    loadUserNotifications();
 };
 
 // ─── NEWS ─────────────────────────────────────
@@ -768,6 +1027,10 @@ window.setExpiry = async function(id, section) {
 
 // ─── ADMIN REQUESTS ───────────────────────────
 
+const REQUEST_TYPE_NAMES = { passport:'🪪 Паспорт', medbook:'🏥 Мед. книжка', license:'🔫 Лицензия', faction_join:'🏛️ Вступление во фракцию', court:'⚖️ Судебный иск', government:'📋 Правительство', lawyer:'👨‍⚖️ Адвокат', opg_create:'💀 Создание ОПГ', opg_join:'💀 Вступление в ОПГ', mafia_create:'🤵 Создание Мафии', mafia_join:'🤵 Вступление в Мафию' };
+
+window._adminRequestsCache = [];
+
 window.loadAdminRequests = async function() {
     const listEl = document.getElementById('admin-requests-list');
     const loadEl = document.getElementById('requests-loading');
@@ -776,13 +1039,37 @@ window.loadAdminRequests = async function() {
     if (listEl) listEl.innerHTML = '';
     const reqs = await db('requests?status=eq.pending&order=created_at.desc');
     if (loadEl) loadEl.style.display = 'none';
-    if (!Array.isArray(reqs)||!reqs.length) { if (listEl) listEl.innerHTML = '<div class="loading-text" style="opacity:0.5">Новых заявок нет</div>'; return; }
-    const typeNames = { passport:'🪪 Паспорт', medbook:'🏥 Мед. книжка', license:'🔫 Лицензия', faction_join:'🏛️ Вступление во фракцию', court:'⚖️ Судебный иск', government:'📋 Правительство', lawyer:'👨‍⚖️ Адвокат', opg_create:'💀 Создание ОПГ', opg_join:'💀 Вступление в ОПГ', mafia_create:'🤵 Создание Мафии', mafia_join:'🤵 Вступление в Мафию' };
+    window._adminRequestsCache = Array.isArray(reqs) ? reqs : [];
+    const searchEl = document.getElementById('requests-search');
+    const filterEl = document.getElementById('requests-filter');
+    if (searchEl) searchEl.value = '';
+    if (filterEl) filterEl.value = 'all';
+    renderAdminRequestsList(window._adminRequestsCache);
+};
+
+function renderAdminRequestsList(reqs) {
+    const listEl = document.getElementById('admin-requests-list');
+    const countEl = document.getElementById('requests-count');
+    if (!listEl) return;
+    if (countEl) countEl.textContent = reqs.length + (reqs.length === 1 ? ' заявка' : ' заявок');
+    if (!reqs.length) { listEl.innerHTML = '<div class="loading-text" style="opacity:0.5">Заявок не найдено</div>'; return; }
     listEl.innerHTML = reqs.map(r => {
         const date = r.created_at ? new Date(r.created_at).toLocaleDateString('ru-RU') : '';
         const details = Object.entries(r).filter(([k])=>!['id','type','status','user_id','created_at','expires_at'].includes(k)).map(([k,v])=>v?`<b>${k}:</b> ${escHtml(String(v))}`:null).filter(Boolean).join('<br>');
-        return `<div class="request-card"><div class="request-type">${typeNames[r.type]||r.type} • ${date}</div><div class="request-player">${escHtml(r.username||'—')}</div><div class="request-data">${details}</div><div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)"><label style="font-size:11px;color:var(--text);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:6px">💰 Стоимость (UnbelievaBoat)</label><div style="display:flex;gap:8px;align-items:center"><input type="number" id="cost-${r.id}" placeholder="0" min="0" style="background:#0d1117;border:1px solid var(--border);color:#fff;padding:7px 12px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:13px;width:120px;outline:none"><span style="color:var(--text);font-size:13px">€</span></div></div><div class="request-actions"><button class="btn-approve" onclick="reviewRequest(${r.id},'approved')">✓ Одобрить</button><button class="btn-reject" onclick="reviewRequest(${r.id},'rejected')">✕ Отклонить</button></div></div>`;
+        return `<div class="request-card"><div class="request-type">${REQUEST_TYPE_NAMES[r.type]||r.type} • ${date}</div><div class="request-player">${escHtml(r.username||'—')}</div><div class="request-data">${details}</div><div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)"><label style="font-size:11px;color:var(--text);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:6px">💰 Стоимость (UnbelievaBoat)</label><div style="display:flex;gap:8px;align-items:center"><input type="number" id="cost-${r.id}" placeholder="0" min="0" style="background:#0d1117;border:1px solid var(--border);color:#fff;padding:7px 12px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:13px;width:120px;outline:none"><span style="color:var(--text);font-size:13px">€</span></div></div><div class="request-actions"><button class="btn-approve" onclick="reviewRequest(${r.id},'approved')">✓ Одобрить</button><button class="btn-reject" onclick="reviewRequest(${r.id},'rejected')">✕ Отклонить</button></div></div>`;
     }).join('');
+}
+
+window.filterRequests = function() {
+    const q = (document.getElementById('requests-search')?.value || '').toLowerCase().trim();
+    const type = document.getElementById('requests-filter')?.value || 'all';
+    let list = window._adminRequestsCache || [];
+    if (type !== 'all') {
+        const typeKey = type.replace(/-/g, '_');
+        list = list.filter(r => r.type === typeKey);
+    }
+    if (q) list = list.filter(r => (r.username||'').toLowerCase().includes(q) || (r.char_name||'').toLowerCase().includes(q));
+    renderAdminRequestsList(list);
 };
 
 window.reviewRequest = async function(id, status) {
@@ -793,6 +1080,7 @@ window.reviewRequest = async function(id, status) {
     let expiresAt = null;
     if (status==='approved' && EXPIRY_DAYS_DEFAULT[req.type]) { const exp = new Date(); exp.setDate(exp.getDate() + EXPIRY_DAYS_DEFAULT[req.type]); expiresAt = exp.toISOString(); }
     await db(`requests?id=eq.${id}`, { method:'PATCH', body: JSON.stringify({ status, ...(expiresAt?{expires_at:expiresAt}:{}) }) });
+    if (status === 'approved') await applyApprovalSideEffects(req);
     const webhook = WEBHOOK_BY_TYPE[req.type] || WEBHOOK_PASSPORT_LICENSE;
     const typeNames = { passport:'🪪 Паспорт', medbook:'🏥 Мед. книжка', license:'🔫 Лицензия', faction_join:'🏛️ Вступление во фракцию', court:'⚖️ Судебный иск', government:'📋 Правительство', lawyer:'👨‍⚖️ Адвокат', opg_create:'💀 Создание ОПГ', opg_join:'💀 Вступление в ОПГ', mafia_create:'🤵 Создание Мафии', mafia_join:'🤵 Вступление в Мафию' };
     const emoji = status==='approved' ? '✅' : '❌';
@@ -818,6 +1106,25 @@ window.reviewRequest = async function(id, status) {
     loadAdminRequests();
 };
 
+// FIX 6: При одобрении заявки на вступление во фракцию/ОПГ/Мафию — фракция сразу
+// проставляется пользователю на сайте (аналогично ручному изменению в таблице пользователей)
+async function applyApprovalSideEffects(req) {
+    if (!req.user_id) return;
+    try {
+        let factionValue = null;
+        if (req.type === 'faction_join') factionValue = req.faction || null;
+        else if (req.type === 'opg_join' || req.type === 'opg_create') factionValue = 'ОПГ';
+        else if (req.type === 'mafia_join' || req.type === 'mafia_create') factionValue = 'Мафия';
+        if (!factionValue) return;
+        await db(`users?id=eq.${req.user_id}`, { method:'PATCH', body: JSON.stringify({ faction: factionValue }) });
+        if (window.currentUser && window.currentUser.id === req.user_id) {
+            window.currentUser.faction = factionValue;
+            localStorage.setItem('nrp_user', JSON.stringify(window.currentUser));
+            updateAuthZone();
+        }
+    } catch(e) { console.warn('applyApprovalSideEffects error', e); }
+}
+
 // ─── DOCUMENTS VIEWER ─────────────────────────
 
 function renderDocCard(r, fields, icon, section) {
@@ -829,32 +1136,72 @@ function renderDocCard(r, fields, icon, section) {
     return `<div class="doc-card" style="flex-direction:column;align-items:stretch;gap:0;${isExpired?'opacity:0.6':''}"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff">${icon} ${escHtml(r.char_name||r.username)}</div><div style="text-align:right">${statusBadge}${expLine?'<br>'+expLine:''}</div></div><div style="color:var(--text);font-size:14px;line-height:1.9;margin-top:12px;border-top:1px solid var(--border);padding-top:12px">${fields}</div>${btns}</div>`;
 }
 
+window._passportsCache = { passports: [], licenses: [], medbooks: [] };
+
 window.loadPassports = async function() {
     const listEl = document.getElementById('passports-list');
     const loadEl = document.getElementById('passports-loading');
+    const countEl = document.getElementById('passports-count');
     const u = window.currentUser;
     if (!u) return;
     const canSeeAll = isAdmin(u) || isPolice(u);
     const canMedbok = isMedic(u);
-    if (!canSeeAll && !canMedbok) { if (listEl) listEl.innerHTML = '<div class="empty"><div class="empty-icon">🔒</div><p>Нет доступа</p></div>'; return; }
+    if (!canSeeAll && !canMedbok) { if (listEl) listEl.innerHTML = '<div class="empty"><div class="empty-icon">🔒</div><p>Нет доступа</p></div>'; if (countEl) countEl.textContent = ''; return; }
     if (loadEl) loadEl.style.display = '';
-    let html = '';
-    if (canSeeAll) {
-        const passports = await db('requests?type=eq.passport&status=eq.approved&order=created_at.desc');
-        html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;color:#fff;margin-bottom:16px">🪪 Паспорта граждан</div>`;
-        html += !passports?.length ? '<div class="loading-text" style="opacity:0.5;margin-bottom:32px">Нет одобренных паспортов</div>' : '<div style="display:grid;gap:12px;margin-bottom:40px">' + passports.map(r=>renderDocCard(r,`<b>👤 Игрок:</b> ${escHtml(r.username)}<br><b>📛 ФИО:</b> ${escHtml(r.char_name||'—')}<br><b>🎂 Дата рождения:</b> ${r.dob||'—'}<br><b>⚧ Пол:</b> ${escHtml(r.reason||'—')}<br><b>💼 Место работы:</b> ${escHtml(r.address||'—')}<br><b>🏠 Адрес:</b> ${escHtml(r.experience||'—')}`,'🪪','passports')).join('') + '</div>';
-        const licenses = await db('requests?type=eq.license&status=eq.approved&order=created_at.desc');
-        html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;color:#fff;margin-bottom:16px">🔫 Лицензии на оружие</div>`;
-        html += !licenses?.length ? '<div class="loading-text" style="opacity:0.5;margin-bottom:32px">Нет одобренных лицензий</div>' : '<div style="display:grid;gap:12px;margin-bottom:40px">' + licenses.map(r=>renderDocCard(r,`<b>👤 Игрок:</b> ${escHtml(r.username)}<br><b>📛 ФИО:</b> ${escHtml(r.char_name||'—')}<br><b>🏛️ Фракция:</b> ${escHtml(r.faction||'—')}<br><b>🔫 Оружие:</b> ${escHtml(r.weapon_type||'—')}`,'🔫','passports')).join('') + '</div>';
-    }
-    if (canSeeAll || canMedbok) {
-        const medbooks = await db('requests?type=eq.medbook&status=eq.approved&order=created_at.desc');
-        html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;color:#fff;margin-bottom:16px">🏥 Медицинские книжки</div>`;
-        html += !medbooks?.length ? '<div class="loading-text" style="opacity:0.5">Нет мед. книжек</div>' : '<div style="display:grid;gap:12px">' + medbooks.map(r=>renderDocCard(r,`<b>👤 Игрок:</b> ${escHtml(r.username)}<br><b>📛 ФИО:</b> ${escHtml(r.char_name||'—')}<br><b>💼 Место работы:</b> ${escHtml(r.address||'—')}<br><b>🏥 Болезнь:</b> ${escHtml(r.note||'—')}`,'🏥','passports')).join('') + '</div>';
-    }
+    const [passports, licenses, medbooks] = await Promise.all([
+        canSeeAll ? db('requests?type=eq.passport&status=eq.approved&order=created_at.desc') : Promise.resolve([]),
+        canSeeAll ? db('requests?type=eq.license&status=eq.approved&order=created_at.desc') : Promise.resolve([]),
+        (canSeeAll || canMedbok) ? db('requests?type=eq.medbook&status=eq.approved&order=created_at.desc') : Promise.resolve([]),
+    ]);
+    window._passportsCache = {
+        passports: Array.isArray(passports) ? passports : [],
+        licenses:  Array.isArray(licenses)  ? licenses  : [],
+        medbooks:  Array.isArray(medbooks)  ? medbooks  : [],
+    };
     if (loadEl) loadEl.style.display = 'none';
-    if (listEl) listEl.innerHTML = html;
+    const searchEl = document.getElementById('passports-search');
+    const filterEl = document.getElementById('passports-filter');
+    if (searchEl) searchEl.value = '';
+    if (filterEl) filterEl.value = 'all';
+    renderPassportsList();
 };
+
+function renderPassportsList() {
+    const listEl = document.getElementById('passports-list');
+    const countEl = document.getElementById('passports-count');
+    if (!listEl) return;
+    const u = window.currentUser;
+    const canSeeAll = isAdmin(u) || isPolice(u);
+    const canMedbok = isMedic(u);
+    const q = (document.getElementById('passports-search')?.value || '').toLowerCase().trim();
+    const filterType = document.getElementById('passports-filter')?.value || 'all';
+    const matchQ = r => !q || (r.username||'').toLowerCase().includes(q) || (r.char_name||'').toLowerCase().includes(q);
+    const { passports, licenses, medbooks } = window._passportsCache;
+    let html = '', total = 0;
+
+    if (canSeeAll && (filterType === 'all' || filterType === 'passport')) {
+        const list = passports.filter(matchQ);
+        total += list.length;
+        html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;color:#fff;margin-bottom:16px">🪪 Паспорта граждан</div>`;
+        html += !list.length ? '<div class="loading-text" style="opacity:0.5;margin-bottom:32px">Ничего не найдено</div>' : '<div style="display:grid;gap:12px;margin-bottom:40px">' + list.map(r=>renderDocCard(r,`<b>👤 Игрок:</b> ${escHtml(r.username)}<br><b>📛 ФИО:</b> ${escHtml(r.char_name||'—')}<br><b>🎂 Дата рождения:</b> ${r.dob||'—'}<br><b>⚧ Пол:</b> ${escHtml(r.reason||'—')}<br><b>💼 Место работы:</b> ${escHtml(r.address||'—')}<br><b>🏠 Адрес:</b> ${escHtml(r.experience||'—')}`,'🪪','passports')).join('') + '</div>';
+    }
+    if (canSeeAll && (filterType === 'all' || filterType === 'license')) {
+        const list = licenses.filter(matchQ);
+        total += list.length;
+        html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;color:#fff;margin-bottom:16px">🔫 Лицензии на оружие</div>`;
+        html += !list.length ? '<div class="loading-text" style="opacity:0.5;margin-bottom:32px">Ничего не найдено</div>' : '<div style="display:grid;gap:12px;margin-bottom:40px">' + list.map(r=>renderDocCard(r,`<b>👤 Игрок:</b> ${escHtml(r.username)}<br><b>📛 ФИО:</b> ${escHtml(r.char_name||'—')}<br><b>🏛️ Фракция:</b> ${escHtml(r.faction||'—')}<br><b>🔫 Оружие:</b> ${escHtml(r.weapon_type||'—')}`,'🔫','passports')).join('') + '</div>';
+    }
+    if ((canSeeAll || canMedbok) && (filterType === 'all' || filterType === 'medbook')) {
+        const list = medbooks.filter(matchQ);
+        total += list.length;
+        html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;color:#fff;margin-bottom:16px">🏥 Медицинские книжки</div>`;
+        html += !list.length ? '<div class="loading-text" style="opacity:0.5">Ничего не найдено</div>' : '<div style="display:grid;gap:12px">' + list.map(r=>renderDocCard(r,`<b>👤 Игрок:</b> ${escHtml(r.username)}<br><b>📛 ФИО:</b> ${escHtml(r.char_name||'—')}<br><b>💼 Место работы:</b> ${escHtml(r.address||'—')}<br><b>🏥 Болезнь:</b> ${escHtml(r.note||'—')}`,'🏥','passports')).join('') + '</div>';
+    }
+    if (countEl) countEl.textContent = total + (total === 1 ? ' документ' : ' документов');
+    listEl.innerHTML = html;
+}
+
+window.filterPassports = function() { renderPassportsList(); };
 
 // ─── RULES ────────────────────────────────────
 
@@ -1045,6 +1392,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderProfile();
     loadNews();
     loadCriminalCounters();
+    loadSiteSettings();
 
     document.getElementById('login-password')?.addEventListener('keydown', e => { if(e.key==='Enter') handleLogin(); });
     document.getElementById('reg-password2')?.addEventListener('keydown',  e => { if(e.key==='Enter') handleRegister(); });
