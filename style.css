@@ -40,3 +40,40 @@
     transform: translateY(-2px);
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
 }
+
+/* ── Обновлённый профиль: цветовые свотчи темы ── */
+.accent-swatch {
+    transition: transform 0.15s ease, outline 0.15s ease;
+    outline: none;
+    outline-offset: 2px;
+}
+.accent-swatch:hover {
+    transform: scale(1.12);
+}
+
+/* ── Лёгкий редизайн карточек профиля: мягкая глубина и акцентная левая полоса ── */
+.profile-card {
+    position: relative;
+    transition: border-color 0.25s ease, transform 0.2s ease;
+}
+.profile-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 14px; bottom: 14px;
+    width: 3px;
+    border-radius: 3px;
+    background: linear-gradient(180deg, var(--cyan), transparent);
+    opacity: 0.6;
+}
+.profile-card:hover {
+    border-color: rgba(0, 245, 255, 0.25);
+}
+
+/* ── Состав команды: аккуратный hover для карточек сотрудников ── */
+#team-list > div {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+#team-list > div:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px -8px rgba(0, 0, 0, 0.4);
+}
