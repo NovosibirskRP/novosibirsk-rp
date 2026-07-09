@@ -1526,3 +1526,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (location.hash) readHash();
 });
+function startUpdateCountdown() {
+    const targetDate = new Date("2026-07-10T21:00:00+03:00").getTime();
+    const timerElement = document.getElementById("countdown-timer");
+    if (!timerElement) return;
+
+    const interval = setInterval(() => {
+        const now = new Date().getTime();
+        const distance = targetDate - now;
+
+        if (distance < 0) {
+            clearInterval(interval);
+            timerElement.innerHTML = "ОБНОВЛЕНИЕ ВЫШЛО! 🔥";
+            timerElement.style.color = "#4ade80";
+            timerElement.style.textShadow = "0 0 12px rgba(74, 222, 128, 0.5)";
+            return;
+        }
+
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+        let timerText = "";
+        if (days > 0) timerText += `${days}д `;
+        
+        // Добавляем нули перед цифрами для красоты (например, 09ч 05м 02с)
+        const formatNum = (num) => num < 10 ? '0' + num : num;
+        
+        timerText += `${formatNum(hours)}ч ${formatNum(minutes)}м ${formatNum(seconds)}с`;
+
+        timerElement.innerHTML = timerText;
+    }, 1000);
+}
+
+document.addEventListener("DOMContentLoaded", startUpdateCountdown);
