@@ -62,7 +62,7 @@ const ALL_FACTIONS = [
     'ОПГ','Мафия','Правительство'
 ];
 
-const EXPIRY_DAYS_DEFAULT = { passport: 30, medbook: 60, license: 14 };
+// Сроки действия документов и оплата за их оформление отменены по решению администрации.
 const OPG_MAX   = 2;
 const MAFIA_MAX = 1;
 
@@ -225,6 +225,7 @@ window.switchTab = function(tab, updateHistory = true) {
     if (tab === 'portal')  initPortal();
     if (tab === 'main')    loadCriminalCounters();
     if (tab === 'rules')   renderRuleSection('discord', 'rules-discord-list');
+    if (tab === 'team')    loadTeamPublic();
 };
 
 window.switchPortal = function(section) {
@@ -514,6 +515,8 @@ window.handleLogin = async function() {
     window.currentUser = users[0];
     localStorage.setItem('nrp_user', JSON.stringify(users[0]));
     closeModal('auth'); updateAuthZone(); notify('Добро пожаловать, ' + u + '!'); renderProfile();
+    // FIX: фиксируем время последнего входа (нужна колонка last_login в таблице users, см. SQL)
+    db(`users?id=eq.${users[0].id}`, { method:'PATCH', body: JSON.stringify({ last_login: new Date().toISOString() }) }).catch(()=>{});
 };
 
 window.logout = function() {
@@ -583,6 +586,17 @@ window.renderProfile = async function() {
     if (pp) { pp.dataset.real = window.currentUser.password; pp.textContent = '••••••••'; }
     const createdEl = document.getElementById('profile-created');
     if (createdEl) createdEl.textContent = window.currentUser.created_at ? new Date(window.currentUser.created_at).toLocaleDateString('ru-RU') : '—';
+    const lastLoginEl = document.getElementById('profile-last-login');
+    if (lastLoginEl) lastLoginEl.textContent = window.currentUser.last_login ? new Date(window.currentUser.last_login).toLocaleString('ru-RU') : '—';
+    const bioEl = document.getElementById('profile-bio-input');
+    if (bioEl) bioEl.value = window.currentUser.bio || '';
+
+    // Значок ОПГ/Мафия, если пользователь состоит в криминальной организации
+    const gangBadge = document.getElementById('profile-gang-badge');
+    if (gangBadge) {
+        if (faction === 'ОПГ' || faction === 'Мафия') { gangBadge.textContent = (faction === 'Мафия' ? '🤵 ' : '💀 ') + faction; gangBadge.style.display = 'inline-flex'; }
+        else gangBadge.style.display = 'none';
+    }
 
     try {
         const docs = await db(`requests?user_id=eq.${window.currentUser.id}`);
@@ -642,6 +656,33 @@ window.changePassword = async function() {
     notify('Пароль изменён!'); renderProfile();
 };
 
+window.saveBio = async function() {
+    const bioEl = document.getElementById('profile-bio-input');
+    const bio = (bioEl?.value || '').trim().slice(0, 300);
+    try {
+        await db(`users?id=eq.${window.currentUser.id}`, { method:'PATCH', body: JSON.stringify({ bio }) });
+        window.currentUser.bio = bio;
+        localStorage.setItem('nrp_user', JSON.stringify(window.currentUser));
+        notify('О себе — сохранено');
+    } catch(e) { notify('Не удалось сохранить (нужна колонка bio в таблице users)', false); }
+};
+
+// ─── ПЕРСОНАЛИЗАЦИЯ: ЦВЕТ АКЦЕНТА ──────────────
+const ACCENT_COLORS = ['#00f5ff', '#a855f7', '#22c55e', '#fbbf24', '#ef4444', '#f472b6'];
+
+function applyAccentColor(color, save = true) {
+    document.documentElement.style.setProperty('--cyan', color);
+    if (save) localStorage.setItem('nrp_accent', color);
+    document.querySelectorAll('.accent-swatch').forEach(s => s.style.outline = (s.dataset.color === color) ? '2px solid #fff' : 'none');
+}
+
+window.pickAccentColor = function(color) { applyAccentColor(color); notify('Цвет темы изменён'); };
+
+(function initAccent() {
+    const saved = localStorage.getItem('nrp_accent');
+    if (saved) applyAccentColor(saved, false);
+})();
+
 // ─── USERS TABLE ──────────────────────────────
 
 const SEL = `background:#1e293b;border:1px solid var(--border);color:#fff;padding:5px 8px;border-radius:8px;font-size:12px;font-family:'Rajdhani',sans-serif;max-width:160px`;
@@ -681,6 +722,122 @@ window.deleteUser = async function(id) {
     notify('Пользователь удалён'); loadUsersTable();
 };
 
+// ─── УПРАВЛЕНИЕ ОПГ / МАФИЕЙ (удаление банд) ──
+// Требуется таблица criminal_gangs (уже используется). Нужна лишь возможность DELETE для anon-ключа (см. SQL).
+
+window.loadAdminGangs = async function() {
+    const el = document.getElementById('admin-gangs-list');
+    if (!el || !isAdmin(window.currentUser)) return;
+    el.innerHTML = '<div class="loading-text" style="opacity:0.5">Загрузка...</div>';
+    try {
+        const gangs = await db('criminal_gangs?status=eq.active&order=type.asc,created_at.asc');
+        if (!Array.isArray(gangs) || !gangs.length) { el.innerHTML = '<div class="loading-text" style="opacity:0.5">Нет активных ОПГ/Мафий</div>'; return; }
+        el.innerHTML = gangs.map(g => `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:#0d1117;border:1px solid var(--border);border-radius:12px;padding:12px 16px;margin-bottom:8px">
+            <div><span style="font-size:13px;color:var(--cyan);font-family:'JetBrains Mono',monospace;text-transform:uppercase">${g.type==='mafia'?'🤵 Мафия':'💀 ОПГ'}</span><div style="font-weight:700;color:#fff;font-size:15px">${escHtml(g.name)} ${g.tag?`<span style="font-size:11px;color:var(--cyan)">[${escHtml(g.tag)}]</span>`:''}</div><div style="color:var(--text);font-size:12px">Основатель: ${escHtml(g.founder||'—')}</div></div>
+            <button onclick="deleteGang(${g.id})" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#f87171;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;padding:7px 14px;border-radius:8px;cursor:pointer;white-space:nowrap">🗑 Расформировать</button>
+        </div>`).join('');
+    } catch(e) { el.innerHTML = '<div class="loading-text" style="opacity:0.5">Ошибка загрузки</div>'; }
+};
+
+window.deleteGang = async function(id) {
+    if (!confirm('Расформировать эту организацию? Действие необратимо.')) return;
+    try {
+        await db(`criminal_gangs?id=eq.${id}`, { method:'DELETE' });
+        notify('Организация расформирована');
+    } catch(e) { notify('Ошибка удаления — проверьте права DELETE в Supabase', false); }
+    loadAdminGangs();
+    loadCriminalCounters();
+};
+
+// ─── УПРАВЛЕНИЕ СОСТАВОМ АДМИНИСТРАЦИИ (вкладка «Команда») ──
+// Требуется таблица team_members в Supabase — см. SQL-скрипт.
+
+const TEAM_STATUS_LABELS = {
+    active:   { label: 'На месте',     color: '#22c55e', emoji: '🟢' },
+    vacation: { label: 'В отпуске',    color: '#38bdf8', emoji: '🏖' },
+    absent:   { label: 'Отсутствует',  color: '#fbbf24', emoji: '⏸' },
+};
+
+function teamStatusBadge(m) {
+    const s = TEAM_STATUS_LABELS[m.status] || TEAM_STATUS_LABELS.active;
+    if (m.status === 'active') return '';
+    let range = '';
+    if (m.status_until) range = ` до ${new Date(m.status_until).toLocaleDateString('ru-RU')}`;
+    const note = m.status_note ? `: ${escHtml(m.status_note)}` : range;
+    return `<span style="font-size:11px;background:${s.color}22;color:${s.color};border:1px solid ${s.color}55;padding:2px 8px;border-radius:6px;margin-left:6px;font-family:'JetBrains Mono',monospace;vertical-align:middle">${s.emoji} ${s.label}${note}</span>`;
+}
+
+window.loadTeamPublic = async function() {
+    const el = document.getElementById('team-list');
+    if (!el) return;
+    el.innerHTML = '<div class="loading-text" style="opacity:0.5">Загрузка состава администрации...</div>';
+    try {
+        const members = await db('team_members?order=sort_order.asc,created_at.asc');
+        if (!Array.isArray(members) || !members.length) { el.innerHTML = '<div class="loading-text" style="opacity:0.5">Состав администрации пока не заполнен</div>'; return; }
+        el.innerHTML = members.map(m => {
+            const color = m.color || '#00f5ff';
+            const avatar = m.roblox_id ? `<img src="https://www.roblox.com/headshot-thumbnail/image?userId=${encodeURIComponent(m.roblox_id)}&width=100&height=100&format=png" style="width:60px;height:60px;border-radius:14px;border:2px solid ${color}66;object-fit:cover" onerror="this.style.display='none'">` : `<div style="width:60px;height:60px;border-radius:14px;border:2px solid ${color}66;background:${color}22;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:22px;color:${color}">${escHtml((m.name||'?').charAt(0).toUpperCase())}</div>`;
+            const link = m.roblox_id ? `<a href="https://www.roblox.com/users/${encodeURIComponent(m.roblox_id)}/profile" target="_blank" style="background:${color}1a;border:1px solid ${color}55;color:${color};font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;padding:7px 14px;border-radius:9px;text-decoration:none;white-space:nowrap">Roblox →</a>` : '';
+            return `<div style="background:var(--card);border:1px solid ${color}40;border-radius:18px;padding:20px;display:flex;align-items:center;gap:16px;${m.status!=='active'?'opacity:0.85':''}">${avatar}<div style="flex:1;min-width:0"><div style="font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;color:${color};margin-bottom:3px">${escHtml((m.role_title||'').toUpperCase())}</div><div style="font-size:18px;font-weight:700;color:#fff">${escHtml(m.name||'')} ${teamStatusBadge(m)}</div></div>${link}</div>`;
+        }).join('');
+    } catch(e) { el.innerHTML = '<div class="loading-text" style="opacity:0.5">Не удалось загрузить состав команды — проверьте таблицу team_members в Supabase</div>'; }
+};
+
+window.loadAdminTeamManage = async function() {
+    const el = document.getElementById('admin-team-list');
+    if (!el || !isAdmin(window.currentUser)) return;
+    el.innerHTML = '<div class="loading-text" style="opacity:0.5">Загрузка...</div>';
+    try {
+        const members = await db('team_members?order=sort_order.asc,created_at.asc');
+        if (!Array.isArray(members) || !members.length) { el.innerHTML = '<div class="loading-text" style="opacity:0.5">Пока никого не добавили</div>'; return; }
+        el.innerHTML = members.map(m => `<div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;background:#0d1117;border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px">
+            <div style="flex:1;min-width:140px"><div style="font-weight:700;color:#fff;font-size:14px">${escHtml(m.name)}</div><div style="color:var(--text);font-size:12px">${escHtml(m.role_title||'')}</div></div>
+            <select onchange="updateTeamMemberStatus(${m.id}, this.value)" style="${SEL}">
+                <option value="active" ${m.status==='active'?'selected':''}>🟢 На месте</option>
+                <option value="vacation" ${m.status==='vacation'?'selected':''}>🏖 В отпуске</option>
+                <option value="absent" ${m.status==='absent'?'selected':''}>⏸ Отсутствует</option>
+            </select>
+            <button onclick="deleteTeamMember(${m.id})" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#f87171;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;padding:6px 12px;border-radius:8px;cursor:pointer">🗑 Убрать</button>
+        </div>`).join('');
+    } catch(e) { el.innerHTML = '<div class="loading-text" style="opacity:0.5">Ошибка загрузки — проверьте таблицу team_members</div>'; }
+};
+
+window.addTeamMember = async function() {
+    if (!isAdmin(window.currentUser)) return notify('Нет доступа', false);
+    const name  = document.getElementById('team-add-name')?.value.trim();
+    const role  = document.getElementById('team-add-role')?.value.trim();
+    const rid   = document.getElementById('team-add-roblox')?.value.trim();
+    const color = document.getElementById('team-add-color')?.value || '#00f5ff';
+    if (!name || !role) return notify('Укажите ник и должность', false);
+    try {
+        await db('team_members', { method:'POST', body: JSON.stringify({ name, role_title: role, roblox_id: rid || null, color, status:'active', sort_order: 100 }) });
+        notify('Сотрудник добавлен в состав');
+        ['team-add-name','team-add-role','team-add-roblox'].forEach(id => { const e = document.getElementById(id); if (e) e.value=''; });
+        loadAdminTeamManage(); loadTeamPublic();
+    } catch(e) { notify('Ошибка — проверьте таблицу team_members в Supabase', false); }
+};
+
+window.updateTeamMemberStatus = async function(id, status) {
+    let status_note = null, status_until = null;
+    if (status === 'vacation' || status === 'absent') {
+        status_note = prompt('Комментарий к статусу (необязательно, например "13.07 – 21.07"):', '') || null;
+    }
+    try {
+        await db(`team_members?id=eq.${id}`, { method:'PATCH', body: JSON.stringify({ status, status_note, status_until }) });
+        notify('Статус обновлён');
+    } catch(e) { notify('Ошибка обновления статуса', false); }
+    loadAdminTeamManage(); loadTeamPublic();
+};
+
+window.deleteTeamMember = async function(id) {
+    if (!confirm('Убрать сотрудника из состава команды?')) return;
+    try {
+        await db(`team_members?id=eq.${id}`, { method:'DELETE' });
+        notify('Сотрудник убран из состава');
+    } catch(e) { notify('Ошибка удаления', false); }
+    loadAdminTeamManage(); loadTeamPublic();
+};
+
 // ─── OWNER PANEL ──────────────────────────────
 
 function showOwnerPanelIfNeeded() {
@@ -689,9 +846,12 @@ function showOwnerPanelIfNeeded() {
     if (isOwner(window.currentUser)) {
         panel.style.display = '';
         syncOwnerCheckboxes();
-        loadOwnerExpiringDocs();
     } else {
         panel.style.display = 'none';
+    }
+    if (isAdmin(window.currentUser)) {
+        loadAdminTeamManage();
+        loadAdminGangs();
     }
 }
 
@@ -750,23 +910,7 @@ window.ownerRenameUser = async function() {
     loadUsersTable();
 };
 
-window.loadOwnerExpiringDocs = async function() {
-    const el = document.getElementById('owner-expiring-docs');
-    if (!el || !isOwner(window.currentUser)) return;
-    el.innerHTML = '<div class="loading-text" style="opacity:0.5">Загрузка...</div>';
-    try {
-        const rows = await db('requests?status=eq.approved&expires_at=not.is.null&order=expires_at.asc');
-        const soon = new Date(); soon.setDate(soon.getDate() + 5);
-        const list = Array.isArray(rows) ? rows.filter(r => r.expires_at && new Date(r.expires_at) <= soon) : [];
-        if (!list.length) { el.innerHTML = '<div class="loading-text" style="opacity:0.5">Нет истекающих документов</div>'; return; }
-        const typeNames = { passport:'🪪 Паспорт', medbook:'🏥 Мед. книжка', license:'🔫 Лицензия' };
-        el.innerHTML = list.map(r => {
-            const exp = new Date(r.expires_at);
-            const expired = exp < new Date();
-            return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px"><span>${typeNames[r.type]||r.type} — <b>${escHtml(r.username||r.char_name||'—')}</b></span><span style="color:${expired?'#f87171':'#fbbf24'}">${expired?'⏰ Истёк':'⚠️ До'} ${exp.toLocaleDateString('ru-RU')}</span></div>`;
-        }).join('');
-    } catch(e) { el.innerHTML = '<div class="loading-text" style="opacity:0.5">Ошибка загрузки</div>'; }
-};
+// FIX: удаление документов больше не привязано к срокам действия — сроки отменены полностью.
 
 window.copyProfileLink = function() {
     if (!window.currentUser) return notify('Войдите в аккаунт', false);
@@ -791,7 +935,14 @@ window.sendRenameRequest = async function() {
     if (!Array.isArray(users) || !users.length) return notify('Пользователь не найден', false);
     try {
         const res = await db('notifications', { method:'POST', body: JSON.stringify({ user_id: users[0].id, type:'rename_request', text, read:false }) });
-        if (!res || res.error) throw new Error('insert failed');
+        // FIX: PostgREST не возвращает { error: ... } — при ошибке ответ выглядит как
+        // { message, code, details, hint } и НЕ является массивом. Раньше это ложно
+        // считалось успехом, из-за чего уведомление «не приходило» на другой аккаунт.
+        const failed = !res || !Array.isArray(res) || !res.length || res.code || res.message;
+        if (failed) {
+            console.warn('sendRenameRequest insert failed', res);
+            return notify('Не удалось отправить: таблица notifications недоступна (проверьте SQL/RLS в Supabase)', false);
+        }
         notify('Запрос отправлен игроку ' + username);
         uEl.value = ''; tEl.value = '';
     } catch(e) {
@@ -968,25 +1119,9 @@ window.submitForm = async function(type) {
     notify('Заявка отправлена! Ожидайте рассмотрения.');
 };
 
-// ─── EXPIRY ───────────────────────────────────
-
-function docExpiryLine(r) {
-    if (!r.expires_at) return '';
-    const exp = new Date(r.expires_at), diff = Math.ceil((exp - new Date()) / 86400000);
-    if (diff < 0)  return `<span class="badge badge-rejected" style="margin-top:6px;display:inline-flex">⏰ Истёк ${exp.toLocaleDateString('ru-RU')}</span>`;
-    if (diff <= 5) return `<span class="badge badge-pending" style="margin-top:6px;display:inline-flex">⚠️ До ${exp.toLocaleDateString('ru-RU')} (${diff} дн.)</span>`;
-    return `<span class="badge badge-approved" style="margin-top:6px;display:inline-flex">📅 До ${exp.toLocaleDateString('ru-RU')}</span>`;
-}
-
-function expiryBadge(r) {
-    if (!r.expires_at) return '';
-    const exp = new Date(r.expires_at), diff = Math.ceil((exp - new Date()) / 86400000);
-    if (diff < 0)  return `<span class="badge badge-rejected">⏰ Истёк</span>`;
-    if (diff <= 5) return `<span class="badge badge-pending">⚠️ ${diff} дн.</span>`;
-    return `<span class="badge badge-approved">📅 До ${exp.toLocaleDateString('ru-RU')}</span>`;
-}
-
 // ─── MY DOCS ──────────────────────────────────
+// FIX: сроки действия документов (паспорт/мед.книжка/лицензия) полностью отменены —
+// все одобренные документы действуют бессрочно, без функций продления/просрочки.
 
 window.loadMyDocs = async function() {
     const guestDiv = document.getElementById('mydocs-guest');
@@ -1002,10 +1137,9 @@ window.loadMyDocs = async function() {
     const canM = canManageDocs(window.currentUser);
     listDiv.innerHTML = reqs.map(r => {
         const sb  = r.status==='approved' ? '<span class="badge badge-approved">✓ Одобрено</span>' : r.status==='rejected' ? '<span class="badge badge-rejected">✕ Отклонено</span>' : '<span class="badge badge-pending">⏳ На рассмотрении</span>';
-        const exp = r.status==='approved' ? expiryBadge(r) : '';
         const date = r.created_at ? new Date(r.created_at).toLocaleDateString('ru-RU') : '';
-        const btns = canM ? `<div style="display:flex;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)"><button onclick="deleteRequest(${r.id},'mydocs')" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#f87171;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;padding:6px 14px;border-radius:8px;cursor:pointer">🗑 Удалить</button>${r.status==='approved'?`<button onclick="setExpiry(${r.id},'mydocs')" style="background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);color:#fbbf24;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;padding:6px 14px;border-radius:8px;cursor:pointer">📅 Изменить срок</button>`:''}</div>` : '';
-        return `<div class="doc-card" style="flex-direction:column;align-items:stretch;gap:0"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><div style="display:flex;align-items:center;gap:14px"><div class="doc-icon">${typeIcons[r.type]||'📄'}</div><div><div style="font-weight:700;color:#fff;font-size:16px">${typeLabels[r.type]||r.type}</div><div style="color:var(--text);font-size:13px;margin-top:2px">${date} • ${escHtml(r.char_name||r.username||'')}</div></div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">${sb}${exp}</div></div>${btns}</div>`;
+        const btns = canM ? `<div style="display:flex;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)"><button onclick="deleteRequest(${r.id},'mydocs')" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#f87171;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;padding:6px 14px;border-radius:8px;cursor:pointer">🗑 Удалить</button></div>` : '';
+        return `<div class="doc-card" style="flex-direction:column;align-items:stretch;gap:0"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><div style="display:flex;align-items:center;gap:14px"><div class="doc-icon">${typeIcons[r.type]||'📄'}</div><div><div style="font-weight:700;color:#fff;font-size:16px">${typeLabels[r.type]||r.type}</div><div style="color:var(--text);font-size:13px;margin-top:2px">${date} • ${escHtml(r.char_name||r.username||'')}</div></div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">${sb}</div></div>${btns}</div>`;
     }).join('');
 };
 
@@ -1013,15 +1147,6 @@ window.deleteRequest = async function(id, section) {
     if (!confirm('Удалить этот документ?')) return;
     await db(`requests?id=eq.${id}`, { method:'DELETE' });
     notify('Документ удалён');
-    if (section==='passports') loadPassports(); else loadMyDocs();
-};
-
-window.setExpiry = async function(id, section) {
-    const days = prompt('Установить срок годности (дней от сегодня):');
-    if (!days || isNaN(days)) return;
-    const exp = new Date(); exp.setDate(exp.getDate() + parseInt(days));
-    await db(`requests?id=eq.${id}`, { method:'PATCH', body: JSON.stringify({ expires_at: exp.toISOString() }) });
-    notify(`Срок установлен до ${exp.toLocaleDateString('ru-RU')}`);
     if (section==='passports') loadPassports(); else loadMyDocs();
 };
 
@@ -1056,7 +1181,7 @@ function renderAdminRequestsList(reqs) {
     listEl.innerHTML = reqs.map(r => {
         const date = r.created_at ? new Date(r.created_at).toLocaleDateString('ru-RU') : '';
         const details = Object.entries(r).filter(([k])=>!['id','type','status','user_id','created_at','expires_at'].includes(k)).map(([k,v])=>v?`<b>${k}:</b> ${escHtml(String(v))}`:null).filter(Boolean).join('<br>');
-        return `<div class="request-card"><div class="request-type">${REQUEST_TYPE_NAMES[r.type]||r.type} • ${date}</div><div class="request-player">${escHtml(r.username||'—')}</div><div class="request-data">${details}</div><div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)"><label style="font-size:11px;color:var(--text);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:6px">💰 Стоимость (UnbelievaBoat)</label><div style="display:flex;gap:8px;align-items:center"><input type="number" id="cost-${r.id}" placeholder="0" min="0" style="background:#0d1117;border:1px solid var(--border);color:#fff;padding:7px 12px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:13px;width:120px;outline:none"><span style="color:var(--text);font-size:13px">€</span></div></div><div class="request-actions"><button class="btn-approve" onclick="reviewRequest(${r.id},'approved')">✓ Одобрить</button><button class="btn-reject" onclick="reviewRequest(${r.id},'rejected')">✕ Отклонить</button></div></div>`;
+        return `<div class="request-card"><div class="request-type">${REQUEST_TYPE_NAMES[r.type]||r.type} • ${date}</div><div class="request-player">${escHtml(r.username||'—')}</div><div class="request-data">${details}</div><div class="request-actions"><button class="btn-approve" onclick="reviewRequest(${r.id},'approved')">✓ Одобрить</button><button class="btn-reject" onclick="reviewRequest(${r.id},'rejected')">✕ Отклонить</button></div></div>`;
     }).join('');
 }
 
@@ -1076,10 +1201,7 @@ window.reviewRequest = async function(id, status) {
     const reqs = await db(`requests?id=eq.${id}`);
     const req  = reqs?.[0];
     if (!req) return notify('Заявка не найдена', false);
-    const cost = document.getElementById('cost-' + id)?.value || '0';
-    let expiresAt = null;
-    if (status==='approved' && EXPIRY_DAYS_DEFAULT[req.type]) { const exp = new Date(); exp.setDate(exp.getDate() + EXPIRY_DAYS_DEFAULT[req.type]); expiresAt = exp.toISOString(); }
-    await db(`requests?id=eq.${id}`, { method:'PATCH', body: JSON.stringify({ status, ...(expiresAt?{expires_at:expiresAt}:{}) }) });
+    await db(`requests?id=eq.${id}`, { method:'PATCH', body: JSON.stringify({ status }) });
     if (status === 'approved') await applyApprovalSideEffects(req);
     const webhook = WEBHOOK_BY_TYPE[req.type] || WEBHOOK_PASSPORT_LICENSE;
     const typeNames = { passport:'🪪 Паспорт', medbook:'🏥 Мед. книжка', license:'🔫 Лицензия', faction_join:'🏛️ Вступление во фракцию', court:'⚖️ Судебный иск', government:'📋 Правительство', lawyer:'👨‍⚖️ Адвокат', opg_create:'💀 Создание ОПГ', opg_join:'💀 Вступление в ОПГ', mafia_create:'🤵 Создание Мафии', mafia_join:'🤵 Вступление в Мафию' };
@@ -1093,8 +1215,6 @@ window.reviewRequest = async function(id, status) {
     if (req.faction)     dataFields.push({ name:'🏛️ Фракция',        value:req.faction,     inline:true });
     if (req.weapon_type) dataFields.push({ name:'🔫 Оружие',         value:req.weapon_type, inline:false });
     if (req.note)        dataFields.push({ name:'📋 Примечание',     value:req.note,        inline:false });
-    if (expiresAt)       dataFields.push({ name:'📅 Действителен до', value:new Date(expiresAt).toLocaleDateString('ru-RU'), inline:true });
-    if (status==='approved' && cost && cost !== '0') dataFields.push({ name:'💰 Стоимость', value:`${cost}€ — \`/eco add ${req.username} ${cost}\``, inline:false });
     await sendDiscordWebhook(webhook, {
         title: `${emoji} ${typeNames[req.type]||req.type} — ${label}`,
         color: status==='approved' ? 0x22c55e : 0xef4444,
@@ -1128,12 +1248,10 @@ async function applyApprovalSideEffects(req) {
 // ─── DOCUMENTS VIEWER ─────────────────────────
 
 function renderDocCard(r, fields, icon, section) {
-    const expLine = docExpiryLine(r);
-    const isExpired = r.expires_at && new Date(r.expires_at) < new Date();
-    const statusBadge = isExpired ? '<span class="badge badge-rejected">⏰ Истёк</span>' : '<span class="badge badge-approved">✓ Действителен</span>';
+    const statusBadge = '<span class="badge badge-approved">✓ Действителен (бессрочно)</span>';
     const canM = canManageDocs(window.currentUser);
-    const btns = canM ? `<div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"><button onclick="deleteRequest(${r.id},'${section}')" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#f87171;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;padding:6px 14px;border-radius:8px;cursor:pointer">🗑 Удалить</button><button onclick="setExpiry(${r.id},'${section}')" style="background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);color:#fbbf24;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;padding:6px 14px;border-radius:8px;cursor:pointer">📅 Изменить срок</button></div>` : '';
-    return `<div class="doc-card" style="flex-direction:column;align-items:stretch;gap:0;${isExpired?'opacity:0.6':''}"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff">${icon} ${escHtml(r.char_name||r.username)}</div><div style="text-align:right">${statusBadge}${expLine?'<br>'+expLine:''}</div></div><div style="color:var(--text);font-size:14px;line-height:1.9;margin-top:12px;border-top:1px solid var(--border);padding-top:12px">${fields}</div>${btns}</div>`;
+    const btns = canM ? `<div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"><button onclick="deleteRequest(${r.id},'${section}')" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#f87171;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;padding:6px 14px;border-radius:8px;cursor:pointer">🗑 Удалить</button></div>` : '';
+    return `<div class="doc-card" style="flex-direction:column;align-items:stretch;gap:0"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff">${icon} ${escHtml(r.char_name||r.username)}</div><div style="text-align:right">${statusBadge}</div></div><div style="color:var(--text);font-size:14px;line-height:1.9;margin-top:12px;border-top:1px solid var(--border);padding-top:12px">${fields}</div>${btns}</div>`;
 }
 
 window._passportsCache = { passports: [], licenses: [], medbooks: [] };
