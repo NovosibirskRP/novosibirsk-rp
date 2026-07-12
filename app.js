@@ -95,24 +95,130 @@ function isOwner(u) { return u && OWNER_ROLES.includes(u.role); }
 const DEFAULT_SITE_FLAGS = {
     tabs: { portal:true, news:true, team:true, rules:true },
     services: { passport:true, medbook:true, license:true, 'faction-join':true, court:true, government:true, lawyer:true, home:true, credit:true, 'opg-mafia':true },
-    registration_open: true
+    registration_open: true,
+    banner: {
+        active: true,
+        label: 'ОБНОВЛЕНИЕ',
+        version: 'Версия V3.15',
+        infoLabel: 'ЧТО НОВОГО',
+        info: 'Ювелирный магазин & Дальнобойщики',
+        timerLabel: 'ДО ВЫХОДА',
+        timerTarget: '2026-07-10T21:00:00+03:00'
+    },
+    // FIX 7: метаданные фракций (цвет / категория / статус "скоро"), редактируемые в панели владельца
+    factionMeta: {}
 };
 window.siteFlags = DEFAULT_SITE_FLAGS;
 
+const FACTION_CATEGORY_LABELS = { government:'ГОСУДАРСТВЕННАЯ', criminal:'КРИМИНАЛЬНАЯ', other:'ИНОЕ' };
+const FACTION_CATEGORY_COLORS = { government:'#3b82f6', criminal:'#f87171', other:'#a855f7' };
+
 async function loadSiteSettings() {
     try {
-        const rows = await db('site_settings?id=eq.1');
-        if (Array.isArray(rows) && rows[0] && rows[0].flags) {
-            window.siteFlags = Object.assign({}, DEFAULT_SITE_FLAGS, rows[0].flags, {
-                tabs: Object.assign({}, DEFAULT_SITE_FLAGS.tabs, rows[0].flags.tabs || {}),
-                services: Object.assign({}, DEFAULT_SITE_FLAGS.services, rows[0].flags.services || {})
+        const rows = await db('site_settings?key=eq.site_flags&select=value');
+        if (Array.isArray(rows) && rows[0] && rows[0].value) {
+            const flags = rows[0].value;
+            window.siteFlags = Object.assign({}, DEFAULT_SITE_FLAGS, flags, {
+                tabs: Object.assign({}, DEFAULT_SITE_FLAGS.tabs, flags.tabs || {}),
+                services: Object.assign({}, DEFAULT_SITE_FLAGS.services, flags.services || {}),
+                banner: Object.assign({}, DEFAULT_SITE_FLAGS.banner, flags.banner || {}),
+                factionMeta: Object.assign({}, DEFAULT_SITE_FLAGS.factionMeta, flags.factionMeta || {})
             });
         } else {
-            await db('site_settings', { method:'POST', body: JSON.stringify({ id:1, flags: DEFAULT_SITE_FLAGS }) }).catch(()=>{});
+            await db('site_settings', { method:'POST', body: JSON.stringify({ key:'site_flags', value: DEFAULT_SITE_FLAGS }) }).catch(()=>{});
         }
     } catch(e) { console.warn('site_settings load error', e); }
     applySiteFlags();
+    renderUpdateBanner();
+    fillBannerAdminForm();
+    applyFactionMeta();
+    loadFactionManager();
 }
+
+// ─── БАННЕР ОБНОВЛЕНИЙ (редактируется админами из профиля) ──
+function renderUpdateBanner() {
+    const b = (window.siteFlags && window.siteFlags.banner) || DEFAULT_SITE_FLAGS.banner;
+    const container = document.getElementById('site-banner');
+    if (!container) return;
+    container.style.display = b.active === false ? 'none' : '';
+    const elLabel = document.getElementById('banner-version-label');
+    const elValue = document.getElementById('banner-version-value');
+    const elInfoLabel = document.getElementById('banner-info-label');
+    const elInfo = document.getElementById('banner-info-value');
+    const elTimerLabel = document.getElementById('banner-timer-label');
+    if (elLabel) elLabel.textContent = b.label || DEFAULT_SITE_FLAGS.banner.label;
+    if (elValue) elValue.textContent = b.version || DEFAULT_SITE_FLAGS.banner.version;
+    if (elInfoLabel) elInfoLabel.textContent = b.infoLabel || DEFAULT_SITE_FLAGS.banner.infoLabel;
+    if (elInfo) elInfo.textContent = b.info || DEFAULT_SITE_FLAGS.banner.info;
+    if (elTimerLabel) elTimerLabel.textContent = b.timerLabel || DEFAULT_SITE_FLAGS.banner.timerLabel;
+    startUpdateCountdown(b.timerTarget || DEFAULT_SITE_FLAGS.banner.timerTarget);
+}
+
+function fillBannerAdminForm() {
+    const b = (window.siteFlags && window.siteFlags.banner) || DEFAULT_SITE_FLAGS.banner;
+    const map = {
+        'banner-admin-active': 'checkbox',
+        'banner-admin-label': 'value',
+        'banner-admin-version': 'value',
+        'banner-admin-infolabel': 'value',
+        'banner-admin-info': 'value',
+        'banner-admin-timerlabel': 'value',
+        'banner-admin-timer': 'value'
+    };
+    const activeEl = document.getElementById('banner-admin-active'); if (activeEl) activeEl.checked = b.active !== false;
+    const set = (id, val) => { const el = document.getElementById(id); if (el && document.activeElement !== el) el.value = val || ''; };
+    set('banner-admin-label', b.label);
+    set('banner-admin-version', b.version);
+    set('banner-admin-infolabel', b.infoLabel);
+    set('banner-admin-info', b.info);
+    set('banner-admin-timerlabel', b.timerLabel);
+    if (b.timerTarget) {
+        const el = document.getElementById('banner-admin-timer');
+        if (el && document.activeElement !== el) {
+            try { el.value = new Date(b.timerTarget).toISOString().slice(0,16); } catch(e){}
+        }
+    }
+}
+
+window.saveBannerSettings = async function() {
+    if (!isAdmin(window.currentUser)) return notify('Нет доступа', false);
+    const active = document.getElementById('banner-admin-active')?.checked !== false;
+    const label = document.getElementById('banner-admin-label')?.value.trim() || DEFAULT_SITE_FLAGS.banner.label;
+    const version = document.getElementById('banner-admin-version')?.value.trim() || DEFAULT_SITE_FLAGS.banner.version;
+    const infoLabel = document.getElementById('banner-admin-infolabel')?.value.trim() || DEFAULT_SITE_FLAGS.banner.infoLabel;
+    const info = document.getElementById('banner-admin-info')?.value.trim() || '';
+    const timerLabel = document.getElementById('banner-admin-timerlabel')?.value.trim() || DEFAULT_SITE_FLAGS.banner.timerLabel;
+    const timerRaw = document.getElementById('banner-admin-timer')?.value;
+    const timerTarget = timerRaw ? new Date(timerRaw).toISOString() : null;
+    const banner = { active, label, version, infoLabel, info, timerLabel, timerTarget };
+    const newFlags = Object.assign({}, window.siteFlags, { banner });
+    try {
+        const existingRes = await fetch(SUPABASE_URL + '/rest/v1/site_settings?key=eq.site_flags', { headers: H });
+        const existing = await existingRes.json();
+        let saveRes;
+        if (Array.isArray(existing) && existing.length) {
+            saveRes = await fetch(SUPABASE_URL + '/rest/v1/site_settings?key=eq.site_flags', { method:'PATCH', headers: H, body: JSON.stringify({ value: newFlags }) });
+        } else {
+            saveRes = await fetch(SUPABASE_URL + '/rest/v1/site_settings', { method:'POST', headers: H, body: JSON.stringify({ key:'site_flags', value: newFlags }) });
+        }
+        if (!saveRes.ok) {
+            const errBody = await saveRes.text().catch(()=> '');
+            console.error('saveBannerSettings: сервер отклонил сохранение', saveRes.status, errBody);
+            return notify('Не сохранилось: сервер вернул ошибку ' + saveRes.status + '. Проверьте права (RLS) на таблицу site_settings в Supabase', false);
+        }
+        // Читаем обратно из базы, чтобы убедиться что сохранение реально применилось (а не просто "не упало")
+        const verifyRes = await fetch(SUPABASE_URL + '/rest/v1/site_settings?key=eq.site_flags', { headers: H });
+        const verifyRows = await verifyRes.json();
+        const savedBanner = Array.isArray(verifyRows) && verifyRows[0] && verifyRows[0].value && verifyRows[0].value.banner;
+        if (!savedBanner || savedBanner.active !== active) {
+            console.error('saveBannerSettings: запрос прошёл без ошибки, но значение в базе не изменилось', verifyRows);
+            return notify('Сохранение не применилось на сервере — проверьте права записи (RLS) для site_settings в Supabase', false);
+        }
+        window.siteFlags = newFlags;
+        renderUpdateBanner();
+        notify('Баннер обновлён — уже виден всем на сайте');
+    } catch(e) { console.error('saveBannerSettings error', e); notify('Не удалось сохранить баннер: ' + (e.message||e), false); }
+};
 
 function applySiteFlags() {
     const f = window.siteFlags || DEFAULT_SITE_FLAGS;
@@ -141,6 +247,125 @@ function canRegisterNow() {
     const f = window.siteFlags || DEFAULT_SITE_FLAGS;
     return f.registration_open !== false;
 }
+
+// ─── УПРАВЛЕНИЕ ФРАКЦИЯМИ (цвет / категория / статус "скоро") ──
+// Работает по совпадению точного названия во .faction-name с ключом в factionMeta.
+// Новая фракция, добавленная через форму, начнёт визуально отображаться, только если
+// на странице уже есть карточка с точно таким же названием — сама карточка при этом не создаётся.
+function getAllFactionCardNames() {
+    return Array.from(document.querySelectorAll('.faction-card .faction-name'))
+        .map(el => el.textContent.trim())
+        .filter((v, i, arr) => v && arr.indexOf(v) === i);
+}
+
+function applyFactionMeta() {
+    const meta = (window.siteFlags && window.siteFlags.factionMeta) || {};
+    document.querySelectorAll('.faction-card').forEach(card => {
+        const nameEl = card.querySelector('.faction-name');
+        if (!nameEl) return;
+        const name = nameEl.textContent.trim();
+        const m = meta[name];
+        if (!m) return;
+        const icon = card.querySelector('.faction-icon');
+        if (icon && m.color) {
+            icon.style.background = m.color + '14';
+            icon.style.borderColor = m.color + '40';
+        }
+        const tag = card.querySelector('.faction-tag');
+        if (tag && m.category) {
+            tag.textContent = FACTION_CATEGORY_LABELS[m.category] || tag.textContent;
+            tag.style.color = FACTION_CATEGORY_COLORS[m.category] || '';
+            tag.style.borderColor = (FACTION_CATEGORY_COLORS[m.category] || '') + '40';
+        }
+        // Сохраняем оригинальный onclick один раз, чтобы можно было включать/выключать "скоро" без потери формы вступления
+        if (!card.dataset.originalOnclick) card.dataset.originalOnclick = card.getAttribute('onclick') || '';
+        if (m.soon) {
+            card.setAttribute('onclick', `showComingSoon('faction-soon', ${JSON.stringify(name)})`);
+        } else if (card.dataset.originalOnclick) {
+            card.setAttribute('onclick', card.dataset.originalOnclick);
+        }
+    });
+}
+
+window.loadFactionManager = function() {
+    const body = document.getElementById('faction-manager-body');
+    if (!body) return;
+    const meta = (window.siteFlags && window.siteFlags.factionMeta) || {};
+    const names = getAllFactionCardNames();
+    // Показываем и фракции с карточками на сайте, и те, что были добавлены вручную, но пока без карточки
+    const allNames = names.concat(Object.keys(meta).filter(n => !names.includes(n)));
+    if (!allNames.length) { body.innerHTML = '<tr><td colspan="5" style="padding:14px;opacity:0.5">Фракций не найдено</td></tr>'; return; }
+    body.innerHTML = allNames.map(name => {
+        const m = meta[name] || { color:'#00f5ff', category:'government', soon:false };
+        const safeId = name.replace(/[^a-zA-Zа-яА-Я0-9]/g, '_');
+        return `<tr>
+            <td style="padding:10px 12px;color:#fff">${escHtml(name)}</td>
+            <td style="padding:10px 12px"><input type="color" id="fm-color-${safeId}" value="${m.color || '#00f5ff'}" style="width:40px;height:32px;border:none;border-radius:6px;background:none;cursor:pointer"></td>
+            <td style="padding:10px 12px"><select id="fm-cat-${safeId}" class="form-input" style="padding:6px 10px;font-size:13px">
+                <option value="government" ${m.category==='government'?'selected':''}>Государственная</option>
+                <option value="criminal" ${m.category==='criminal'?'selected':''}>Криминальная</option>
+                <option value="other" ${m.category==='other'?'selected':''}>Иное</option>
+            </select></td>
+            <td style="padding:10px 12px"><input type="checkbox" id="fm-soon-${safeId}" ${m.soon?'checked':''}></td>
+            <td style="padding:10px 12px;white-space:nowrap">
+                <button class="form-submit" style="padding:6px 12px;font-size:12px;margin:0 6px 0 0;display:inline-block;width:auto" onclick="saveManagedFaction(${JSON.stringify(name)}, '${safeId}')">Сохранить</button>
+                <button style="background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);color:#f87171;padding:6px 10px;border-radius:8px;cursor:pointer;font-size:12px" onclick="deleteManagedFaction(${JSON.stringify(name)})">✕</button>
+            </td>
+        </tr>`;
+    }).join('');
+};
+
+async function persistFactionMeta(newMeta) {
+    const newFlags = Object.assign({}, window.siteFlags, { factionMeta: newMeta });
+    try {
+        const existingRes = await fetch(SUPABASE_URL + '/rest/v1/site_settings?key=eq.site_flags', { headers: H });
+        const existing = await existingRes.json();
+        let saveRes;
+        if (Array.isArray(existing) && existing.length) {
+            saveRes = await fetch(SUPABASE_URL + '/rest/v1/site_settings?key=eq.site_flags', { method:'PATCH', headers: H, body: JSON.stringify({ value: newFlags }) });
+        } else {
+            saveRes = await fetch(SUPABASE_URL + '/rest/v1/site_settings', { method:'POST', headers: H, body: JSON.stringify({ key:'site_flags', value: newFlags }) });
+        }
+        if (!saveRes.ok) { notify('Не сохранилось: сервер вернул ошибку ' + saveRes.status, false); return false; }
+        window.siteFlags = newFlags;
+        applyFactionMeta();
+        return true;
+    } catch(e) { console.error(e); notify('Ошибка сохранения фракции', false); return false; }
+}
+
+window.saveManagedFaction = async function(name, safeId) {
+    if (!isOwner(window.currentUser)) return notify('Нет доступа', false);
+    const color = document.getElementById('fm-color-' + safeId)?.value || '#00f5ff';
+    const category = document.getElementById('fm-cat-' + safeId)?.value || 'government';
+    const soon = document.getElementById('fm-soon-' + safeId)?.checked || false;
+    const meta = Object.assign({}, window.siteFlags.factionMeta);
+    meta[name] = { color, category, soon };
+    if (await persistFactionMeta(meta)) notify('Фракция «' + name + '» обновлена');
+};
+
+window.deleteManagedFaction = async function(name) {
+    if (!isOwner(window.currentUser)) return notify('Нет доступа', false);
+    if (!confirm('Убрать настройки для «' + name + '»? Сама карточка на сайте (если есть) не удалится, просто вернётся к обычному виду.')) return;
+    const meta = Object.assign({}, window.siteFlags.factionMeta);
+    delete meta[name];
+    if (await persistFactionMeta(meta)) { notify('Настройки убраны'); loadFactionManager(); }
+};
+
+window.addManagedFaction = async function() {
+    if (!isOwner(window.currentUser)) return notify('Нет доступа', false);
+    const name = document.getElementById('faction-add-name')?.value.trim();
+    const color = document.getElementById('faction-add-color')?.value || '#00f5ff';
+    const category = document.getElementById('faction-add-category')?.value || 'government';
+    const soon = document.getElementById('faction-add-soon')?.checked || false;
+    if (!name) return notify('Введите название фракции', false);
+    const meta = Object.assign({}, window.siteFlags.factionMeta);
+    meta[name] = { color, category, soon };
+    if (await persistFactionMeta(meta)) {
+        notify('Фракция «' + name + '» добавлена в настройки' + (getAllFactionCardNames().includes(name) ? '' : ' (карточки с таким названием пока нет на сайте — настройки применятся, если её добавит разработчик)'));
+        document.getElementById('faction-add-name').value = '';
+        loadFactionManager();
+    }
+};
 
 function db(path, opts) {
     return fetch(SUPABASE_URL + '/rest/v1/' + path, { headers: H, ...opts }).then(r => r.json());
@@ -459,10 +684,15 @@ window.requireAuth = function(fn) {
 const COMING_SOON_INFO = {
     home:   { icon:'🏠', title:'Скоро!', desc:'Приобретение и управление недвижимостью появится на портале в ближайших обновлениях.' },
     credit: { icon:'💳', title:'Скоро!', desc:'Оформление кредита на жильё, авто или бизнес появится на портале в ближайших обновлениях.' },
+    trucker:   { icon:'🚛', title:'Дальнобойщик — скоро!', desc:'Перевозка грузов между городами, свой тягач и стабильный заработок. Устройство на работу откроется в ближайшем обновлении.' },
+    busdriver: { icon:'🚌', title:'Водитель автобуса — скоро!', desc:'Городские маршруты, расписание и пассажиры. Устройство на работу откроется в ближайшем обновлении.' },
 };
 
-window.showComingSoon = function(key) {
-    const info = COMING_SOON_INFO[key] || { icon:'🏗️', title:'Скоро!', desc:'Раздел в разработке.' };
+window.showComingSoon = function(key, factionName) {
+    let info = COMING_SOON_INFO[key] || { icon:'🏗️', title:'Скоро!', desc:'Раздел в разработке.' };
+    if (key === 'faction-soon') {
+        info = { icon:'🚧', title:(factionName || 'Фракция') + ' — скоро откроется!', desc:'Вступление во фракцию «' + (factionName || '') + '» временно недоступно — набор откроется в ближайшем обновлении.' };
+    }
     const el = document.getElementById('fullscreen-cs');
     if (!el) return;
     const iconEl  = document.getElementById('fs-cs-icon');
@@ -490,19 +720,21 @@ window.switchAuthTab = function(tab) {
 window.handleRegister = async function() {
     if (!canRegisterNow()) return notify('Регистрация временно отключена администрацией', false);
     const u  = document.getElementById('reg-username').value.trim();
+    const dNick = document.getElementById('reg-discord-nick').value.trim();
+    const dUser = document.getElementById('reg-discord-username').value.trim().replace(/^@/, '');
     const p  = document.getElementById('reg-password').value;
     const p2 = document.getElementById('reg-password2').value;
-    if (!u || !p)     return notify('Заполните все поля', false);
+    if (!u || !p || !dNick || !dUser) return notify('Заполните все поля, включая Discord Никнейм и Юзернейм', false);
     if (p !== p2)     return notify('Пароли не совпадают', false);
     if (p.length < 4) return notify('Пароль минимум 4 символа', false);
     const exists = await db(`users?username=eq.${encodeURIComponent(u)}`);
     if (exists.length) return notify('Ник уже занят', false);
-    const res = await db('users', { method:'POST', body: JSON.stringify({ username:u, password:p, role:'Пользователь', faction:'' }) });
+    const res = await db('users', { method:'POST', body: JSON.stringify({ username:u, password:p, role:'Пользователь', faction:'', discord_nick:dNick, discord_id:dUser }) });
     if (res && res[0]) {
         window.currentUser = res[0];
         localStorage.setItem('nrp_user', JSON.stringify(res[0]));
         closeModal('auth'); updateAuthZone(); notify('Добро пожаловать, ' + u + '!'); navigateTo('profile');
-    } else notify('Ошибка регистрации', false);
+    } else notify('Ошибка регистрации (нужны колонки discord_nick и discord_id в таблице users)', false);
 };
 
 window.handleLogin = async function() {
@@ -528,6 +760,7 @@ window.logout = function() {
 // FIX 3: В кнопке профиля показывается ник + роль + фракция
 function updateAuthZone() {
     const zone = document.getElementById('auth-zone');
+    updateDiscordMissingIndicators();
     if (!zone) return;
     if (window.currentUser) {
         const role    = window.currentUser.role    || 'Пользователь';
@@ -590,6 +823,11 @@ window.renderProfile = async function() {
     if (lastLoginEl) lastLoginEl.textContent = window.currentUser.last_login ? new Date(window.currentUser.last_login).toLocaleString('ru-RU') : '—';
     const bioEl = document.getElementById('profile-bio-input');
     if (bioEl) bioEl.value = window.currentUser.bio || '';
+    const discordNickEl = document.getElementById('profile-discord-nick');
+    if (discordNickEl) discordNickEl.value = window.currentUser.discord_nick || '';
+    const discordIdEl = document.getElementById('profile-discord-id');
+    if (discordIdEl) discordIdEl.value = window.currentUser.discord_id || '';
+    updateDiscordMissingIndicators();
 
     // Значок ОПГ/Мафия, если пользователь состоит в криминальной организации
     const gangBadge = document.getElementById('profile-gang-badge');
@@ -612,6 +850,13 @@ window.renderProfile = async function() {
 
     if (isAdmin(window.currentUser)) { if (adminP) adminP.style.display = ''; loadUsersTable(); }
     else { if (adminP) adminP.style.display = 'none'; }
+
+    const bannerP = document.getElementById('admin-banner-panel');
+    if (bannerP) bannerP.style.display = isAdmin(window.currentUser) ? '' : 'none';
+    if (isAdmin(window.currentUser)) fillBannerAdminForm();
+
+    const discordReqP = document.getElementById('admin-discord-request-panel');
+    if (discordReqP) discordReqP.style.display = isAdmin(window.currentUser) ? '' : 'none';
 
     showOwnerPanelIfNeeded();
 };
@@ -667,6 +912,38 @@ window.saveBio = async function() {
     } catch(e) { notify('Не удалось сохранить (нужна колонка bio в таблице users)', false); }
 };
 
+// ─── DISCORD ID (для автоматической выдачи ролей ботом) ──
+window.saveDiscordId = async function() {
+    const nickEl = document.getElementById('profile-discord-nick');
+    const userEl = document.getElementById('profile-discord-id');
+    const discordNick = (nickEl?.value || '').trim().slice(0, 60);
+    const discordId = (userEl?.value || '').trim().replace(/^@/, '').slice(0, 40);
+    if (nickEl) nickEl.value = discordNick;
+    if (userEl) userEl.value = discordId;
+    try {
+        await db(`users?id=eq.${window.currentUser.id}`, { method:'PATCH', body: JSON.stringify({ discord_nick: discordNick, discord_id: discordId }) });
+        window.currentUser.discord_nick = discordNick;
+        window.currentUser.discord_id = discordId;
+        localStorage.setItem('nrp_user', JSON.stringify(window.currentUser));
+        notify('Discord-данные сохранены');
+        updateDiscordMissingIndicators();
+    } catch(e) { console.error(e); notify('Не удалось сохранить (нужны колонки discord_nick и discord_id в таблице users)', false); }
+};
+
+// FIX 8: показываем красную точку у кнопки "Профиль" и баннер внутри профиля,
+// если у пользователя не заполнены Discord Никнейм или Юзернейм (актуально для тех, кто
+// зарегистрировался до введения этого требования).
+function updateDiscordMissingIndicators() {
+    const u = window.currentUser;
+    const missing = !!u && (!u.discord_nick || !u.discord_id);
+    const dot1 = document.getElementById('profile-discord-missing-dot');
+    const dot2 = document.getElementById('profile-discord-missing-dot-m');
+    if (dot1) dot1.style.display = missing ? '' : 'none';
+    if (dot2) dot2.style.display = missing ? '' : 'none';
+    const banner = document.getElementById('discord-missing-banner');
+    if (banner) banner.style.display = missing ? '' : 'none';
+}
+
 // ─── ПЕРСОНАЛИЗАЦИЯ: ЦВЕТ АКЦЕНТА ──────────────
 const ACCENT_COLORS = ['#00f5ff', '#a855f7', '#22c55e', '#fbbf24', '#ef4444', '#f472b6'];
 
@@ -687,21 +964,83 @@ window.pickAccentColor = function(color) { applyAccentColor(color); notify('Цв
 
 const SEL = `background:#1e293b;border:1px solid var(--border);color:#fff;padding:5px 8px;border-radius:8px;font-size:12px;font-family:'Rajdhani',sans-serif;max-width:160px`;
 
+function rankIndex(role) {
+    const i = ADMIN_RANKS.indexOf(role);
+    return i === -1 ? 0 : i;
+}
+
+// Кэш paролей в открытом виде на этот сеанс — только для строк, где показ разрешён
+window._usersCache = {};
+
 window.loadUsersTable = async function() {
     const tbody = document.getElementById('users-table-body');
     if (!tbody) return;
-    tbody.innerHTML = `<tr><td colspan="5" style="padding:20px;text-align:center;color:var(--text)">Загрузка...</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" style="padding:20px;text-align:center;color:var(--text)">Загрузка...</td></tr>`;
     const users = await db('users?order=username.asc');
     if (!Array.isArray(users) || !users.length) {
-        tbody.innerHTML = `<tr><td colspan="5" style="padding:20px;text-align:center;color:var(--text)">Нет пользователей</td></tr>`; return;
+        tbody.innerHTML = `<tr><td colspan="7" style="padding:20px;text-align:center;color:var(--text)">Нет пользователей</td></tr>`; return;
     }
-    tbody.innerHTML = users.map(u => `<tr>
+    window._usersCache = {};
+    users.forEach(u => window._usersCache[u.id] = u);
+    const viewerRank = rankIndex(window.currentUser?.role);
+    tbody.innerHTML = users.map(u => {
+        const targetRank = rankIndex(u.role);
+        const canSeePassword = viewerRank > targetRank;
+        const passwordCell = canSeePassword
+            ? `<span id="pwd-mask-${u.id}" style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#64748b">••••••</span>
+               <span id="pwd-real-${u.id}" style="display:none;font-family:'JetBrains Mono',monospace;font-size:12px;color:#fbbf24">${escHtml(u.password||'')}</span>
+               <button onclick="togglePasswordVisibility(${u.id})" style="background:none;border:none;color:var(--cyan);cursor:pointer;font-size:13px;margin-left:6px" title="Показать/скрыть пароль">👁</button>`
+            : `<span style="font-size:12px;color:#334155">🔒 Скрыто</span>`;
+        return `<tr>
         <td style="padding:10px 14px;font-weight:600;color:#fff">${escHtml(u.username)}</td>
-        <td style="padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#64748b">${escHtml(u.password||'')}</td>
+        <td style="padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#94a3b8">${escHtml(u.discord_id||'—')}</td>
+        <td style="padding:10px 14px;white-space:nowrap">${passwordCell}</td>
+        <td style="padding:10px 14px" id="discord-check-${u.id}"><button onclick="checkUserInDiscord(${u.id})" style="background:rgba(0,245,255,0.08);border:1px solid rgba(0,245,255,0.25);color:var(--cyan);padding:4px 10px;border-radius:8px;cursor:pointer;font-size:11px">Проверить</button></td>
         <td style="padding:10px 14px"><select onchange="changeRole(${u.id},this.value)" style="${SEL}">${ADMIN_RANKS.map(r=>`<option value="${r}" ${u.role===r?'selected':''}>${r}</option>`).join('')}</select></td>
         <td style="padding:10px 14px"><select onchange="changeFaction(${u.id},this.value)" style="${SEL}">${ALL_FACTIONS.map(f=>`<option value="${f==='—'?'':f}" ${(u.faction||'')===(f==='—'?'':f)?'selected':''}>${f}</option>`).join('')}</select></td>
         <td style="padding:10px 14px"><button onclick="deleteUser(${u.id})" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#f87171;padding:5px 12px;border-radius:8px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:600">Удалить</button></td>
-    </tr>`).join('');
+    </tr>`;
+    }).join('');
+};
+
+window.togglePasswordVisibility = function(id) {
+    const mask = document.getElementById('pwd-mask-' + id);
+    const real = document.getElementById('pwd-real-' + id);
+    if (!mask || !real) return;
+    const showing = real.style.display !== 'none';
+    mask.style.display = showing ? '' : 'none';
+    real.style.display = showing ? 'none' : '';
+};
+
+// FIX 9: проверка присутствия игрока на Discord-сервере через ту же Edge Function,
+// что выдаёт роли — с флагом checkOnly, чтобы не выдавать роль, а только проверить.
+window.checkUserInDiscord = async function(id) {
+    const cell = document.getElementById('discord-check-' + id);
+    const u = window._usersCache[id];
+    if (!cell || !u) return;
+    if (!u.discord_id) { cell.innerHTML = '<span style="color:#f87171;font-size:11px">Нет юзернейма</span>'; return; }
+    cell.innerHTML = '<span style="color:var(--text);font-size:11px">Проверка...</span>';
+    try {
+        const res = await fetch(SUPABASE_URL + '/functions/v1/assign-discord-role', {
+            method: 'POST',
+            headers: H,
+            body: JSON.stringify({ discordUsername: u.discord_id, checkOnly: true })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.found) {
+            cell.innerHTML = '<span style="color:#4ade80;font-size:11px">✅ Есть на сервере</span>';
+        } else {
+            cell.innerHTML = `<span style="color:#f87171;font-size:11px" title="${escHtml(data.error||'')}">❌ Не найден</span> <button onclick="prefillDiscordFixRequest('${escHtml(u.username)}')" style="margin-left:6px;background:none;border:none;color:var(--cyan);cursor:pointer;font-size:11px;text-decoration:underline">Запросить исправление</button>`;
+        }
+    } catch(e) {
+        cell.innerHTML = '<span style="color:#f87171;font-size:11px">Ошибка проверки</span>';
+    }
+};
+
+window.prefillDiscordFixRequest = function(username) {
+    const el = document.getElementById('discord-req-username');
+    if (el) el.value = username;
+    document.getElementById('admin-discord-request-panel')?.scrollIntoView({ behavior:'smooth', block:'center' });
 };
 
 window.changeRole = async function(id, role) {
@@ -874,14 +1213,15 @@ window.saveOwnerSettings = async function() {
     const services = {};
     document.querySelectorAll('#owner-toggle-services input[data-flag-service]').forEach(cb => { services[cb.dataset.flagService] = cb.checked; });
     const registration_open = document.getElementById('owner-toggle-registration')?.checked !== false;
-    const flags = { tabs, services, registration_open };
+    // Сохраняем tabs/services/registration_open, но не затираем банер, который мог сохранить админ отдельно
+    const flags = Object.assign({}, window.siteFlags, { tabs, services, registration_open });
     window.siteFlags = flags;
     try {
-        const existing = await db('site_settings?id=eq.1');
+        const existing = await db('site_settings?key=eq.site_flags');
         if (Array.isArray(existing) && existing.length) {
-            await db('site_settings?id=eq.1', { method:'PATCH', body: JSON.stringify({ flags }) });
+            await db('site_settings?key=eq.site_flags', { method:'PATCH', body: JSON.stringify({ value: flags }) });
         } else {
-            await db('site_settings', { method:'POST', body: JSON.stringify({ id:1, flags }) });
+            await db('site_settings', { method:'POST', body: JSON.stringify({ key:'site_flags', value: flags }) });
         }
     } catch(e) { console.warn('saveOwnerSettings error', e); }
     applySiteFlags();
@@ -923,6 +1263,28 @@ window.copyProfileLink = function() {
 
 // ─── УВЕДОМЛЕНИЯ ПОЛЬЗОВАТЕЛЮ (напр. просьба сменить ник) ──
 // Требуется таблица в Supabase: notifications (id, user_id, type text, text text, read bool default false, created_at timestamptz default now())
+
+window.sendDiscordFixRequest = async function() {
+    if (!isAdmin(window.currentUser)) return notify('Нет доступа', false);
+    const uEl = document.getElementById('discord-req-username');
+    const fEl = document.getElementById('discord-req-field');
+    const mEl = document.getElementById('discord-req-message');
+    const username = uEl?.value.trim();
+    const field = fEl?.value || 'username';
+    const fieldLabel = field === 'nick' ? 'Discord Никнейм' : 'Discord Юзернейм';
+    const comment = mEl?.value.trim();
+    if (!username) return notify('Введите ник игрока на сайте', false);
+    const users = await db(`users?username=eq.${encodeURIComponent(username)}`);
+    if (!Array.isArray(users) || !users.length) return notify('Пользователь не найден', false);
+    const text = `Администрация не может найти вас в Discord. Пожалуйста, проверьте и исправьте: ${fieldLabel}.` + (comment ? ` Комментарий: ${comment}` : '');
+    try {
+        const res = await db('notifications', { method:'POST', body: JSON.stringify({ user_id: users[0].id, type:'discord_fix_request', text, field, read:false }) });
+        const failed = !res || !Array.isArray(res) || !res.length || res.code || res.message;
+        if (failed) { console.warn('sendDiscordFixRequest failed', res); return notify('Не удалось отправить: проверьте таблицу notifications в Supabase', false); }
+        notify('Запрос отправлен игроку ' + username);
+        if (uEl) uEl.value = ''; if (mEl) mEl.value = '';
+    } catch(e) { console.warn('sendDiscordFixRequest error', e); notify('Ошибка отправки', false); }
+};
 
 window.sendRenameRequest = async function() {
     if (!isOwner(window.currentUser)) return notify('Нет доступа', false);
@@ -978,8 +1340,31 @@ function renderNotificationCard(n) {
             <button class="form-submit" onclick="respondRenameRequest(${n.id})">Сменить никнейм</button>
         </div>`;
     }
+    if (n.type === 'discord_fix_request') {
+        const isNick = n.field === 'nick';
+        return `<div class="profile-card" style="border-color:rgba(248,113,113,0.35);background:rgba(248,113,113,0.05)">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><span style="font-size:20px">🛠️</span><div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;color:#f87171">Проверьте ваши Discord-данные</div></div>
+            <div style="color:var(--text);font-size:14px;margin-bottom:14px;line-height:1.6">${escHtml(n.text||'')}</div>
+            <div class="form-group"><input type="text" id="notif-discord-${n.id}" placeholder="${isNick ? 'Правильный Discord Никнейм' : 'Правильный Discord Юзернейм'}" class="form-input"></div>
+            <button class="form-submit" onclick="respondDiscordFixRequest(${n.id}, '${isNick ? 'nick' : 'username'}')">Сохранить исправление</button>
+        </div>`;
+    }
     return `<div class="profile-card"><div style="color:var(--text);font-size:14px;line-height:1.6">${escHtml(n.text||'')}</div><button onclick="dismissNotification(${n.id})" style="margin-top:10px;background:none;border:none;color:var(--cyan);font-size:12px;cursor:pointer;letter-spacing:1px">ПОНЯТНО, СКРЫТЬ</button></div>`;
 }
+
+window.respondDiscordFixRequest = async function(notifId, field) {
+    const input = document.getElementById('notif-discord-' + notifId);
+    const next = input?.value.trim().replace(/^@/, '');
+    if (!next) return notify('Введите значение', false);
+    const patch = field === 'nick' ? { discord_nick: next } : { discord_id: next };
+    await db(`users?id=eq.${window.currentUser.id}`, { method:'PATCH', body: JSON.stringify(patch) });
+    Object.assign(window.currentUser, patch);
+    localStorage.setItem('nrp_user', JSON.stringify(window.currentUser));
+    await db(`notifications?id=eq.${notifId}`, { method:'PATCH', body: JSON.stringify({ read:true }) }).catch(()=>{});
+    renderProfile();
+    updateDiscordMissingIndicators();
+    notify('Данные обновлены, спасибо!');
+};
 
 window.respondRenameRequest = async function(notifId) {
     const input = document.getElementById('notif-rename-' + notifId);
@@ -1092,9 +1477,9 @@ window.submitForm = async function(type) {
         data = { type:'medbook', username:u, char_name:n, dob, address:job, reason:pos, note:gl+'|'+dis+(nt?'|'+nt:''), status:'pending', user_id:window.currentUser?.id };
     } else if (type === 'license') {
         const u=document.getElementById('license-username').value.trim(), n=document.getElementById('license-name').value.trim(), dob=document.getElementById('license-dob').value, job=document.getElementById('license-job').value.trim(), fac=document.getElementById('license-faction').value, rsn=document.getElementById('license-reason').value.trim(), sgn=document.getElementById('license-sign').value.trim();
-        // FIX 4: Правильное получение мультиселекта — перебираем все options
-        const wpnSelect = document.getElementById('license-weapons');
-        const wpn = Array.from(wpnSelect.options).filter(o => o.selected).map(o => o.value).join(', ');
+        // FIX 5: чекбоксы оружия лежат в #weapons-checkboxes, а не в старом <select id="license-weapons"> — читаем отмеченные чекбоксы
+        const wpnBox = document.getElementById('weapons-checkboxes');
+        const wpn = wpnBox ? Array.from(wpnBox.querySelectorAll('input[type=checkbox]:checked')).map(o => o.value).join(', ') : '';
         if (!u||!n||!job||!rsn||!wpn) return notify('Выберите оружие и заполните поля', false);
         data = { type:'license', username:u, char_name:n, dob, address:job, faction:fac, reason:rsn, weapon_type:wpn, note:sgn, status:'pending', user_id:window.currentUser?.id };
     } else if (type === 'faction-join') {
@@ -1226,8 +1611,37 @@ window.reviewRequest = async function(id, status) {
     loadAdminRequests();
 };
 
+// Если название фракции на сайте отличается от точного названия роли в Discord — впишите соответствие сюда.
+// Ключ — как фракция называется на сайте, значение — как называется роль в Discord (регистр не важен).
+// Если фракция не указана в списке, бот попробует найти роль с точно таким же именем, как на сайте.
+const DISCORD_ROLE_NAME_MAP = {
+    // 'Патрульная Полиция (ДПС)': 'ДПС',
+};
+
+async function assignDiscordRole(discordUsername, factionValue, oldFactionValue) {
+    if (!discordUsername || !factionValue) return;
+    const roleName = DISCORD_ROLE_NAME_MAP[factionValue] || factionValue;
+    const oldRoleName = oldFactionValue ? (DISCORD_ROLE_NAME_MAP[oldFactionValue] || oldFactionValue) : null;
+    try {
+        const res = await fetch(SUPABASE_URL + '/functions/v1/assign-discord-role', {
+            method: 'POST',
+            headers: H,
+            body: JSON.stringify({ discordUsername, roleName, oldRoleName })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            console.warn('assignDiscordRole: не удалось выдать роль в Discord', data);
+            notify('Заявка одобрена, но роль в Discord не выдалась: ' + (data.error || res.status), false);
+        }
+    } catch (e) {
+        console.warn('assignDiscordRole error', e);
+    }
+}
+
 // FIX 6: При одобрении заявки на вступление во фракцию/ОПГ/Мафию — фракция сразу
-// проставляется пользователю на сайте (аналогично ручному изменению в таблице пользователей)
+// проставляется пользователю на сайте (аналогично ручному изменению в таблице пользователей).
+// Если у игрока указан ник Discord в профиле — сайт просит бота снять старую роль фракции
+// (если она была) и выдать новую.
 async function applyApprovalSideEffects(req) {
     if (!req.user_id) return;
     try {
@@ -1236,12 +1650,19 @@ async function applyApprovalSideEffects(req) {
         else if (req.type === 'opg_join' || req.type === 'opg_create') factionValue = 'ОПГ';
         else if (req.type === 'mafia_join' || req.type === 'mafia_create') factionValue = 'Мафия';
         if (!factionValue) return;
+        // Сначала узнаём, какая фракция была у игрока ДО одобрения — её роль нужно будет снять
+        const beforeRows = await db(`users?id=eq.${req.user_id}&select=discord_id,faction`);
+        const before = Array.isArray(beforeRows) && beforeRows[0] ? beforeRows[0] : {};
+        const oldFaction = before.faction || null;
+        const discordId = before.discord_id || null;
+
         await db(`users?id=eq.${req.user_id}`, { method:'PATCH', body: JSON.stringify({ faction: factionValue }) });
         if (window.currentUser && window.currentUser.id === req.user_id) {
             window.currentUser.faction = factionValue;
             localStorage.setItem('nrp_user', JSON.stringify(window.currentUser));
             updateAuthZone();
         }
+        if (discordId) await assignDiscordRole(discordId, factionValue, oldFaction !== factionValue ? oldFaction : null);
     } catch(e) { console.warn('applyApprovalSideEffects error', e); }
 }
 
@@ -1515,19 +1936,12 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('login-password')?.addEventListener('keydown', e => { if(e.key==='Enter') handleLogin(); });
     document.getElementById('reg-password2')?.addEventListener('keydown',  e => { if(e.key==='Enter') handleRegister(); });
 
-    // FIX 4: Мультиселект — добавляем CSS чтобы выделение работало нормально
-    const wpnSel = document.getElementById('license-weapons');
-    if (wpnSel) {
-        // Убираем атрибут size чтобы браузер сам определял высоту через CSS
-        wpnSel.style.height = 'auto';
-        wpnSel.style.overflowY = 'auto';
-        wpnSel.style.maxHeight = '200px';
-    }
-
     if (location.hash) readHash();
 });
-function startUpdateCountdown() {
-    const targetDate = new Date("2026-07-10T21:00:00+03:00").getTime();
+window._updateCountdownInterval = null;
+function startUpdateCountdown(targetIso) {
+    if (window._updateCountdownInterval) { clearInterval(window._updateCountdownInterval); window._updateCountdownInterval = null; }
+    const targetDate = new Date(targetIso || "2026-07-10T21:00:00+03:00").getTime();
     const timerElement = document.getElementById("countdown-timer");
     if (!timerElement) return;
 
@@ -1537,6 +1951,7 @@ function startUpdateCountdown() {
 
         if (distance < 0) {
             clearInterval(interval);
+            window._updateCountdownInterval = null;
             timerElement.innerHTML = "ОБНОВЛЕНИЕ ВЫШЛО! 🔥";
             timerElement.style.color = "#4ade80";
             timerElement.style.textShadow = "0 0 12px rgba(74, 222, 128, 0.5)";
@@ -1558,6 +1973,5 @@ function startUpdateCountdown() {
 
         timerElement.innerHTML = timerText;
     }, 1000);
+    window._updateCountdownInterval = interval;
 }
-
-document.addEventListener("DOMContentLoaded", startUpdateCountdown);
