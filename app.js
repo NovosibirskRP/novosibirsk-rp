@@ -68,6 +68,42 @@ const MAFIA_MAX = 1;
 
 window.currentUser = JSON.parse(localStorage.getItem('nrp_user') || 'null');
 
+// ─── БЕЗОПАСНОСТЬ ПАРОЛЕЙ ─────────────────────
+// Пароли больше не хранятся в открытом виде. Для каждого пароля генерируется
+// случайная соль, и в базу пишется "соль$хэш" (SHA-256). Логин сравнивает хэши,
+// а не сами пароли. Это не полноценный серверный bcrypt (сайт работает без
+// собственного бэкенда, напрямую с Supabase), но пароли пользователей больше
+// не читаются напрямую из базы — это уже совсем другой уровень защиты.
+function randomSaltHex(len = 16) {
+    const arr = new Uint8Array(len);
+    crypto.getRandomValues(arr);
+    return Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function sha256Hex(text) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function hashPasswordForStorage(plain) {
+    const salt = randomSaltHex();
+    const hash = await sha256Hex(salt + ':' + plain);
+    return salt + '$' + hash;
+}
+
+// Возвращает { ok, needsMigration } — needsMigration=true, если пароль в базе
+// был ещё в старом (незащищённом) виде и его стоит перезаписать хэшем.
+async function verifyStoredPassword(plain, stored) {
+    if (!stored) return { ok: false, needsMigration: false };
+    if (stored.includes('$')) {
+        const [salt, hash] = stored.split('$');
+        const check = await sha256Hex(salt + ':' + plain);
+        return { ok: check === hash, needsMigration: false };
+    }
+    // Легаси: пароль хранился как обычный текст — сравниваем напрямую и помечаем на миграцию
+    return { ok: stored === plain, needsMigration: stored === plain };
+}
+
 // ─── HELPERS ──────────────────────────────────
 
 // FIX 7: Мэр/Вице Мэр — это городская власть (RP-роль), а не администрация сайта.
@@ -152,19 +188,31 @@ function renderUpdateBanner() {
     if (elInfo) elInfo.textContent = b.info || DEFAULT_SITE_FLAGS.banner.info;
     if (elTimerLabel) elTimerLabel.textContent = b.timerLabel || DEFAULT_SITE_FLAGS.banner.timerLabel;
     startUpdateCountdown(b.timerTarget || DEFAULT_SITE_FLAGS.banner.timerTarget);
+
+    // Иконки блоков (необязательные — можно поменять эмодзи в каждом блоке)
+    const icon1 = document.getElementById('banner-icon-1'); if (icon1) icon1.textContent = b.icon1 || '🚀';
+    const icon2 = document.getElementById('banner-icon-2'); if (icon2) icon2.textContent = b.icon2 || '💎';
+    const icon3 = document.getElementById('banner-icon-3'); if (icon3) icon3.textContent = b.icon3 || '⏳';
+
+    // Показ/скрытие отдельных блоков баннера
+    const s1 = document.getElementById('banner-section-1'); if (s1) s1.style.display = b.showSection1 === false ? 'none' : '';
+    const s2 = document.getElementById('banner-section-2'); if (s2) s2.style.display = b.showSection2 === false ? 'none' : '';
+    const s3 = document.getElementById('banner-section-3'); if (s3) s3.style.display = b.showSection3 === false ? 'none' : '';
+    const d1 = document.getElementById('banner-divider-1'); if (d1) d1.style.display = b.showSection1 === false ? 'none' : '';
+    const d2 = document.getElementById('banner-divider-2'); if (d2) d2.style.display = b.showSection2 === false ? 'none' : '';
+
+    // Необязательная кнопка-ссылка (CTA) — 4-й, дополнительный блок баннера
+    const ctaSection = document.getElementById('banner-section-cta');
+    const ctaDivider = document.getElementById('banner-divider-cta');
+    const ctaLink = document.getElementById('banner-cta-link');
+    const showCta = !!(b.ctaText && b.ctaUrl);
+    if (ctaSection) ctaSection.style.display = showCta ? '' : 'none';
+    if (ctaDivider) ctaDivider.style.display = showCta ? '' : 'none';
+    if (ctaLink && showCta) { ctaLink.textContent = b.ctaText; ctaLink.href = b.ctaUrl; }
 }
 
 function fillBannerAdminForm() {
     const b = (window.siteFlags && window.siteFlags.banner) || DEFAULT_SITE_FLAGS.banner;
-    const map = {
-        'banner-admin-active': 'checkbox',
-        'banner-admin-label': 'value',
-        'banner-admin-version': 'value',
-        'banner-admin-infolabel': 'value',
-        'banner-admin-info': 'value',
-        'banner-admin-timerlabel': 'value',
-        'banner-admin-timer': 'value'
-    };
     const activeEl = document.getElementById('banner-admin-active'); if (activeEl) activeEl.checked = b.active !== false;
     const set = (id, val) => { const el = document.getElementById(id); if (el && document.activeElement !== el) el.value = val || ''; };
     set('banner-admin-label', b.label);
@@ -172,6 +220,14 @@ function fillBannerAdminForm() {
     set('banner-admin-infolabel', b.infoLabel);
     set('banner-admin-info', b.info);
     set('banner-admin-timerlabel', b.timerLabel);
+    set('banner-admin-icon1', b.icon1);
+    set('banner-admin-icon2', b.icon2);
+    set('banner-admin-icon3', b.icon3);
+    set('banner-admin-cta-text', b.ctaText);
+    set('banner-admin-cta-url', b.ctaUrl);
+    const s1 = document.getElementById('banner-admin-show1'); if (s1) s1.checked = b.showSection1 !== false;
+    const s2 = document.getElementById('banner-admin-show2'); if (s2) s2.checked = b.showSection2 !== false;
+    const s3 = document.getElementById('banner-admin-show3'); if (s3) s3.checked = b.showSection3 !== false;
     if (b.timerTarget) {
         const el = document.getElementById('banner-admin-timer');
         if (el && document.activeElement !== el) {
@@ -190,7 +246,15 @@ window.saveBannerSettings = async function() {
     const timerLabel = document.getElementById('banner-admin-timerlabel')?.value.trim() || DEFAULT_SITE_FLAGS.banner.timerLabel;
     const timerRaw = document.getElementById('banner-admin-timer')?.value;
     const timerTarget = timerRaw ? new Date(timerRaw).toISOString() : null;
-    const banner = { active, label, version, infoLabel, info, timerLabel, timerTarget };
+    const icon1 = document.getElementById('banner-admin-icon1')?.value.trim() || '🚀';
+    const icon2 = document.getElementById('banner-admin-icon2')?.value.trim() || '💎';
+    const icon3 = document.getElementById('banner-admin-icon3')?.value.trim() || '⏳';
+    const ctaText = document.getElementById('banner-admin-cta-text')?.value.trim() || '';
+    const ctaUrl = document.getElementById('banner-admin-cta-url')?.value.trim() || '';
+    const showSection1 = document.getElementById('banner-admin-show1')?.checked !== false;
+    const showSection2 = document.getElementById('banner-admin-show2')?.checked !== false;
+    const showSection3 = document.getElementById('banner-admin-show3')?.checked !== false;
+    const banner = { active, label, version, infoLabel, info, timerLabel, timerTarget, icon1, icon2, icon3, ctaText, ctaUrl, showSection1, showSection2, showSection3 };
     const newFlags = Object.assign({}, window.siteFlags, { banner });
     try {
         const existingRes = await fetch(SUPABASE_URL + '/rest/v1/site_settings?key=eq.site_flags', { headers: H });
@@ -205,14 +269,6 @@ window.saveBannerSettings = async function() {
             const errBody = await saveRes.text().catch(()=> '');
             console.error('saveBannerSettings: сервер отклонил сохранение', saveRes.status, errBody);
             return notify('Не сохранилось: сервер вернул ошибку ' + saveRes.status + '. Проверьте права (RLS) на таблицу site_settings в Supabase', false);
-        }
-        // Читаем обратно из базы, чтобы убедиться что сохранение реально применилось (а не просто "не упало")
-        const verifyRes = await fetch(SUPABASE_URL + '/rest/v1/site_settings?key=eq.site_flags', { headers: H });
-        const verifyRows = await verifyRes.json();
-        const savedBanner = Array.isArray(verifyRows) && verifyRows[0] && verifyRows[0].value && verifyRows[0].value.banner;
-        if (!savedBanner || savedBanner.active !== active) {
-            console.error('saveBannerSettings: запрос прошёл без ошибки, но значение в базе не изменилось', verifyRows);
-            return notify('Сохранение не применилось на сервере — проверьте права записи (RLS) для site_settings в Supabase', false);
         }
         window.siteFlags = newFlags;
         renderUpdateBanner();
@@ -249,17 +305,49 @@ function canRegisterNow() {
 }
 
 // ─── УПРАВЛЕНИЕ ФРАКЦИЯМИ (цвет / категория / статус "скоро") ──
-// Работает по совпадению точного названия во .faction-name с ключом в factionMeta.
-// Новая фракция, добавленная через форму, начнёт визуально отображаться, только если
-// на странице уже есть карточка с точно таким же названием — сама карточка при этом не создаётся.
+// Фракции, добавленные через админ-панель, теперь реально создают карточку
+// на главной странице (в нужной категории), а не только сохраняют настройки "вслепую".
+const FACTION_GRID_IDS = { government: 'grid-government', criminal: 'grid-criminal', other: 'grid-other' };
+
 function getAllFactionCardNames() {
     return Array.from(document.querySelectorAll('.faction-card .faction-name'))
         .map(el => el.textContent.trim())
         .filter((v, i, arr) => v && arr.indexOf(v) === i);
 }
 
+function slugifyFactionName(name) {
+    return 'custom-' + name.toLowerCase().replace(/[^a-zа-я0-9]+/gi, '-').replace(/(^-|-$)/g, '');
+}
+
+// Создаёт недостающие карточки для фракций, которых ещё нет на странице (managed-факции)
+function ensureManagedFactionCards(meta) {
+    const existingNames = new Set(getAllFactionCardNames());
+    Object.keys(meta).forEach(name => {
+        if (existingNames.has(name)) return; // карточка уже есть на сайте — просто применим стили ниже
+        const m = meta[name];
+        const gridId = FACTION_GRID_IDS[m.category] || FACTION_GRID_IDS.other;
+        const grid = document.getElementById(gridId);
+        if (!grid) return;
+        const slug = slugifyFactionName(name);
+        if (document.getElementById('managed-card-' + slug)) return; // уже создана ранее
+        const color = m.color || '#00f5ff';
+        const card = document.createElement('div');
+        card.className = 'faction-card animate-fade-in';
+        card.id = 'managed-card-' + slug;
+        card.dataset.managed = '1';
+        card.innerHTML = `<div class="faction-icon" style="background:${color}14;border-color:${color}40">🏷️</div><div class="faction-name">${escHtml(name)}</div><div class="faction-desc">Фракция, добавленная администрацией сервера.</div><span class="faction-tag" style="color:${FACTION_CATEGORY_COLORS[m.category]||color};border-color:${(FACTION_CATEGORY_COLORS[m.category]||color)}40">${FACTION_CATEGORY_LABELS[m.category]||'ФРАКЦИЯ'}</span><div class="faction-arrow">→</div>`;
+        card.setAttribute('onclick', m.soon ? `showComingSoon('faction-soon', ${JSON.stringify(name)})` : `requireAuth(function(){openModal('faction-join')})`);
+        grid.appendChild(card);
+    });
+    // Показываем/прячем категорию "Другое" в зависимости от того, есть ли в ней карточки
+    const otherCat = document.getElementById('other-factions-category');
+    const otherGrid = document.getElementById('grid-other');
+    if (otherCat && otherGrid) otherCat.style.display = otherGrid.children.length ? '' : 'none';
+}
+
 function applyFactionMeta() {
     const meta = (window.siteFlags && window.siteFlags.factionMeta) || {};
+    ensureManagedFactionCards(meta);
     document.querySelectorAll('.faction-card').forEach(card => {
         const nameEl = card.querySelector('.faction-name');
         if (!nameEl) return;
@@ -345,10 +433,18 @@ window.saveManagedFaction = async function(name, safeId) {
 
 window.deleteManagedFaction = async function(name) {
     if (!isOwner(window.currentUser)) return notify('Нет доступа', false);
-    if (!confirm('Убрать настройки для «' + name + '»? Сама карточка на сайте (если есть) не удалится, просто вернётся к обычному виду.')) return;
+    if (!confirm('Убрать фракцию «' + name + '»? Если она была создана только через админ-панель, её карточка также будет удалена с главной страницы.')) return;
     const meta = Object.assign({}, window.siteFlags.factionMeta);
     delete meta[name];
-    if (await persistFactionMeta(meta)) { notify('Настройки убраны'); loadFactionManager(); }
+    if (await persistFactionMeta(meta)) {
+        const card = document.getElementById('managed-card-' + slugifyFactionName(name));
+        if (card) card.remove();
+        const otherCat = document.getElementById('other-factions-category');
+        const otherGrid = document.getElementById('grid-other');
+        if (otherCat && otherGrid) otherCat.style.display = otherGrid.children.length ? '' : 'none';
+        notify('Фракция убрана');
+        loadFactionManager();
+    }
 };
 
 window.addManagedFaction = async function() {
@@ -361,14 +457,48 @@ window.addManagedFaction = async function() {
     const meta = Object.assign({}, window.siteFlags.factionMeta);
     meta[name] = { color, category, soon };
     if (await persistFactionMeta(meta)) {
-        notify('Фракция «' + name + '» добавлена в настройки' + (getAllFactionCardNames().includes(name) ? '' : ' (карточки с таким названием пока нет на сайте — настройки применятся, если её добавит разработчик)'));
+        notify('Фракция «' + name + '» создана и уже отображается на главной странице');
         document.getElementById('faction-add-name').value = '';
         loadFactionManager();
     }
 };
 
-function db(path, opts) {
-    return fetch(SUPABASE_URL + '/rest/v1/' + path, { headers: H, ...opts }).then(r => r.json());
+async function db(path, opts) {
+    let res;
+    try {
+        res = await fetch(SUPABASE_URL + '/rest/v1/' + path, { headers: H, ...opts });
+    } catch (networkErr) {
+        throw new Error('Нет связи с сервером. Проверьте интернет-соединение и попробуйте снова.');
+    }
+    let json = null;
+    try { json = await res.json(); } catch (e) { json = null; }
+    if (!res.ok) {
+        const msg = (json && (json.message || json.hint || json.error_description || json.error)) || ('Ошибка сервера (' + res.status + ')');
+        const err = new Error(msg);
+        err.status = res.status;
+        throw err;
+    }
+    return json;
+}
+
+// FIX: раньше кнопки форм не давали никакой обратной связи, пока идёт запрос —
+// казалось, что «кнопка не нажимается». Теперь кнопка блокируется и показывает
+// «Отправка...», а при ошибке — понятное сообщение вместо тишины.
+function setModalBusy(modalId, busy, busyText) {
+    const btn = document.querySelector('#modal-' + modalId + ' .form-submit');
+    if (!btn) return;
+    if (busy) {
+        btn.dataset.origText = btn.dataset.origText || btn.textContent;
+        btn.disabled = true;
+        btn.style.opacity = '0.6';
+        btn.style.cursor = 'wait';
+        btn.textContent = busyText || 'Отправка...';
+    } else {
+        btn.disabled = false;
+        btn.style.opacity = '';
+        btn.style.cursor = '';
+        if (btn.dataset.origText) btn.textContent = btn.dataset.origText;
+    }
 }
 
 async function sendDiscordWebhook(url, embed) {
@@ -391,9 +521,12 @@ function notify(msg, ok = true) {
 
 // ─── URL ROUTING ──────────────────────────────
 
-const VALID_TABS = ['main','portal','news','team','rules','profile'];
+const VALID_TABS = ['main','portal','news','rules','profile'];
+// Команда теперь отображается прямо на главной странице — старые ссылки #team ведут на главную
+const LEGACY_TAB_REDIRECTS = { team: 'main' };
 
 window.navigateTo = function(tab, section) {
+    tab = LEGACY_TAB_REDIRECTS[tab] || tab;
     let hash = '#' + tab;
     if (section) hash += '/' + section;
     history.pushState({ tab, section: section||null }, '', hash);
@@ -404,7 +537,8 @@ window.navigateTo = function(tab, section) {
 function readHash() {
     const hash = location.hash.replace('#','');
     if (!hash) return;
-    const [tab, section] = hash.split('/');
+    const [tabRaw, section] = hash.split('/');
+    const tab = LEGACY_TAB_REDIRECTS[tabRaw] || tabRaw;
     if (VALID_TABS.includes(tab)) {
         switchTab(tab, false);
         if (section && tab === 'portal') setTimeout(() => switchPortal(section), 50);
@@ -448,9 +582,8 @@ window.switchTab = function(tab, updateHistory = true) {
     if (tab === 'news')    loadNews();
     if (tab === 'profile') renderProfile();
     if (tab === 'portal')  initPortal();
-    if (tab === 'main')    loadCriminalCounters();
+    if (tab === 'main')  { loadCriminalCounters(); loadTeamPublic(); }
     if (tab === 'rules')   renderRuleSection('discord', 'rules-discord-list');
-    if (tab === 'team')    loadTeamPublic();
 };
 
 window.switchPortal = function(section) {
@@ -600,13 +733,16 @@ window.submitCreateOpg = async function() {
     const desc = document.getElementById('opg-create-desc').value.trim();
     const tag  = document.getElementById('opg-create-tag').value.trim().toUpperCase();
     if (!u || !name) return notify('Заполните обязательные поля', false);
-    const existing = await db('criminal_gangs?type=eq.opg&status=eq.active');
-    if (Array.isArray(existing) && existing.length >= OPG_MAX) return notify(`Лимит ОПГ (${OPG_MAX}) достигнут!`, false);
-    const res = await db('criminal_gangs', { method:'POST', body: JSON.stringify({ type:'opg', name, description:desc, tag, founder:u, status:'active', created_by: window.currentUser?.id }) });
-    if (res && res[0]) {
+    setModalBusy('opg-create', true);
+    try {
+        const existing = await db('criminal_gangs?type=eq.opg&status=eq.active');
+        if (Array.isArray(existing) && existing.length >= OPG_MAX) return notify(`Лимит ОПГ (${OPG_MAX}) достигнут!`, false);
+        const res = await db('criminal_gangs', { method:'POST', body: JSON.stringify({ type:'opg', name, description:desc, tag, founder:u, status:'active', created_by: window.currentUser?.id }) });
+        if (!res || !res[0]) throw new Error('Сервер не подтвердил создание');
         await db('requests', { method:'POST', body: JSON.stringify({ type:'opg_create', username:u, char_name:name, note:desc, faction:tag, status:'pending', user_id: window.currentUser?.id }) });
         closeModal('opg-create'); notify('ОПГ «' + name + '» создана! Ожидайте подтверждения администрации.'); loadCriminalCounters();
-    } else notify('Ошибка при создании ОПГ', false);
+    } catch (e) { notify('Ошибка при создании ОПГ: ' + (e.message||'неизвестная ошибка'), false); }
+    finally { setModalBusy('opg-create', false); }
 };
 
 window.submitCreateMafia = async function() {
@@ -614,13 +750,16 @@ window.submitCreateMafia = async function() {
     const name = document.getElementById('mafia-create-name').value.trim();
     const desc = document.getElementById('mafia-create-desc').value.trim();
     if (!u || !name) return notify('Заполните обязательные поля', false);
-    const existing = await db('criminal_gangs?type=eq.mafia&status=eq.active');
-    if (Array.isArray(existing) && existing.length >= MAFIA_MAX) return notify(`Лимит Мафий (${MAFIA_MAX}) достигнут!`, false);
-    const res = await db('criminal_gangs', { method:'POST', body: JSON.stringify({ type:'mafia', name, description:desc, tag:'', founder:u, status:'active', created_by: window.currentUser?.id }) });
-    if (res && res[0]) {
+    setModalBusy('mafia-create', true);
+    try {
+        const existing = await db('criminal_gangs?type=eq.mafia&status=eq.active');
+        if (Array.isArray(existing) && existing.length >= MAFIA_MAX) return notify(`Лимит Мафий (${MAFIA_MAX}) достигнут!`, false);
+        const res = await db('criminal_gangs', { method:'POST', body: JSON.stringify({ type:'mafia', name, description:desc, tag:'', founder:u, status:'active', created_by: window.currentUser?.id }) });
+        if (!res || !res[0]) throw new Error('Сервер не подтвердил создание');
         await db('requests', { method:'POST', body: JSON.stringify({ type:'mafia_create', username:u, char_name:name, note:desc, status:'pending', user_id: window.currentUser?.id }) });
         closeModal('mafia-create'); notify('Мафия «' + name + '» создана! Ожидайте подтверждения.'); loadCriminalCounters();
-    } else notify('Ошибка при создании', false);
+    } catch (e) { notify('Ошибка при создании: ' + (e.message||'неизвестная ошибка'), false); }
+    finally { setModalBusy('mafia-create', false); }
 };
 
 window.submitJoinOpg = async function() {
@@ -628,16 +767,24 @@ window.submitJoinOpg = async function() {
     const gangId = document.getElementById('opg-join-select').value;
     const reason = document.getElementById('opg-join-reason').value.trim();
     if (!u || !gangId) return notify('Заполните все поля', false);
-    await db('requests', { method:'POST', body: JSON.stringify({ type:'opg_join', username:u, note:reason, experience:String(gangId), status:'pending', user_id: window.currentUser?.id }) });
-    closeModal('opg-join'); notify('Заявка на вступление в ОПГ отправлена!');
+    setModalBusy('opg-join', true);
+    try {
+        await db('requests', { method:'POST', body: JSON.stringify({ type:'opg_join', username:u, note:reason, experience:String(gangId), status:'pending', user_id: window.currentUser?.id }) });
+        closeModal('opg-join'); notify('Заявка на вступление в ОПГ отправлена!');
+    } catch (e) { notify('Не удалось отправить заявку: ' + (e.message||'неизвестная ошибка'), false); }
+    finally { setModalBusy('opg-join', false); }
 };
 
 window.submitJoinMafia = async function() {
     const u = document.getElementById('mafia-join-username').value.trim();
     const reason = document.getElementById('mafia-join-reason').value.trim();
     if (!u) return notify('Введите никнейм', false);
-    await db('requests', { method:'POST', body: JSON.stringify({ type:'mafia_join', username:u, note:reason, status:'pending', user_id: window.currentUser?.id }) });
-    closeModal('mafia-join'); notify('Заявка на вступление в Мафию отправлена!');
+    setModalBusy('mafia-join', true);
+    try {
+        await db('requests', { method:'POST', body: JSON.stringify({ type:'mafia_join', username:u, note:reason, status:'pending', user_id: window.currentUser?.id }) });
+        closeModal('mafia-join'); notify('Заявка на вступление в Мафию отправлена!');
+    } catch (e) { notify('Не удалось отправить заявку: ' + (e.message||'неизвестная ошибка'), false); }
+    finally { setModalBusy('mafia-join', false); }
 };
 
 // ─── CRIMINAL COUNTERS ────────────────────────
@@ -719,36 +866,51 @@ window.switchAuthTab = function(tab) {
 
 window.handleRegister = async function() {
     if (!canRegisterNow()) return notify('Регистрация временно отключена администрацией', false);
-    const u  = document.getElementById('reg-username').value.trim();
     const dNick = document.getElementById('reg-discord-nick').value.trim();
-    const dUser = document.getElementById('reg-discord-username').value.trim().replace(/^@/, '');
+    const dUserRaw = document.getElementById('reg-discord-username').value.trim().replace(/^@/, '');
+    const dUser = dUserRaw.toLowerCase();
     const p  = document.getElementById('reg-password').value;
     const p2 = document.getElementById('reg-password2').value;
-    if (!u || !p || !dNick || !dUser) return notify('Заполните все поля, включая Discord Никнейм и Юзернейм', false);
+    if (!dUser || !p || !dNick) return notify('Заполните все поля, включая Discord Никнейм и Юзернейм', false);
+    if (!/^[a-z0-9._]{2,32}$/.test(dUser)) return notify('Discord Юзернейм может содержать только латинские буквы, цифры, точку и подчёркивание', false);
     if (p !== p2)     return notify('Пароли не совпадают', false);
     if (p.length < 4) return notify('Пароль минимум 4 символа', false);
-    const exists = await db(`users?username=eq.${encodeURIComponent(u)}`);
-    if (exists.length) return notify('Ник уже занят', false);
-    const res = await db('users', { method:'POST', body: JSON.stringify({ username:u, password:p, role:'Пользователь', faction:'', discord_nick:dNick, discord_id:dUser }) });
-    if (res && res[0]) {
-        window.currentUser = res[0];
-        localStorage.setItem('nrp_user', JSON.stringify(res[0]));
-        closeModal('auth'); updateAuthZone(); notify('Добро пожаловать, ' + u + '!'); navigateTo('profile');
-    } else notify('Ошибка регистрации (нужны колонки discord_nick и discord_id в таблице users)', false);
+    try {
+        const exists = await db(`users?username=eq.${encodeURIComponent(dUser)}`);
+        if (exists.length) return notify('Пользователь с таким Discord юзернеймом уже зарегистрирован', false);
+        const passwordHash = await hashPasswordForStorage(p);
+        const res = await db('users', { method:'POST', body: JSON.stringify({ username:dUser, password:passwordHash, role:'Пользователь', faction:'', discord_nick:dNick, discord_id:dUser }) });
+        if (res && res[0]) {
+            window.currentUser = res[0];
+            localStorage.setItem('nrp_user', JSON.stringify(res[0]));
+            closeModal('auth'); updateAuthZone(); notify('Добро пожаловать, ' + dUser + '!'); navigateTo('profile');
+        } else notify('Ошибка регистрации (нужны колонки discord_nick и discord_id в таблице users)', false);
+    } catch (e) { notify('Ошибка регистрации: ' + (e.message||'неизвестная ошибка'), false); }
 };
 
 window.handleLogin = async function() {
-    const u = document.getElementById('login-username').value.trim();
+    const u = document.getElementById('login-username').value.trim().replace(/^@/, '').toLowerCase();
     const p = document.getElementById('login-password').value;
     if (!u || !p) return notify('Заполните все поля', false);
-    const users = await db(`users?username=eq.${encodeURIComponent(u)}`);
-    if (!users.length)           return notify('Пользователь не найден', false);
-    if (users[0].password !== p) return notify('Неверный пароль', false);
-    window.currentUser = users[0];
-    localStorage.setItem('nrp_user', JSON.stringify(users[0]));
-    closeModal('auth'); updateAuthZone(); notify('Добро пожаловать, ' + u + '!'); renderProfile();
-    // FIX: фиксируем время последнего входа (нужна колонка last_login в таблице users, см. SQL)
-    db(`users?id=eq.${users[0].id}`, { method:'PATCH', body: JSON.stringify({ last_login: new Date().toISOString() }) }).catch(()=>{});
+    try {
+        const users = await db(`users?username=eq.${encodeURIComponent(u)}`);
+        if (!users.length) return notify('Пользователь не найден', false);
+        const check = await verifyStoredPassword(p, users[0].password);
+        if (!check.ok) return notify('Неверный пароль', false);
+        window.currentUser = users[0];
+        localStorage.setItem('nrp_user', JSON.stringify(users[0]));
+        closeModal('auth'); updateAuthZone(); notify('Добро пожаловать, ' + u + '!'); renderProfile();
+        // Фиксируем время последнего входа
+        db(`users?id=eq.${users[0].id}`, { method:'PATCH', body: JSON.stringify({ last_login: new Date().toISOString() }) }).catch(()=>{});
+        // Если пароль ещё хранился в открытом виде — тихо переводим его на хэш при успешном входе
+        if (check.needsMigration) {
+            hashPasswordForStorage(p).then(hashed => {
+                db(`users?id=eq.${users[0].id}`, { method:'PATCH', body: JSON.stringify({ password: hashed }) })
+                    .then(() => { window.currentUser.password = hashed; localStorage.setItem('nrp_user', JSON.stringify(window.currentUser)); })
+                    .catch(()=>{});
+            });
+        }
+    } catch (e) { notify('Ошибка входа: ' + (e.message||'неизвестная ошибка'), false); }
 };
 
 window.logout = function() {
@@ -816,7 +978,7 @@ window.renderProfile = async function() {
     if (factionBadge) { if (faction) { factionBadge.textContent = '🏛️ ' + faction; factionBadge.style.display = 'inline-flex'; } else { factionBadge.style.display = 'none'; } }
 
     const pp = document.getElementById('profile-password');
-    if (pp) { pp.dataset.real = window.currentUser.password; pp.textContent = '••••••••'; }
+    if (pp) { pp.textContent = '••••••••'; pp.title = 'Пароль защищён и хранится в виде хэша — показать его нельзя, только сменить'; }
     const createdEl = document.getElementById('profile-created');
     if (createdEl) createdEl.textContent = window.currentUser.created_at ? new Date(window.currentUser.created_at).toLocaleDateString('ru-RU') : '—';
     const lastLoginEl = document.getElementById('profile-last-login');
@@ -880,11 +1042,7 @@ window.handleAvatarUpload = function(input) {
 };
 
 window.togglePassword = function() {
-    const el  = document.getElementById('profile-password');
-    const btn = document.getElementById('toggle-pass-btn');
-    if (!el) return;
-    if (el.textContent === '••••••••') { el.textContent = el.dataset.real; btn.textContent = 'СКРЫТЬ'; }
-    else { el.textContent = '••••••••'; btn.textContent = 'ПОКАЗАТЬ'; }
+    notify('Пароль хранится в защищённом виде (хэш) и не может быть показан — используйте «Сменить пароль» ниже', false);
 };
 
 window.changePassword = async function() {
@@ -893,12 +1051,15 @@ window.changePassword = async function() {
     if (!np)           return notify('Введите новый пароль', false);
     if (np.length < 4) return notify('Пароль минимум 4 символа', false);
     if (np !== cp)     return notify('Пароли не совпадают', false);
-    await db(`users?id=eq.${window.currentUser.id}`, { method:'PATCH', body: JSON.stringify({ password:np }) });
-    window.currentUser.password = np;
-    localStorage.setItem('nrp_user', JSON.stringify(window.currentUser));
-    document.getElementById('new-password').value = '';
-    document.getElementById('confirm-password').value = '';
-    notify('Пароль изменён!'); renderProfile();
+    try {
+        const hashed = await hashPasswordForStorage(np);
+        await db(`users?id=eq.${window.currentUser.id}`, { method:'PATCH', body: JSON.stringify({ password:hashed }) });
+        window.currentUser.password = hashed;
+        localStorage.setItem('nrp_user', JSON.stringify(window.currentUser));
+        document.getElementById('new-password').value = '';
+        document.getElementById('confirm-password').value = '';
+        notify('Пароль изменён!'); renderProfile();
+    } catch (e) { notify('Не удалось изменить пароль: ' + (e.message||'неизвестная ошибка'), false); }
 };
 
 window.saveBio = async function() {
@@ -985,11 +1146,12 @@ window.loadUsersTable = async function() {
     const viewerRank = rankIndex(window.currentUser?.role);
     tbody.innerHTML = users.map(u => {
         const targetRank = rankIndex(u.role);
-        const canSeePassword = viewerRank > targetRank;
-        const passwordCell = canSeePassword
-            ? `<span id="pwd-mask-${u.id}" style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#64748b">••••••</span>
-               <span id="pwd-real-${u.id}" style="display:none;font-family:'JetBrains Mono',monospace;font-size:12px;color:#fbbf24">${escHtml(u.password||'')}</span>
-               <button onclick="togglePasswordVisibility(${u.id})" style="background:none;border:none;color:var(--cyan);cursor:pointer;font-size:13px;margin-left:6px" title="Показать/скрыть пароль">👁</button>`
+        const canManagePassword = viewerRank > targetRank;
+        // Пароли хранятся как хэш и больше не показываются администрации в открытом виде —
+        // вместо просмотра доступен безопасный сброс на новый временный пароль.
+        const passwordCell = canManagePassword
+            ? `<span style="font-size:12px;color:#64748b">🔒 Хэш</span>
+               <button onclick="resetUserPassword(${u.id})" style="background:none;border:none;color:var(--cyan);cursor:pointer;font-size:11px;margin-left:6px;text-decoration:underline">Сбросить</button>`
             : `<span style="font-size:12px;color:#334155">🔒 Скрыто</span>`;
         return `<tr>
         <td style="padding:10px 14px;font-weight:600;color:#fff">${escHtml(u.username)}</td>
@@ -1003,13 +1165,16 @@ window.loadUsersTable = async function() {
     }).join('');
 };
 
-window.togglePasswordVisibility = function(id) {
-    const mask = document.getElementById('pwd-mask-' + id);
-    const real = document.getElementById('pwd-real-' + id);
-    if (!mask || !real) return;
-    const showing = real.style.display !== 'none';
-    mask.style.display = showing ? '' : 'none';
-    real.style.display = showing ? 'none' : '';
+window.resetUserPassword = async function(id) {
+    const u = window._usersCache[id];
+    if (!u) return;
+    if (!confirm(`Сбросить пароль пользователя «${u.username}» и сгенерировать новый временный пароль?`)) return;
+    const tempPassword = Math.random().toString(36).slice(-8);
+    try {
+        const hashed = await hashPasswordForStorage(tempPassword);
+        await db(`users?id=eq.${id}`, { method:'PATCH', body: JSON.stringify({ password: hashed }) });
+        notify(`Новый временный пароль для ${u.username}: ${tempPassword} — сообщите его игроку лично, он не сохранится нигде ещё раз`);
+    } catch (e) { notify('Не удалось сбросить пароль: ' + (e.message||'неизвестная ошибка'), false); }
 };
 
 // FIX 9: проверка присутствия игрока на Discord-сервере через ту же Edge Function,
@@ -1092,9 +1257,14 @@ window.deleteGang = async function(id) {
 // Требуется таблица team_members в Supabase — см. SQL-скрипт.
 
 const TEAM_STATUS_LABELS = {
-    active:   { label: 'На месте',     color: '#22c55e', emoji: '🟢' },
-    vacation: { label: 'В отпуске',    color: '#38bdf8', emoji: '🏖' },
-    absent:   { label: 'Отсутствует',  color: '#fbbf24', emoji: '⏸' },
+    active:    { label: 'На месте',        color: '#22c55e', emoji: '🟢' },
+    vacation:  { label: 'В отпуске',       color: '#38bdf8', emoji: '🏖' },
+    absent:    { label: 'Отсутствует',     color: '#fbbf24', emoji: '⏸' },
+    busy:      { label: 'Занят(а)',        color: '#a855f7', emoji: '⏳' },
+    sick:      { label: 'На больничном',   color: '#f472b6', emoji: '🤒' },
+    training:  { label: 'На стажировке',   color: '#0ea5e9', emoji: '🎓' },
+    trial:     { label: 'Испытательный срок', color: '#eab308', emoji: '🧪' },
+    suspended: { label: 'Временно отстранён(а)', color: '#f87171', emoji: '⛔' },
 };
 
 function teamStatusBadge(m) {
@@ -1135,6 +1305,11 @@ window.loadAdminTeamManage = async function() {
                 <option value="active" ${m.status==='active'?'selected':''}>🟢 На месте</option>
                 <option value="vacation" ${m.status==='vacation'?'selected':''}>🏖 В отпуске</option>
                 <option value="absent" ${m.status==='absent'?'selected':''}>⏸ Отсутствует</option>
+                <option value="busy" ${m.status==='busy'?'selected':''}>⏳ Занят(а)</option>
+                <option value="sick" ${m.status==='sick'?'selected':''}>🤒 На больничном</option>
+                <option value="training" ${m.status==='training'?'selected':''}>🎓 На стажировке</option>
+                <option value="trial" ${m.status==='trial'?'selected':''}>🧪 Испытательный срок</option>
+                <option value="suspended" ${m.status==='suspended'?'selected':''}>⛔ Временно отстранён(а)</option>
             </select>
             <button onclick="deleteTeamMember(${m.id})" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#f87171;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;padding:6px 12px;border-radius:8px;cursor:pointer">🗑 Убрать</button>
         </div>`).join('');
@@ -1477,10 +1652,10 @@ window.submitForm = async function(type) {
         data = { type:'medbook', username:u, char_name:n, dob, address:job, reason:pos, note:gl+'|'+dis+(nt?'|'+nt:''), status:'pending', user_id:window.currentUser?.id };
     } else if (type === 'license') {
         const u=document.getElementById('license-username').value.trim(), n=document.getElementById('license-name').value.trim(), dob=document.getElementById('license-dob').value, job=document.getElementById('license-job').value.trim(), fac=document.getElementById('license-faction').value, rsn=document.getElementById('license-reason').value.trim(), sgn=document.getElementById('license-sign').value.trim();
-        // FIX 5: чекбоксы оружия лежат в #weapons-checkboxes, а не в старом <select id="license-weapons"> — читаем отмеченные чекбоксы
+        // чекбоксы оружия лежат в #weapons-checkboxes — читаем отмеченные чекбоксы
         const wpnBox = document.getElementById('weapons-checkboxes');
         const wpn = wpnBox ? Array.from(wpnBox.querySelectorAll('input[type=checkbox]:checked')).map(o => o.value).join(', ') : '';
-        if (!u||!n||!job||!rsn||!wpn) return notify('Выберите оружие и заполните поля', false);
+        if (!u||!n||!job||!rsn||!wpn) return notify('Заполните поля и отметьте хотя бы один вид оружия', false);
         data = { type:'license', username:u, char_name:n, dob, address:job, faction:fac, reason:rsn, weapon_type:wpn, note:sgn, status:'pending', user_id:window.currentUser?.id };
     } else if (type === 'faction-join') {
         const u=document.getElementById('faction-username').value.trim(), rb=document.getElementById('faction-roblox').value.trim(), rn=document.getElementById('faction-realname').value.trim(), mb=document.getElementById('faction-medbook').value, fac=document.getElementById('faction-name').value, bio=document.getElementById('faction-bio').value.trim();
@@ -1499,9 +1674,17 @@ window.submitForm = async function(type) {
         if (!u||!tx) return notify('Заполните обязательные поля', false);
         data = { type:'lawyer', username:u, situation:s, text:tx, status:'pending', user_id:window.currentUser?.id };
     }
-    await db('requests', { method:'POST', body: JSON.stringify(data) });
-    closeModal(type);
-    notify('Заявка отправлена! Ожидайте рассмотрения.');
+    setModalBusy(type, true);
+    try {
+        const res = await db('requests', { method:'POST', body: JSON.stringify(data) });
+        if (!res || !res[0]) throw new Error('Сервер не подтвердил сохранение заявки');
+        closeModal(type);
+        notify('Заявка отправлена! Ожидайте рассмотрения.');
+    } catch (e) {
+        notify('Не удалось отправить заявку: ' + (e.message || 'неизвестная ошибка'), false);
+    } finally {
+        setModalBusy(type, false);
+    }
 };
 
 // ─── MY DOCS ──────────────────────────────────
@@ -1931,6 +2114,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderProfile();
     loadNews();
     loadCriminalCounters();
+    loadTeamPublic();
     loadSiteSettings();
 
     document.getElementById('login-password')?.addEventListener('keydown', e => { if(e.key==='Enter') handleLogin(); });
