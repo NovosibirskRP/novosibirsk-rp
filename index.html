@@ -255,33 +255,39 @@
 <div class="update-banner-container" id="site-banner">
     <div class="update-banner-glow"></div>
     <div class="update-banner-content">
-        
-        <div class="banner-section patch-version">
-            <div class="banner-icon-box">🚀</div>
+
+        <div class="banner-section patch-version" id="banner-section-1">
+            <div class="banner-icon-box" id="banner-icon-1">🚀</div>
             <div class="banner-text-box">
                 <span class="banner-label" id="banner-version-label">ОБНОВЛЕНИЕ</span>
                 <span class="banner-value text-cyan" id="banner-version-value">Версия V3.15</span>
             </div>
         </div>
 
-        <div class="banner-divider"></div>
+        <div class="banner-divider" id="banner-divider-1"></div>
 
-        <div class="banner-section patch-info">
-            <div class="banner-icon-box">💎</div>
+        <div class="banner-section patch-info" id="banner-section-2">
+            <div class="banner-icon-box" id="banner-icon-2">💎</div>
             <div class="banner-text-box">
                 <span class="banner-label" id="banner-info-label">ЧТО НОВОГО</span>
                 <span class="banner-value" id="banner-info-value">Ювелирный магазин & Дальнобойщики</span>
             </div>
         </div>
 
-        <div class="banner-divider"></div>
+        <div class="banner-divider" id="banner-divider-2"></div>
 
-        <div class="banner-section patch-timer">
-            <div class="banner-icon-box pulse-icon">⏳</div>
+        <div class="banner-section patch-timer" id="banner-section-3">
+            <div class="banner-icon-box pulse-icon" id="banner-icon-3">⏳</div>
             <div class="banner-text-box">
                 <span class="banner-label" id="banner-timer-label">ДО ВЫХОДА </span>
                 <span class="banner-value timer-countdown" id="countdown-timer">00ч 00м 00с</span>
             </div>
+        </div>
+
+        <div class="banner-divider" id="banner-divider-cta" style="display:none"></div>
+
+        <div class="banner-section patch-cta" id="banner-section-cta" style="display:none;flex:0 0 auto">
+            <a href="#" target="_blank" id="banner-cta-link" class="btn-primary" style="text-decoration:none;white-space:nowrap;font-size:12px;padding:9px 18px" id="banner-cta-btn">Подробнее</a>
         </div>
 
     </div>
@@ -293,7 +299,6 @@
       <button class="nav-btn active" id="nav-main" onclick="navigateTo('main')"><span class="nav-btn-ic">🏠</span>Главная</button>
       <button class="nav-btn" id="nav-portal" data-flag-tab="portal" onclick="navigateTo('portal')"><span class="nav-btn-ic">🏛️</span>Портал</button>
       <button class="nav-btn" id="nav-news" data-flag-tab="news" onclick="navigateTo('news')"><span class="nav-btn-ic">📰</span>Новости</button>
-      <button class="nav-btn" id="nav-team" data-flag-tab="team" onclick="navigateTo('team')"><span class="nav-btn-ic">👥</span>Команда</button>
       <button class="nav-btn" id="nav-rules" data-flag-tab="rules" onclick="navigateTo('rules')"><span class="nav-btn-ic">📋</span>Правила</button>
       <button class="nav-btn" id="nav-profile" onclick="navigateTo('profile')"><span class="nav-btn-ic">👤</span>Профиль<span class="notify-dot" id="profile-notify-dot" style="display:none"></span><span class="notify-dot" id="profile-discord-missing-dot" style="display:none;background:#f87171" title="Не заполнены данные Discord"></span></button>
     </div>
@@ -307,7 +312,6 @@
   <button class="mobile-nav-btn active" id="mnav-main" onclick="navigateTo('main');closeMobileMenu()">🏠 Главная</button>
   <button class="mobile-nav-btn" id="mnav-portal" data-flag-tab="portal" onclick="navigateTo('portal');closeMobileMenu()">🏛️ Портал</button>
   <button class="mobile-nav-btn" id="mnav-news" data-flag-tab="news" onclick="navigateTo('news');closeMobileMenu()">📰 Новости</button>
-  <button class="mobile-nav-btn" id="mnav-team" data-flag-tab="team" onclick="navigateTo('team');closeMobileMenu()">👥 Команда</button>
   <button class="mobile-nav-btn" id="mnav-rules" data-flag-tab="rules" onclick="navigateTo('rules');closeMobileMenu()">📋 Правила</button>
   <button class="mobile-nav-btn" id="mnav-profile" onclick="navigateTo('profile');closeMobileMenu()">👤 Профиль<span class="notify-dot" id="profile-notify-dot-m" style="display:none"></span><span class="notify-dot" id="profile-discord-missing-dot-m" style="display:none;background:#f87171"></span></button>
 </div>
@@ -333,7 +337,7 @@
   </div>
   <div class="faction-category">
     <div style="margin-bottom:16px"><div class="section-title">Государственные Структуры</div><div class="section-sub">Правопорядок, правосудие и государственное управление</div></div>
-    <div class="factions-grid">
+    <div class="factions-grid" id="grid-government">
       <div class="faction-card" onclick="goToFaction('fsb')"><div class="faction-icon" style="background:rgba(234,179,8,0.08);border-color:rgba(234,179,8,0.2)">🕵️</div><div class="faction-name">ФСБ</div><div class="faction-desc">Федеральная служба безопасности. Контрразведка, оперативная работа и надзор за государственной безопасностью.</div><span class="faction-tag">ГОСУДАРСТВЕННАЯ</span><div class="faction-arrow">→</div></div>
       <div class="faction-card" onclick="goToFaction('fso')"><div class="faction-icon" style="background:rgba(234,179,8,0.08);border-color:rgba(234,179,8,0.2)">🛡️</div><div class="faction-name">ФСО</div><div class="faction-desc">Федеральная служба охраны. Обеспечение безопасности государственных объектов и VIP-персон.</div><span class="faction-tag">ГОСУДАРСТВЕННАЯ</span><div class="faction-arrow">→</div></div>
       <div class="faction-card" onclick="goToFaction('sobr')"><div class="faction-icon" style="background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.2)">🪖</div><div class="faction-name">СОБР</div><div class="faction-desc">Специальный отряд быстрого реагирования. Штурмы, захват преступников, поддержка силовых операций.</div><span class="faction-tag">ГОСУДАРСТВЕННАЯ</span><div class="faction-arrow">→</div></div>
@@ -361,10 +365,24 @@
   </div>
   <div class="faction-category">
     <div style="margin-bottom:16px"><div class="section-title">Криминальный Мир</div><div class="section-sub">Организованная преступность Новосибирска</div></div>
-    <div class="factions-grid">
+    <div class="factions-grid" id="grid-criminal">
       <div class="faction-card" onclick="goToFaction('opg')"><div class="faction-icon" style="background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.2)">💀</div><div class="faction-name">ОПГ</div><div class="faction-desc">Организованная преступная группировка. Теневой бизнес, уличный контроль, криминальные операции.</div><span class="faction-tag criminal">КРИМИНАЛЬНАЯ</span><div id="opg-counter-badge" style="margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text)">Загрузка...</div><div class="faction-arrow">→</div></div>
       <div class="faction-card" onclick="goToFaction('mafia')"><div class="faction-icon" style="background:rgba(168,85,247,0.08);border-color:rgba(168,85,247,0.2)">🤵</div><div class="faction-name">Мафия</div><div class="faction-desc">Итальянская организованная преступность. Контроль над бизнесом, коррупция и серые схемы.</div><span class="faction-tag mafia">КРИМИНАЛЬНАЯ</span><div id="mafia-counter-badge" style="margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text)">Загрузка...</div><div class="faction-arrow">→</div></div>
     </div>
+  </div>
+  <div class="faction-category" id="other-factions-category" style="display:none">
+    <div style="margin-bottom:16px"><div class="section-title">Другое</div><div class="section-sub">Дополнительные фракции, добавленные администрацией</div></div>
+    <div class="factions-grid" id="grid-other"></div>
+  </div>
+  <div class="faction-category" id="main-team-section">
+    <div style="margin-bottom:16px"><div class="section-title">Команда &amp; О Сервере</div><div class="section-sub">Администрация Novosibirsk RP</div></div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px;margin-bottom:24px">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:var(--cyan);margin-bottom:8px">О СЕРВЕРЕ</div>
+      <div style="color:var(--text);font-size:15px;line-height:1.8">Novosibirsk RP — ролевой сервер в Roblox с проработанной системой фракций, реальной экономикой и живым комьюнити.</div>
+      <a href="https://discord.gg/rp9btukQV5" target="_blank" class="btn-discord" style="display:inline-flex;margin-top:20px;text-decoration:none"><svg width="18" height="18" viewBox="0 0 71 55" fill="white"><path d="M60.1 4.9A58.6 58.6 0 0 0 45.5.4a.2.2 0 0 0-.2.1 40.8 40.8 0 0 0-1.8 3.7 54.1 54.1 0 0 0-16.2 0 37.4 37.4 0 0 0-1.8-3.7.2.2 0 0 0-.2-.1A58.4 58.4 0 0 0 10.5 4.9a.2.2 0 0 0-.1.1C1.5 18.1-1 30.9.3 43.5a.2.2 0 0 0 .1.2 58.9 58.9 0 0 0 17.7 9 .2.2 0 0 0 .2-.1 42 42 0 0 0 3.6-5.9.2.2 0 0 0-.1-.3 38.7 38.7 0 0 1-5.5-2.6.2.2 0 0 1 0-.4l1.1-.8a.2.2 0 0 1 .2 0c11.5 5.3 24 5.3 35.4 0a.2.2 0 0 1 .2 0l1.1.8a.2.2 0 0 1 0 .4 36.3 36.3 0 0 1-5.5 2.6.2.2 0 0 0-.1.3 47.1 47.1 0 0 0 3.6 5.9.2.2 0 0 0 .2.1 58.7 58.7 0 0 0 17.8-9 .2.2 0 0 0 .1-.2C73.1 28.8 69.5 16 60.2 5a.2.2 0 0 0-.1-.1zM23.7 36.1c-3.5 0-6.4-3.2-6.4-7.2s2.8-7.2 6.4-7.2c3.6 0 6.5 3.3 6.4 7.2 0 4-2.8 7.2-6.4 7.2zm23.6 0c-3.5 0-6.4-3.2-6.4-7.2s2.8-7.2 6.4-7.2c3.6 0 6.5 3.3 6.4 7.2 0 4-2.8 7.2-6.4 7.2z"/></svg>Зайти в Discord</a>
+    </div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:3px;color:#fff;margin-bottom:20px">Состав Администрации</div>
+    <div id="team-list" style="display:grid;gap:14px"><div class="loading-text" style="opacity:0.5">Загрузка состава администрации...</div></div>
   </div>
 </div></div>
 <!-- ПОРТАЛ -->
@@ -566,7 +584,7 @@
       </div>
       <div class="profile-row"><span class="profile-label">Роль</span><span class="profile-value" id="profile-role-value">—</span></div>
       <div class="profile-row"><span class="profile-label">Фракция</span><span class="profile-value" id="profile-faction-value">—</span></div>
-      <div class="profile-row"><span class="profile-label">Пароль</span><div style="display:flex;align-items:center;gap:10px"><span class="profile-value" style="font-family:'JetBrains Mono',monospace" id="profile-password">••••••••</span><button onclick="togglePassword()" id="toggle-pass-btn" style="background:none;border:none;color:var(--cyan);font-size:12px;cursor:pointer;font-family:'Rajdhani',sans-serif;letter-spacing:1px">ПОКАЗАТЬ</button></div></div>
+      <div class="profile-row"><span class="profile-label">Пароль</span><div style="display:flex;align-items:center;gap:10px"><span class="profile-value" style="font-family:'JetBrains Mono',monospace" id="profile-password">••••••••</span><span style="color:var(--text);font-size:11px">защищён (хэш)</span></div></div>
       <div class="profile-row"><span class="profile-label">Аккаунт создан</span><span class="profile-value" id="profile-created">—</span></div>
       <div class="profile-row" style="border-bottom:none"><span class="profile-label">Последний вход</span><span class="profile-value" id="profile-last-login">—</span></div>
     </div>
@@ -699,19 +717,32 @@
       <div style="color:var(--text);font-size:13px;margin-bottom:16px">Текст, который видят все посетители сайта наверху страницы. Просто заполните поля — без выбора из списков.</div>
       <div class="profile-card">
         <label class="owner-toggle" style="margin-bottom:14px;max-width:340px"><input type="checkbox" id="banner-admin-active" checked> ✅ Показывать баннер на сайте</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:6px">
+          <div class="form-group" style="margin-bottom:6px"><label class="form-label">Иконка блока 1</label><input type="text" id="banner-admin-icon1" class="form-input" placeholder="🚀"></div>
+          <div class="form-group" style="margin-bottom:6px"><label class="form-label">Иконка блока 2</label><input type="text" id="banner-admin-icon2" class="form-input" placeholder="💎"></div>
+          <div class="form-group" style="margin-bottom:6px"><label class="form-label">Иконка блока 3</label><input type="text" id="banner-admin-icon3" class="form-input" placeholder="⏳"></div>
+        </div>
         <div class="form-group"><label class="form-label">Метка (например: ОБНОВЛЕНИЕ)</label><input type="text" id="banner-admin-label" class="form-input" placeholder="ОБНОВЛЕНИЕ"></div>
         <div class="form-group"><label class="form-label">Версия / значение</label><input type="text" id="banner-admin-version" class="form-input" placeholder="Версия V3.16"></div>
+        <label class="owner-toggle" style="margin-bottom:10px"><input type="checkbox" id="banner-admin-show1" checked> Показывать блок 1 (метка/версия)</label>
         <div class="form-group"><label class="form-label">Метка второго блока (например: ЧТО НОВОГО)</label><input type="text" id="banner-admin-infolabel" class="form-input" placeholder="ЧТО НОВОГО"></div>
         <div class="form-group"><label class="form-label">Что нового — текст</label><input type="text" id="banner-admin-info" class="form-input" placeholder="Дальнобойщики & Водители автобуса"></div>
+        <label class="owner-toggle" style="margin-bottom:10px"><input type="checkbox" id="banner-admin-show2" checked> Показывать блок 2 (что нового)</label>
         <div class="form-group"><label class="form-label">Метка таймера (например: ДО ВЫХОДА)</label><input type="text" id="banner-admin-timerlabel" class="form-input" placeholder="ДО ВЫХОДА"></div>
         <div class="form-group"><label class="form-label">Дата и время окончания отсчёта (необязательно)</label><input type="datetime-local" id="banner-admin-timer" class="form-input"></div>
+        <label class="owner-toggle" style="margin-bottom:14px"><input type="checkbox" id="banner-admin-show3" checked> Показывать блок 3 (таймер)</label>
+        <div class="sep" style="margin:8px 0 14px"></div>
+        <div style="font-size:12px;color:var(--cyan);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Кнопка-ссылка (необязательно)</div>
+        <div class="form-group"><label class="form-label">Текст кнопки</label><input type="text" id="banner-admin-cta-text" class="form-input" placeholder="Подробнее"></div>
+        <div class="form-group"><label class="form-label">Ссылка (URL)</label><input type="text" id="banner-admin-cta-url" class="form-input" placeholder="https://discord.gg/..."></div>
+        <div style="color:var(--text);font-size:11px;margin-bottom:10px">Кнопка появится в баннере автоматически, если заполнены оба поля выше.</div>
         <button class="form-submit" onclick="saveBannerSettings()">Сохранить баннер</button>
       </div>
     </div>
     <div id="admin-users-panel" style="display:none">
       <div class="sep"></div>
       <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:#f87171;margin-bottom:4px">⚙️ Все пользователи</div>
-      <div style="color:var(--text);font-size:13px;margin-bottom:16px">Только для администрации. Пароли скрыты — нажмите «👁» рядом с паролем, чтобы показать. Пароли пользователей выше вас по рангу скрыты без права показа.</div>
+      <div style="color:var(--text);font-size:13px;margin-bottom:16px">Только для администрации. Пароли хранятся в защищённом виде (хэш) и никому не показываются — при необходимости используйте «Сбросить», чтобы выдать пользователю новый временный пароль. Управление доступно только для пользователей ниже вас по рангу.</div>
       <div class="profile-card" style="padding:0;overflow:auto">
         <table class="salary-table" style="width:100%"><thead><tr><th style="padding:12px 14px">Ник (сайт)</th><th style="padding:12px 14px">Discord юзернейм</th><th style="padding:12px 14px">Пароль</th><th style="padding:12px 14px">В Discord?</th><th style="padding:12px 14px">Роль</th><th style="padding:12px 14px">Фракция</th><th style="padding:12px 14px">Действие</th></tr></thead><tbody id="users-table-body"></tbody></table>
       </div>
@@ -735,18 +766,6 @@
     </div>
   </div>
 </div></div>
-<!-- КОМАНДА -->
-<div class="tab" id="tab-team"><div class="container" style="max-width:900px">
-  <div style="margin-bottom:24px"><div class="section-title">Команда & О Сервере</div><div class="section-sub">Администрация Novosibirsk RP</div></div>
-  <div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px;margin-bottom:32px">
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:var(--cyan);margin-bottom:8px">О СЕРВЕРЕ</div>
-    <div style="color:var(--text);font-size:15px;line-height:1.8">Novosibirsk RP — ролевой сервер в Roblox с проработанной системой фракций, реальной экономикой и живым комьюнити.</div>
-    <a href="https://discord.gg/rp9btukQV5" target="_blank" class="btn-discord" style="display:inline-flex;margin-top:20px;text-decoration:none"><svg width="18" height="18" viewBox="0 0 71 55" fill="white"><path d="M60.1 4.9A58.6 58.6 0 0 0 45.5.4a.2.2 0 0 0-.2.1 40.8 40.8 0 0 0-1.8 3.7 54.1 54.1 0 0 0-16.2 0 37.4 37.4 0 0 0-1.8-3.7.2.2 0 0 0-.2-.1A58.4 58.4 0 0 0 10.5 4.9a.2.2 0 0 0-.1.1C1.5 18.1-1 30.9.3 43.5a.2.2 0 0 0 .1.2 58.9 58.9 0 0 0 17.7 9 .2.2 0 0 0 .2-.1 42 42 0 0 0 3.6-5.9.2.2 0 0 0-.1-.3 38.7 38.7 0 0 1-5.5-2.6.2.2 0 0 1 0-.4l1.1-.8a.2.2 0 0 1 .2 0c11.5 5.3 24 5.3 35.4 0a.2.2 0 0 1 .2 0l1.1.8a.2.2 0 0 1 0 .4 36.3 36.3 0 0 1-5.5 2.6.2.2 0 0 0-.1.3 47.1 47.1 0 0 0 3.6 5.9.2.2 0 0 0 .2.1 58.7 58.7 0 0 0 17.8-9 .2.2 0 0 0 .1-.2C73.1 28.8 69.5 16 60.2 5a.2.2 0 0 0-.1-.1zM23.7 36.1c-3.5 0-6.4-3.2-6.4-7.2s2.8-7.2 6.4-7.2c3.6 0 6.5 3.3 6.4 7.2 0 4-2.8 7.2-6.4 7.2zm23.6 0c-3.5 0-6.4-3.2-6.4-7.2s2.8-7.2 6.4-7.2c3.6 0 6.5 3.3 6.4 7.2 0 4-2.8 7.2-6.4 7.2z"/></svg>Зайти в Discord</a>
-  </div>
-  <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:#fff;margin-bottom:20px">Состав Администрации</div>
-  <div id="team-list" style="display:grid;gap:14px"><div class="loading-text" style="opacity:0.5">Загрузка состава администрации...</div></div>
-</div></div>
-
 <!-- ПРАВИЛА -->
 <div class="tab" id="tab-rules"><div class="container" style="max-width:900px">
   <div style="margin-bottom:24px"><div class="section-title">Правила Сервера</div><div class="section-sub">Обязательно к прочтению — незнание не освобождает от ответственности</div></div>
@@ -794,8 +813,8 @@
   <button class="modal-close" onclick="closeModal('auth')">&#10005;</button>
   <div class="modal-header"><div class="auth-tabs"><button class="auth-tab active" id="auth-tab-login" onclick="switchAuthTab('login')">&#1042;&#1086;&#1081;&#1090;&#1080;</button><button class="auth-tab" id="auth-tab-register" onclick="switchAuthTab('register')">&#1056;&#1077;&#1075;&#1080;&#1089;&#1090;&#1088;&#1072;&#1094;&#1080;&#1103;</button></div></div>
   <div class="modal-body">
-    <div id="auth-login-form"><div class="modal-title">&#1042;&#1093;&#1086;&#1076;</div><div class="modal-sub">&#1042;&#1074;&#1077;&#1076;&#1080;&#1090;&#1077; &#1076;&#1072;&#1085;&#1085;&#1099;&#1077; &#1072;&#1082;&#1082;&#1072;&#1091;&#1085;&#1090;&#1072;</div><div class="form-group"><label class="form-label">Discord Никнейм</label><input type="text" id="login-username" placeholder="ivan_ivanov" class="form-input"><div style="color:var(--text);font-size:11px;margin-top:5px">Укажите ваш ник в Discord-сервере</div></div><div class="form-group"><label class="form-label">&#1055;&#1072;&#1088;&#1086;&#1083;&#1100;</label><input type="password" id="login-password" class="form-input"></div><button class="form-submit" onclick="handleLogin()">&#1042;&#1086;&#1081;&#1090;&#1080;</button></div>
-    <div id="auth-register-form" style="display:none"><div class="modal-title">Регистрация</div><div class="form-group"><label class="form-label">Ник для входа на сайт</label><input type="text" id="reg-username" placeholder="ivan_ivanov" class="form-input"><div style="color:var(--text);font-size:11px;margin-top:5px">Именно под этим ником вы будете заходить на сайт</div></div><div class="form-group"><label class="form-label">Discord Никнейм <span style="color:#f87171">*</span></label><input type="text" id="reg-discord-nick" placeholder="Иван Иванов" class="form-input" required><div style="color:var(--text);font-size:11px;margin-top:5px">Ваше отображаемое имя на сервере Discord</div></div><div class="form-group"><label class="form-label">Discord Юзернейм <span style="color:#f87171">*</span></label><input type="text" id="reg-discord-username" placeholder="ivan.ivanov" class="form-input" required><div style="color:var(--text);font-size:11px;margin-top:5px">Ваш @юзернейм из настроек профиля Discord (без символа @)</div></div><div class="form-group"><label class="form-label">Пароль</label><input type="password" id="reg-password" class="form-input"></div><div class="form-group"><label class="form-label">Повторите</label><input type="password" id="reg-password2" class="form-input"></div><button class="form-submit" onclick="handleRegister()">Зарегистрироваться</button></div>
+    <div id="auth-login-form"><div class="modal-title">&#1042;&#1093;&#1086;&#1076;</div><div class="modal-sub">&#1042;&#1074;&#1077;&#1076;&#1080;&#1090;&#1077; &#1076;&#1072;&#1085;&#1085;&#1099;&#1077; &#1072;&#1082;&#1082;&#1072;&#1091;&#1085;&#1090;&#1072;</div><div class="form-group"><label class="form-label">Discord Юзернейм</label><input type="text" id="login-username" placeholder="deirexrey_legit" class="form-input"><div style="color:var(--text);font-size:11px;margin-top:5px">Ваш @юзернейм в Discord — под ним вы регистрировались</div></div><div class="form-group"><label class="form-label">&#1055;&#1072;&#1088;&#1086;&#1083;&#1100;</label><input type="password" id="login-password" class="form-input"></div><button class="form-submit" onclick="handleLogin()">&#1042;&#1086;&#1081;&#1090;&#1080;</button></div>
+    <div id="auth-register-form" style="display:none"><div class="modal-title">Регистрация</div><div class="form-group"><label class="form-label">Discord Никнейм <span style="color:#f87171">*</span></label><input type="text" id="reg-discord-nick" placeholder="Иван Иванов" class="form-input" required><div style="color:var(--text);font-size:11px;margin-top:5px">Ваше отображаемое имя на сервере Discord</div></div><div class="form-group"><label class="form-label">Discord Юзернейм <span style="color:#f87171">*</span></label><input type="text" id="reg-discord-username" placeholder="deirexrey_legit" class="form-input" required><div style="color:var(--text);font-size:11px;margin-top:5px">Ваш @юзернейм из настроек профиля Discord (без символа @) — именно под этим именем вы будете заходить на сайт</div></div><div class="form-group"><label class="form-label">Пароль</label><input type="password" id="reg-password" class="form-input"></div><div class="form-group"><label class="form-label">Повторите</label><input type="password" id="reg-password2" class="form-input"></div><button class="form-submit" onclick="handleRegister()">Зарегистрироваться</button></div>
   </div>
 </div></div>
 <div class="modal-overlay" id="modal-why"><div class="modal-box"><button class="modal-close" onclick="closeModal('why')">&#10005;</button><div class="modal-body" style="padding-top:28px"><div class="modal-title">&#1047;&#1072;&#1095;&#1077;&#1084; &#1079;&#1072;&#1093;&#1086;&#1076;&#1080;&#1090;&#1100;?</div><div class="why-item"><div class="why-num">01</div><div class="why-text"><strong>&#1046;&#1080;&#1074;&#1086;&#1081; &#1075;&#1086;&#1088;&#1086;&#1076;.</strong> &#1056;&#1077;&#1072;&#1083;&#1100;&#1085;&#1072;&#1103; &#1101;&#1082;&#1086;&#1085;&#1086;&#1084;&#1080;&#1082;&#1072;, &#1073;&#1072;&#1085;&#1082;&#1080;, &#1073;&#1080;&#1079;&#1085;&#1077;&#1089;.</div></div><div class="why-item"><div class="why-num">02</div><div class="why-text"><strong>&#1060;&#1088;&#1072;&#1082;&#1094;&#1080;&#1080;.</strong> &#1054;&#1090; &#1087;&#1086;&#1083;&#1080;&#1094;&#1080;&#1080; &#1076;&#1086; &#1054;&#1055;&#1043;.</div></div><div class="why-item"><div class="why-num">03</div><div class="why-text"><strong>&#1057;&#1086;&#1073;&#1099;&#1090;&#1080;&#1103;.</strong> &#1055;&#1086;&#1075;&#1086;&#1085;&#1080;, &#1089;&#1091;&#1076;&#1099;, &#1088;&#1077;&#1081;&#1076;&#1099;.</div></div><a href="https://discord.gg/rp9btukQV5" target="_blank" class="btn-discord" style="width:100%;justify-content:center;margin-top:8px;text-decoration:none">&#1047;&#1072;&#1081;&#1090;&#1080; &#1074; Discord</a></div></div></div>
