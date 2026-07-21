@@ -893,7 +893,7 @@ window.handleRegister = async function() {
     const pwCheck = checkPasswordStrength(p);
     if (!pwCheck.ok) return notify(pwCheck.reason, false);
     try {
-        const res = await callSiteApi('register', { username: dUser, password: p, discord_nick: dNick });
+        const res = await callSiteApi('register', { username: dUser, password: p });
         window.currentUser = res.user;
         window._siteToken = res.token;
         localStorage.setItem('nrp_user', JSON.stringify(res.user));
@@ -1099,7 +1099,7 @@ window.saveDiscordId = async function() {
 // зарегистрировался до введения этого требования).
 function updateDiscordMissingIndicators() {
     const u = window.currentUser;
-    const missing = !!u && (!u.discord_nick || !u.discord_id);
+    const missing = !!u && !u.discord_id;
     const dot1 = document.getElementById('profile-discord-missing-dot');
     const dot2 = document.getElementById('profile-discord-missing-dot-m');
     if (dot1) dot1.style.display = missing ? '' : 'none';
