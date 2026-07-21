@@ -887,7 +887,7 @@ window.handleRegister = async function() {
     const dUser = dUserRaw.toLowerCase();
     const p  = document.getElementById('reg-password').value;
     const p2 = document.getElementById('reg-password2').value;
-    if (!dUser || !p || !dNick) return notify('Заполните все поля, включая Discord Никнейм и Юзернейм', false);
+    if (!dUser || !p) return notify('Заполните все поля', false);
     if (!/^[a-z0-9._]{2,32}$/.test(dUser)) return notify('Discord Юзернейм может содержать только латинские буквы, цифры, точку и подчёркивание', false);
     if (p !== p2) return notify('Пароли не совпадают', false);
     const pwCheck = checkPasswordStrength(p);
