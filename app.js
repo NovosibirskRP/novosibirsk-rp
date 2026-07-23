@@ -1476,7 +1476,7 @@ window.sendDiscordFixRequest = async function() {
     if (!Array.isArray(users) || !users.length) return notify('Пользователь не найден', false);
     const text = `Администрация не может найти вас в Discord. Пожалуйста, проверьте и исправьте Discord Юзернейм.` + (comment ? ` Комментарий: ${comment}` : '');
     try {
-        const res = await db('notifications', { method:'POST', body: JSON.stringify({ user_id: users[0].id, type:'discord_fix_request', text, field:'username', read:false }) });
+        const res = await db('notifications', { method:'POST', body: JSON.stringify({ user_id: users[0].id, type:'discord_fix_request', text, read:false }) });
         const failed = !res || !Array.isArray(res) || !res.length || res.code || res.message;
         if (failed) { console.warn('sendDiscordFixRequest failed', res); return notify('Не удалось отправить: проверьте таблицу notifications в Supabase', false); }
         notify('Запрос отправлен игроку ' + username);
