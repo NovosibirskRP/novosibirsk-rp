@@ -574,11 +574,7 @@
       </div>
       <div id="discord-missing-banner" style="display:none;background:linear-gradient(135deg,rgba(248,113,113,0.12),rgba(248,113,113,0.03));border:1px solid rgba(248,113,113,0.35);border-radius:12px;padding:16px 18px;margin-bottom:16px">
         <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;color:#f87171;margin-bottom:4px">⚠️ Заполните данные Discord</div>
-        <div style="color:var(--text);font-size:13px">Без этого сайт не сможет выдать вам роль в Discord при одобрении заявок. Заполните никнейм и юзернейм ниже.</div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Discord Никнейм (необязательно)</label>
-        <input type="text" id="profile-discord-nick" class="form-input" placeholder="Например: Иван Иванов" onblur="saveDiscordId()">
+        <div style="color:var(--text);font-size:13px">Без этого сайт не сможет выдать вам роль в Discord при одобрении заявок. Заполните юзернейм ниже.</div>
       </div>
       <div class="form-group">
         <label class="form-label">Discord Юзернейм <span style="color:#f87171">*</span></label>
@@ -698,20 +694,23 @@
       </div>
       <div class="profile-card">
         <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:#fff;margin-bottom:4px">🏷️ Управление фракциями</div>
-        <div style="color:var(--text);font-size:13px;margin-bottom:14px">Цвет карточки, категория и статус «скоро» — если включить «Скоро», карточка фракции на главной при нажатии будет показывать экран «скоро откроется» вместо формы вступления.</div>
+        <div style="color:var(--text);font-size:13px;margin-bottom:14px">Цвет карточки, категория (определяет, в каком разделе главной страницы будет карточка — Государственные / Криминальные / Другое), описание и статус «скоро» — если включить «Скоро», карточка фракции на главной при нажатии будет показывать экран «скоро откроется» вместо формы вступления. Кнопка «✕» полностью убирает фракцию с сайта.</div>
         <div class="profile-card" style="padding:0;overflow:auto;margin-bottom:16px">
-          <table class="salary-table" style="width:100%"><thead><tr><th style="padding:10px 12px">Фракция</th><th style="padding:10px 12px">Цвет</th><th style="padding:10px 12px">Категория</th><th style="padding:10px 12px">Скоро</th><th style="padding:10px 12px">Действие</th></tr></thead><tbody id="faction-manager-body"><tr><td colspan="5" style="padding:14px;opacity:0.5">Загрузка...</td></tr></tbody></table>
+          <table class="salary-table" style="width:100%"><thead><tr><th style="padding:10px 12px">Фракция</th><th style="padding:10px 12px">Цвет</th><th style="padding:10px 12px">Категория</th><th style="padding:10px 12px">Описание</th><th style="padding:10px 12px">Скоро</th><th style="padding:10px 12px">Действие</th></tr></thead><tbody id="faction-manager-body"><tr><td colspan="6" style="padding:14px;opacity:0.5">Загрузка...</td></tr></tbody></table>
         </div>
         <div style="font-size:12px;color:var(--cyan);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Добавить новую фракцию</div>
         <div style="display:grid;grid-template-columns:2fr auto 1.4fr auto;gap:10px;margin-bottom:10px;align-items:center">
           <input type="text" id="faction-add-name" class="form-input" placeholder="Название фракции">
           <input type="color" id="faction-add-color" value="#00f5ff" style="width:48px;height:40px;border:none;border-radius:8px;background:none;cursor:pointer">
           <select id="faction-add-category" class="form-input">
-            <option value="government">Государственная</option>
-            <option value="criminal">Криминальная</option>
-            <option value="other">Иное</option>
+            <option value="government">Государственная (раздел «Государственные»)</option>
+            <option value="criminal">Криминальная (раздел «Криминальные»)</option>
+            <option value="other">Иное (раздел «Другое»)</option>
           </select>
           <label class="owner-toggle" style="margin:0"><input type="checkbox" id="faction-add-soon"> Скоро</label>
+        </div>
+        <div class="form-group">
+          <input type="text" id="faction-add-desc" class="form-input" placeholder="Описание фракции (необязательно, покажется на карточке)">
         </div>
         <button class="form-submit" onclick="addManagedFaction()">Добавить фракцию</button>
       </div>
@@ -758,13 +757,6 @@
       <div style="color:var(--text);font-size:13px;margin-bottom:16px">Если игрока не удаётся найти в Discord — отправьте ему запрос на сайт с просьбой исправить никнейм или юзернейм.</div>
       <div class="profile-card">
         <div class="form-group"><label class="form-label">Игрок (ник на сайте)</label><input type="text" id="discord-req-username" class="form-input" placeholder="ivan_ivanov"></div>
-        <div class="form-group">
-          <label class="form-label">Что нужно исправить</label>
-          <select id="discord-req-field" class="form-input">
-            <option value="nick">Discord Никнейм</option>
-            <option value="username">Discord Юзернейм</option>
-          </select>
-        </div>
         <div class="form-group"><label class="form-label">Комментарий игроку</label><input type="text" id="discord-req-message" class="form-input" placeholder="Например: не могу найти вас в Discord, проверьте юзернейм"></div>
         <button class="form-submit" onclick="sendDiscordFixRequest()">Отправить запрос игроку</button>
       </div>
@@ -819,7 +811,7 @@
   <div class="modal-header"><div class="auth-tabs"><button class="auth-tab active" id="auth-tab-login" onclick="switchAuthTab('login')">&#1042;&#1086;&#1081;&#1090;&#1080;</button><button class="auth-tab" id="auth-tab-register" onclick="switchAuthTab('register')">&#1056;&#1077;&#1075;&#1080;&#1089;&#1090;&#1088;&#1072;&#1094;&#1080;&#1103;</button></div></div>
   <div class="modal-body">
     <div id="auth-login-form"><div class="modal-title">&#1042;&#1093;&#1086;&#1076;</div><div class="modal-sub">&#1042;&#1074;&#1077;&#1076;&#1080;&#1090;&#1077; &#1076;&#1072;&#1085;&#1085;&#1099;&#1077; &#1072;&#1082;&#1082;&#1072;&#1091;&#1085;&#1090;&#1072;</div><div class="form-group"><label class="form-label">Discord Юзернейм</label><input type="text" id="login-username" placeholder="deirexrey_legit" class="form-input"><div style="color:var(--text);font-size:11px;margin-top:5px">Ваш @юзернейм в Discord — под ним вы регистрировались</div></div><div class="form-group"><label class="form-label">&#1055;&#1072;&#1088;&#1086;&#1083;&#1100;</label><input type="password" id="login-password" class="form-input"></div><button class="form-submit" onclick="handleLogin()">&#1042;&#1086;&#1081;&#1090;&#1080;</button></div>
-<div class="form-group"><label class="form-label">Discord Юзернейм <span style="color:#f87171">*</span></label><input type="text" id="reg-discord-username" placeholder="deirexrey_legit" class="form-input" required><div style="color:var(--text);font-size:11px;margin-top:5px">Ваш @юзернейм из настроек профиля Discord (без символа @) — именно под этим именем вы будете заходить на сайт</div></div><div class="form-group"><label class="form-label">Пароль</label><input type="password" id="reg-password" class="form-input" oninput="renderPasswordStrength()"><div id="reg-password-strength" style="font-size:11px;margin-top:5px;color:var(--text)">Минимум 8 символов, буквы и цифры разных регистров</div></div><div class="form-group"><label class="form-label">Повторите</label><input type="password" id="reg-password2" class="form-input"></div><button class="form-submit" onclick="handleRegister()">Зарегистрироваться</button></div>
+    <div id="auth-register-form" style="display:none"><div class="modal-title">Регистрация</div><div class="form-group"><label class="form-label">Discord Юзернейм <span style="color:#f87171">*</span></label><input type="text" id="reg-discord-username" placeholder="deirexrey_legit" class="form-input" required><div style="color:var(--text);font-size:11px;margin-top:5px">Ваш @юзернейм из настроек профиля Discord (без символа @) — именно под этим именем вы будете заходить на сайт</div></div><div class="form-group"><label class="form-label">Пароль</label><input type="password" id="reg-password" class="form-input" oninput="renderPasswordStrength()"><div id="reg-password-strength" style="font-size:11px;margin-top:5px;color:var(--text)">Минимум 8 символов, буквы и цифры разных регистров</div></div><div class="form-group"><label class="form-label">Повторите</label><input type="password" id="reg-password2" class="form-input"></div><button class="form-submit" onclick="handleRegister()">Зарегистрироваться</button></div>
   </div>
 </div></div>
 <div class="modal-overlay" id="modal-why"><div class="modal-box"><button class="modal-close" onclick="closeModal('why')">&#10005;</button><div class="modal-body" style="padding-top:28px"><div class="modal-title">&#1047;&#1072;&#1095;&#1077;&#1084; &#1079;&#1072;&#1093;&#1086;&#1076;&#1080;&#1090;&#1100;?</div><div class="why-item"><div class="why-num">01</div><div class="why-text"><strong>&#1046;&#1080;&#1074;&#1086;&#1081; &#1075;&#1086;&#1088;&#1086;&#1076;.</strong> &#1056;&#1077;&#1072;&#1083;&#1100;&#1085;&#1072;&#1103; &#1101;&#1082;&#1086;&#1085;&#1086;&#1084;&#1080;&#1082;&#1072;, &#1073;&#1072;&#1085;&#1082;&#1080;, &#1073;&#1080;&#1079;&#1085;&#1077;&#1089;.</div></div><div class="why-item"><div class="why-num">02</div><div class="why-text"><strong>&#1060;&#1088;&#1072;&#1082;&#1094;&#1080;&#1080;.</strong> &#1054;&#1090; &#1087;&#1086;&#1083;&#1080;&#1094;&#1080;&#1080; &#1076;&#1086; &#1054;&#1055;&#1043;.</div></div><div class="why-item"><div class="why-num">03</div><div class="why-text"><strong>&#1057;&#1086;&#1073;&#1099;&#1090;&#1080;&#1103;.</strong> &#1055;&#1086;&#1075;&#1086;&#1085;&#1080;, &#1089;&#1091;&#1076;&#1099;, &#1088;&#1077;&#1081;&#1076;&#1099;.</div></div><a href="https://discord.gg/rp9btukQV5" target="_blank" class="btn-discord" style="width:100%;justify-content:center;margin-top:8px;text-decoration:none">&#1047;&#1072;&#1081;&#1090;&#1080; &#1074; Discord</a></div></div></div>
