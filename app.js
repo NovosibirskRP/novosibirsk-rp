@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════
-//  NOVOSIBIRSK RP — app.js v4.2 (bugfix)
+//  NOVOSIBIRSK RP — app.js v4.1 (bugfix)
 // ═══════════════════════════════════════════════
 
 const SUPABASE_URL = "https://aygqlldisjyeljgmwmec.supabase.co";
@@ -39,6 +39,7 @@ const ADMIN_RANKS = [
     "Ассистент Главного Владельца","Заместитель Главного Владельца","Главный Владелец"
 ];
 
+// FIX 1: Кто может публиковать новости — Администрация (от Ассистента) и ГТРК
 const NEWS_ALLOWED_ROLES = [
     "Ассистент Главного Владельца",
     "Заместитель Главного Владельца",
@@ -65,12 +66,18 @@ const ALL_FACTIONS = [
     'ОПГ','Мафия','Правительство'
 ];
 
+// Сроки действия документов и оплата за их оформление отменены по решению администрации.
 const OPG_MAX   = 2;
 const MAFIA_MAX = 1;
 
 window.currentUser = JSON.parse(localStorage.getItem('nrp_user') || 'null');
 window._siteToken = localStorage.getItem('nrp_token') || null;
 
+// ─── SITE-ADMIN EDGE FUNCTION ─────────────────
+// Все чувствительные действия (логин/регистрация, смена роли/фракции, сброс пароля,
+// одобрение заявок, публикация/удаление новостей, настройки владельца) теперь идут
+// не напрямую в Supabase анонимным ключом, а через Edge Function site-admin,
+// которая проверяет права на сервере и пишет в базу через service_role.
 async function callSiteApi(action, payload = {}) {
     const res = await fetch(SUPABASE_URL + '/functions/v1/site-admin', {
         method: 'POST',
@@ -82,6 +89,17 @@ async function callSiteApi(action, payload = {}) {
     return data;
 }
 
+// ─── БЕЗОПАСНОСТЬ ПАРОЛЕЙ ─────────────────────
+// Пароли больше не хранятся в открытом виде. Для каждого пароля генерируется
+// случайная соль, и в базу пишется "соль$хэш" (SHA-256). Логин сравнивает хэши,
+// а не сами пароли. Это не полноценный серверный bcrypt (сайт работает без
+// собственного бэкенда, напрямую с Supabase), но пароли пользователей больше
+// не читаются напрямую из базы — это уже совсем другой уровень защиты.
+// Хеширование/проверка паролей больше не выполняются в браузере — это делает
+// только Edge Function site-admin на сервере (через service_role), клиент
+// присылает пароль только по HTTPS в момент логина/регистрации/смены пароля.
+
+// Требования к паролю при регистрации: не даём выбрать слишком простой пароль.
 const COMMON_WEAK_PASSWORDS = ['12345678','password','qwerty123','11111111','123456789','qwertyui','admin123','password1','1q2w3e4r','00000000'];
 function checkPasswordStrength(p) {
     if (!p || p.length < 8) return { ok:false, reason:'Пароль должен быть не менее 8 символов' };
@@ -102,6 +120,10 @@ window.renderPasswordStrength = function() {
     el.style.color = res.ok ? '#4ade80' : '#f87171';
 };
 
+// ─── HELPERS ──────────────────────────────────
+
+// FIX 7: Мэр/Вице Мэр — это городская власть (RP-роль), а не администрация сайта.
+// Админ-доступ (заявки, документы, панель пользователей) — только у реального стаффа.
 const ADMIN_STAFF_ROLES = [
     "Модерация",
     "Администрация",
@@ -117,9 +139,11 @@ function isMedic(u)      { return u && MEDIC_FACTIONS.includes(u.faction); }
 function isService(u)    { return u && SERVICE_FACTIONS.includes(u.faction); }
 function canManageDocs(u){ return isAdmin(u) || isPolice(u); }
 
+// FIX 5: Панель Владельца — доступна только Главному Владельцу и Заместителю
 const OWNER_ROLES = ["Главный Владелец", "Заместитель Главного Владельца"];
 function isOwner(u) { return u && OWNER_ROLES.includes(u.role); }
 
+// ─── SITE SETTINGS (экстренное отключение разделов) ──
 const DEFAULT_SITE_FLAGS = {
     tabs: { portal:true, news:true, team:true, rules:true },
     services: { passport:true, medbook:true, license:true, 'driving-license':true, 'faction-join':true, court:true, government:true, lawyer:true, home:true, credit:true, 'opg-mafia':true },
@@ -133,6 +157,7 @@ const DEFAULT_SITE_FLAGS = {
         timerLabel: 'ДО ВЫХОДА',
         timerTarget: '2026-07-10T21:00:00+03:00'
     },
+    // FIX 7: метаданные фракций (цвет / категория / статус "скоро"), редактируемые в панели владельца
     factionMeta: {}
 };
 window.siteFlags = DEFAULT_SITE_FLAGS;
@@ -162,6 +187,7 @@ async function loadSiteSettings() {
     loadFactionManager();
 }
 
+// ─── БАННЕР ОБНОВЛЕНИЙ (редактируется админами из профиля) ──
 function renderUpdateBanner() {
     const b = (window.siteFlags && window.siteFlags.banner) || DEFAULT_SITE_FLAGS.banner;
     const container = document.getElementById('site-banner');
@@ -179,16 +205,19 @@ function renderUpdateBanner() {
     if (elTimerLabel) elTimerLabel.textContent = b.timerLabel || DEFAULT_SITE_FLAGS.banner.timerLabel;
     startUpdateCountdown(b.timerTarget || DEFAULT_SITE_FLAGS.banner.timerTarget);
 
+    // Иконки блоков (необязательные — можно поменять эмодзи в каждом блоке)
     const icon1 = document.getElementById('banner-icon-1'); if (icon1) icon1.textContent = b.icon1 || '🚀';
     const icon2 = document.getElementById('banner-icon-2'); if (icon2) icon2.textContent = b.icon2 || '💎';
     const icon3 = document.getElementById('banner-icon-3'); if (icon3) icon3.textContent = b.icon3 || '⏳';
 
+    // Показ/скрытие отдельных блоков баннера
     const s1 = document.getElementById('banner-section-1'); if (s1) s1.style.display = b.showSection1 === false ? 'none' : '';
     const s2 = document.getElementById('banner-section-2'); if (s2) s2.style.display = b.showSection2 === false ? 'none' : '';
     const s3 = document.getElementById('banner-section-3'); if (s3) s3.style.display = b.showSection3 === false ? 'none' : '';
     const d1 = document.getElementById('banner-divider-1'); if (d1) d1.style.display = b.showSection1 === false ? 'none' : '';
     const d2 = document.getElementById('banner-divider-2'); if (d2) d2.style.display = b.showSection2 === false ? 'none' : '';
 
+    // Необязательная кнопка-ссылка (CTA) — 4-й, дополнительный блок баннера
     const ctaSection = document.getElementById('banner-section-cta');
     const ctaDivider = document.getElementById('banner-divider-cta');
     const ctaLink = document.getElementById('banner-cta-link');
@@ -196,15 +225,6 @@ function renderUpdateBanner() {
     if (ctaSection) ctaSection.style.display = showCta ? '' : 'none';
     if (ctaDivider) ctaDivider.style.display = showCta ? '' : 'none';
     if (ctaLink && showCta) { ctaLink.textContent = b.ctaText; ctaLink.href = b.ctaUrl; }
-}
-
-// FIX БАННЕР: раньше время таймера показывалось в UTC вместо локального времени
-// пользователя, из-за чего при повторном открытии формы время "съезжало" на
-// несколько часов. Теперь дата/время всегда берутся и отображаются в локальном
-// времени браузера администратора.
-function toDatetimeLocalValue(date) {
-    const pad = n => String(n).padStart(2, '0');
-    return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
 function fillBannerAdminForm() {
@@ -227,7 +247,7 @@ function fillBannerAdminForm() {
     if (b.timerTarget) {
         const el = document.getElementById('banner-admin-timer');
         if (el && document.activeElement !== el) {
-            try { el.value = toDatetimeLocalValue(new Date(b.timerTarget)); } catch(e){}
+            try { el.value = new Date(b.timerTarget).toISOString().slice(0,16); } catch(e){}
         }
     }
 }
@@ -287,6 +307,7 @@ function applySiteFlags() {
     const canRegister = f.registration_open !== false;
     const regTabBtn = document.getElementById('auth-tab-register');
     if (regTabBtn) regTabBtn.style.display = canRegister ? '' : 'none';
+    // Если владелец отключил вкладку, в которой сейчас находится обычный пользователь — вернуть на главную
     const activeTab = document.querySelector('.tab.active');
     if (activeTab && !isOwner(window.currentUser)) {
         const tabId = activeTab.id.replace('tab-', '');
@@ -299,6 +320,9 @@ function canRegisterNow() {
     return f.registration_open !== false;
 }
 
+// ─── УПРАВЛЕНИЕ ФРАКЦИЯМИ (цвет / категория / статус "скоро") ──
+// Фракции, добавленные через админ-панель, теперь реально создают карточку
+// на главной странице (в нужной категории), а не только сохраняют настройки "вслепую".
 const FACTION_GRID_IDS = { government: 'grid-government', criminal: 'grid-criminal', other: 'grid-other' };
 
 function getAllFactionCardNames() {
@@ -311,32 +335,47 @@ function slugifyFactionName(name) {
     return 'custom-' + name.toLowerCase().replace(/[^a-zа-я0-9]+/gi, '-').replace(/(^-|-$)/g, '');
 }
 
+// Создаёт недостающие карточки для фракций, которых ещё нет на странице (managed-факции)
 function ensureManagedFactionCards(meta) {
     const existingNames = new Set(getAllFactionCardNames());
     Object.keys(meta).forEach(name => {
-        if (existingNames.has(name)) return;
         const m = meta[name];
+        if (m.hidden) return; // фракция удалена администратором — карточку не создаём
+        if (existingNames.has(name)) return; // карточка уже есть на сайте — просто применим стили ниже
         const gridId = FACTION_GRID_IDS[m.category] || FACTION_GRID_IDS.other;
         const grid = document.getElementById(gridId);
         if (!grid) return;
         const slug = slugifyFactionName(name);
-        if (document.getElementById('managed-card-' + slug)) return;
+        if (document.getElementById('managed-card-' + slug)) return; // уже создана ранее
         const color = m.color || '#00f5ff';
+        const desc = m.desc || 'Фракция, добавленная администрацией сервера.';
         const card = document.createElement('div');
         card.className = 'faction-card animate-fade-in';
         card.id = 'managed-card-' + slug;
         card.dataset.managed = '1';
-        card.innerHTML = `<div class="faction-icon" style="background:${color}14;border-color:${color}40">🏷️</div><div class="faction-name">${escHtml(name)}</div><div class="faction-desc">Фракция, добавленная администрацией сервера.</div><span class="faction-tag" style="color:${FACTION_CATEGORY_COLORS[m.category]||color};border-color:${(FACTION_CATEGORY_COLORS[m.category]||color)}40">${FACTION_CATEGORY_LABELS[m.category]||'ФРАКЦИЯ'}</span><div class="faction-arrow">→</div>`;
+        card.innerHTML = `<div class="faction-icon" style="background:${color}14;border-color:${color}40">🏷️</div><div class="faction-name">${escHtml(name)}</div><div class="faction-desc">${escHtml(desc)}</div><span class="faction-tag" style="color:${FACTION_CATEGORY_COLORS[m.category]||color};border-color:${(FACTION_CATEGORY_COLORS[m.category]||color)}40">${FACTION_CATEGORY_LABELS[m.category]||'ФРАКЦИЯ'}</span><div class="faction-arrow">→</div>`;
         card.setAttribute('onclick', m.soon ? `showComingSoon('faction-soon', ${JSON.stringify(name)})` : `requireAuth(function(){openModal('faction-join')})`);
         grid.appendChild(card);
     });
+    // Показываем/прячем категорию "Другое" в зависимости от того, есть ли в ней карточки
     const otherCat = document.getElementById('other-factions-category');
     const otherGrid = document.getElementById('grid-other');
     if (otherCat && otherGrid) otherCat.style.display = otherGrid.children.length ? '' : 'none';
 }
 
+// Полностью убирает карточку фракции со страницы (используется для удалённых/скрытых фракций)
+function removeFactionCardByName(name) {
+    document.querySelectorAll('.faction-card').forEach(card => {
+        const nameEl = card.querySelector('.faction-name');
+        if (nameEl && nameEl.textContent.trim() === name) card.remove();
+    });
+}
+
 function applyFactionMeta() {
     const meta = (window.siteFlags && window.siteFlags.factionMeta) || {};
+    // Сначала убираем карточки фракций, которые были удалены администратором —
+    // это касается и добавленных вручную, и «встроенных» фракций (ФСБ, ФСО и т.д.)
+    Object.keys(meta).forEach(name => { if (meta[name].hidden) removeFactionCardByName(name); });
     ensureManagedFactionCards(meta);
     document.querySelectorAll('.faction-card').forEach(card => {
         const nameEl = card.querySelector('.faction-name');
@@ -349,12 +388,21 @@ function applyFactionMeta() {
             icon.style.background = m.color + '14';
             icon.style.borderColor = m.color + '40';
         }
+        const descEl = card.querySelector('.faction-desc');
+        if (descEl && m.desc) descEl.textContent = m.desc;
         const tag = card.querySelector('.faction-tag');
         if (tag && m.category) {
             tag.textContent = FACTION_CATEGORY_LABELS[m.category] || tag.textContent;
             tag.style.color = FACTION_CATEGORY_COLORS[m.category] || '';
             tag.style.borderColor = (FACTION_CATEGORY_COLORS[m.category] || '') + '40';
         }
+        // Переносим карточку в раздел (grid), соответствующий выбранной категории
+        if (m.category) {
+            const targetGridId = FACTION_GRID_IDS[m.category] || FACTION_GRID_IDS.other;
+            const targetGrid = document.getElementById(targetGridId);
+            if (targetGrid && card.parentElement !== targetGrid) targetGrid.appendChild(card);
+        }
+        // Сохраняем оригинальный onclick один раз, чтобы можно было включать/выключать "скоро" без потери формы вступления
         if (!card.dataset.originalOnclick) card.dataset.originalOnclick = card.getAttribute('onclick') || '';
         if (m.soon) {
             card.setAttribute('onclick', `showComingSoon('faction-soon', ${JSON.stringify(name)})`);
@@ -362,6 +410,10 @@ function applyFactionMeta() {
             card.setAttribute('onclick', card.dataset.originalOnclick);
         }
     });
+    // Обновляем видимость категории "Другое" после возможного переноса карточек
+    const otherCat = document.getElementById('other-factions-category');
+    const otherGrid = document.getElementById('grid-other');
+    if (otherCat && otherGrid) otherCat.style.display = otherGrid.children.length ? '' : 'none';
 }
 
 window.loadFactionManager = function() {
@@ -369,10 +421,13 @@ window.loadFactionManager = function() {
     if (!body) return;
     const meta = (window.siteFlags && window.siteFlags.factionMeta) || {};
     const names = getAllFactionCardNames();
-    const allNames = names.concat(Object.keys(meta).filter(n => !names.includes(n)));
-    if (!allNames.length) { body.innerHTML = '<tr><td colspan="5" style="padding:14px;opacity:0.5">Фракций не найдено</td></tr>'; return; }
+    // Показываем и фракции с карточками на сайте, и те, что были добавлены вручную, но пока без карточки.
+    // Скрытые (удалённые) фракции из списка управления убираем.
+    const allNames = names.concat(Object.keys(meta).filter(n => !names.includes(n)))
+        .filter(n => !(meta[n] && meta[n].hidden));
+    if (!allNames.length) { body.innerHTML = '<tr><td colspan="6" style="padding:14px;opacity:0.5">Фракций не найдено</td></tr>'; return; }
     body.innerHTML = allNames.map(name => {
-        const m = meta[name] || { color:'#00f5ff', category:'government', soon:false };
+        const m = meta[name] || { color:'#00f5ff', category:'government', soon:false, desc:'' };
         const safeId = name.replace(/[^a-zA-Zа-яА-Я0-9]/g, '_');
         return `<tr>
             <td style="padding:10px 12px;color:#fff">${escHtml(name)}</td>
@@ -382,6 +437,7 @@ window.loadFactionManager = function() {
                 <option value="criminal" ${m.category==='criminal'?'selected':''}>Криминальная</option>
                 <option value="other" ${m.category==='other'?'selected':''}>Иное</option>
             </select></td>
+            <td style="padding:10px 12px;min-width:160px"><input type="text" id="fm-desc-${safeId}" class="form-input" style="padding:6px 10px;font-size:13px" value="${escHtml(m.desc || '')}" placeholder="Описание фракции"></td>
             <td style="padding:10px 12px"><input type="checkbox" id="fm-soon-${safeId}" ${m.soon?'checked':''}></td>
             <td style="padding:10px 12px;white-space:nowrap">
                 <button class="form-submit" style="padding:6px 12px;font-size:12px;margin:0 6px 0 0;display:inline-block;width:auto" onclick="saveManagedFaction(${JSON.stringify(name)}, '${safeId}')">Сохранить</button>
@@ -413,20 +469,23 @@ window.saveManagedFaction = async function(name, safeId) {
     if (!isOwner(window.currentUser)) return notify('Нет доступа', false);
     const color = document.getElementById('fm-color-' + safeId)?.value || '#00f5ff';
     const category = document.getElementById('fm-cat-' + safeId)?.value || 'government';
+    const desc = document.getElementById('fm-desc-' + safeId)?.value.trim() || '';
     const soon = document.getElementById('fm-soon-' + safeId)?.checked || false;
     const meta = Object.assign({}, window.siteFlags.factionMeta);
-    meta[name] = { color, category, soon };
+    meta[name] = { color, category, soon, desc };
     if (await persistFactionMeta(meta)) notify('Фракция «' + name + '» обновлена');
 };
 
 window.deleteManagedFaction = async function(name) {
     if (!isOwner(window.currentUser)) return notify('Нет доступа', false);
-    if (!confirm('Убрать фракцию «' + name + '»? Если она была создана только через админ-панель, её карточка также будет удалена с главной страницы.')) return;
+    if (!confirm('Убрать фракцию «' + name + '»? Её карточка будет полностью удалена с главной страницы.')) return;
+    // Помечаем фракцию как скрытую, а не просто стираем запись из настроек — иначе
+    // «встроенные» фракции (ФСБ, ФСО и т.п.), у которых карточка прописана прямо в HTML,
+    // при следующей загрузке страницы снова попадали бы в список, ведь их карточка никуда не девалась.
     const meta = Object.assign({}, window.siteFlags.factionMeta);
-    delete meta[name];
+    meta[name] = Object.assign({}, meta[name], { hidden: true });
     if (await persistFactionMeta(meta)) {
-        const card = document.getElementById('managed-card-' + slugifyFactionName(name));
-        if (card) card.remove();
+        removeFactionCardByName(name);
         const otherCat = document.getElementById('other-factions-category');
         const otherGrid = document.getElementById('grid-other');
         if (otherCat && otherGrid) otherCat.style.display = otherGrid.children.length ? '' : 'none';
@@ -440,13 +499,15 @@ window.addManagedFaction = async function() {
     const name = document.getElementById('faction-add-name')?.value.trim();
     const color = document.getElementById('faction-add-color')?.value || '#00f5ff';
     const category = document.getElementById('faction-add-category')?.value || 'government';
+    const desc = document.getElementById('faction-add-desc')?.value.trim() || '';
     const soon = document.getElementById('faction-add-soon')?.checked || false;
     if (!name) return notify('Введите название фракции', false);
     const meta = Object.assign({}, window.siteFlags.factionMeta);
-    meta[name] = { color, category, soon };
+    meta[name] = { color, category, soon, desc, hidden:false };
     if (await persistFactionMeta(meta)) {
         notify('Фракция «' + name + '» создана и уже отображается на главной странице');
         document.getElementById('faction-add-name').value = '';
+        if (document.getElementById('faction-add-desc')) document.getElementById('faction-add-desc').value = '';
         loadFactionManager();
     }
 };
@@ -469,6 +530,9 @@ async function db(path, opts) {
     return json;
 }
 
+// FIX: раньше кнопки форм не давали никакой обратной связи, пока идёт запрос —
+// казалось, что «кнопка не нажимается». Теперь кнопка блокируется и показывает
+// «Отправка...», а при ошибке — понятное сообщение вместо тишины.
 function setModalBusy(modalId, busy, busyText) {
     const btn = document.querySelector('#modal-' + modalId + ' .form-submit');
     if (!btn) return;
@@ -504,7 +568,10 @@ function notify(msg, ok = true) {
     setTimeout(() => { el.style.opacity='0'; setTimeout(()=>el.remove(),300); }, 3200);
 }
 
+// ─── URL ROUTING ──────────────────────────────
+
 const VALID_TABS = ['main','portal','news','rules','profile'];
+// Команда теперь отображается прямо на главной странице — старые ссылки #team ведут на главную
 const LEGACY_TAB_REDIRECTS = { team: 'main' };
 
 window.navigateTo = function(tab, section) {
@@ -529,6 +596,8 @@ function readHash() {
 
 window.addEventListener('popstate', () => readHash());
 
+// ─── MOBILE MENU ──────────────────────────────
+
 window.toggleMobileMenu = function() {
     const nav = document.getElementById('mobile-nav');
     const btn = document.getElementById('burger-btn');
@@ -542,6 +611,8 @@ window.closeMobileMenu = function() {
     if (nav) nav.classList.remove('open');
     if (btn) btn.textContent = '☰';
 };
+
+// ─── NAV / TAB SWITCHING ──────────────────────
 
 window.switchTab = function(tab, updateHistory = true) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -596,6 +667,8 @@ function initPortal() {
         btnDocs.textContent = (isMedic(window.currentUser) && !canManageDocs(window.currentUser)) ? '🏥 Мед. книжки' : '📋 Документы';
     }
 }
+
+// ─── FACTION PORTAL ───────────────────────────
 
 const FACTION_INFO = {
     fsb:        { icon:'🕵️', name:'ФСБ',               sub:'Федеральная служба безопасности',    type:'gov' },
@@ -672,6 +745,8 @@ window.closeFactionPortal = function() {
     if (factionView) factionView.style.display = 'none';
     switchPortal('services');
 };
+
+// ─── CRIMINAL GANG ACTIONS ────────────────────
 
 window.openCriminalCreate = function(type) {
     if (type === 'mafia') openModal('mafia-create');
@@ -761,6 +836,8 @@ window.submitJoinMafia = async function() {
     finally { setModalBusy('mafia-join', false); }
 };
 
+// ─── CRIMINAL COUNTERS ────────────────────────
+
 window.loadCriminalCounters = async function() {
     try {
         const [opgs, mafias] = await Promise.all([db('criminal_gangs?type=eq.opg&status=eq.active'), db('criminal_gangs?type=eq.mafia&status=eq.active')]);
@@ -772,6 +849,8 @@ window.loadCriminalCounters = async function() {
         if (mafiaBadge) mafiaBadge.innerHTML = `<span style="color:${mafiaCount >= MAFIA_MAX ? '#f87171' : 'var(--text)'}">${mafiaCount}/${MAFIA_MAX} организаций</span>`;
     } catch(e) {}
 };
+
+// ─── MODALS ───────────────────────────────────
 
 window.openModal = function(id) {
     const m = document.getElementById('modal-' + id);
@@ -833,7 +912,6 @@ window.switchAuthTab = function(tab) {
 };
 
 // ─── AUTH ─────────────────────────────────────
-// FIX: Discord Никнейм полностью убран из регистрации — требуется только Юзернейм.
 
 window.handleRegister = async function() {
     if (!canRegisterNow()) return notify('Регистрация временно отключена администрацией', false);
@@ -878,6 +956,7 @@ window.logout = function() {
     updateAuthZone(); navigateTo('main'); notify('Вы вышли из аккаунта');
 };
 
+// FIX 3: В кнопке профиля показывается ник + роль + фракция
 function updateAuthZone() {
     const zone = document.getElementById('auth-zone');
     updateDiscordMissingIndicators();
@@ -900,7 +979,6 @@ function updateAuthZone() {
 }
 
 // ─── PROFILE ──────────────────────────────────
-// FIX: Discord Никнейм полностью убран из профиля — используется только Юзернейм (discord_id).
 
 window.renderProfile = async function() {
     const guest  = document.getElementById('profile-guest');
@@ -948,6 +1026,7 @@ window.renderProfile = async function() {
     if (discordIdEl) discordIdEl.value = window.currentUser.discord_id || '';
     updateDiscordMissingIndicators();
 
+    // Значок ОПГ/Мафия, если пользователь состоит в криминальной организации
     const gangBadge = document.getElementById('profile-gang-badge');
     if (gangBadge) {
         if (faction === 'ОПГ' || faction === 'Мафия') { gangBadge.textContent = (faction === 'Мафия' ? '🤵 ' : '💀 ') + faction; gangBadge.style.display = 'inline-flex'; }
@@ -1028,7 +1107,6 @@ window.saveBio = async function() {
 };
 
 // ─── DISCORD ID (для автоматической выдачи ролей ботом) ──
-// FIX: сохраняем только Юзернейм (discord_id) — Никнейм больше не используется.
 window.saveDiscordId = async function() {
     const userEl = document.getElementById('profile-discord-id');
     const discordId = (userEl?.value || '').trim().replace(/^@/, '').slice(0, 40);
@@ -1042,6 +1120,9 @@ window.saveDiscordId = async function() {
     } catch(e) { console.error(e); notify('Не удалось сохранить: ' + (e.message||'неизвестная ошибка'), false); }
 };
 
+// FIX 8: показываем красную точку у кнопки "Профиль" и баннер внутри профиля,
+// если у пользователя не заполнен Discord Юзернейм (актуально для тех, кто
+// зарегистрировался до введения этого требования).
 function updateDiscordMissingIndicators() {
     const u = window.currentUser;
     const missing = !!u && !u.discord_id;
@@ -1053,6 +1134,7 @@ function updateDiscordMissingIndicators() {
     if (banner) banner.style.display = missing ? '' : 'none';
 }
 
+// ─── ПЕРСОНАЛИЗАЦИЯ: ЦВЕТ АКЦЕНТА ──────────────
 const ACCENT_COLORS = ['#00f5ff', '#a855f7', '#22c55e', '#fbbf24', '#ef4444', '#f472b6'];
 
 function applyAccentColor(color, save = true) {
@@ -1068,6 +1150,8 @@ window.pickAccentColor = function(color) { applyAccentColor(color); notify('Цв
     if (saved) applyAccentColor(saved, false);
 })();
 
+// ─── USERS TABLE ──────────────────────────────
+
 const SEL = `background:#1e293b;border:1px solid var(--border);color:#fff;padding:5px 8px;border-radius:8px;font-size:12px;font-family:'Rajdhani',sans-serif;max-width:160px`;
 
 function rankIndex(role) {
@@ -1075,6 +1159,7 @@ function rankIndex(role) {
     return i === -1 ? 0 : i;
 }
 
+// Кэш paролей в открытом виде на этот сеанс — только для строк, где показ разрешён
 window._usersCache = {};
 
 window.loadUsersTable = async function() {
@@ -1091,6 +1176,8 @@ window.loadUsersTable = async function() {
     tbody.innerHTML = users.map(u => {
         const targetRank = rankIndex(u.role);
         const canManagePassword = viewerRank > targetRank;
+        // Пароли хранятся как хэш и больше не показываются администрации в открытом виде —
+        // вместо просмотра доступен безопасный сброс на новый временный пароль.
         const passwordCell = canManagePassword
             ? `<span style="font-size:12px;color:#64748b">🔒 Хэш</span>
                <button onclick="resetUserPassword(${u.id})" style="background:none;border:none;color:var(--cyan);cursor:pointer;font-size:11px;margin-left:6px;text-decoration:underline">Сбросить</button>`
@@ -1117,6 +1204,8 @@ window.resetUserPassword = async function(id) {
     } catch (e) { notify('Не удалось сбросить пароль: ' + (e.message||'неизвестная ошибка'), false); }
 };
 
+// FIX 9: проверка присутствия игрока на Discord-сервере через ту же Edge Function,
+// что выдаёт роли — с флагом checkOnly, чтобы не выдавать роль, а только проверить.
 window.checkUserInDiscord = async function(id) {
     const cell = document.getElementById('discord-check-' + id);
     const u = window._usersCache[id];
@@ -1170,6 +1259,9 @@ window.deleteUser = async function(id) {
     } catch (e) { notify('Не удалось удалить: ' + (e.message||'неизвестная ошибка'), false); }
 };
 
+// ─── УПРАВЛЕНИЕ ОПГ / МАФИЕЙ (удаление банд) ──
+// Требуется таблица criminal_gangs (уже используется). Нужна лишь возможность DELETE для anon-ключа (см. SQL).
+
 window.loadAdminGangs = async function() {
     const el = document.getElementById('admin-gangs-list');
     if (!el || !isAdmin(window.currentUser)) return;
@@ -1193,6 +1285,9 @@ window.deleteGang = async function(id) {
     loadAdminGangs();
     loadCriminalCounters();
 };
+
+// ─── УПРАВЛЕНИЕ СОСТАВОМ АДМИНИСТРАЦИИ (вкладка «Команда») ──
+// Требуется таблица team_members в Supabase — см. SQL-скрипт.
 
 const TEAM_STATUS_LABELS = {
     active:    { label: 'На месте',        color: '#22c55e', emoji: '🟢' },
@@ -1290,6 +1385,8 @@ window.deleteTeamMember = async function(id) {
     loadAdminTeamManage(); loadTeamPublic();
 };
 
+// ─── OWNER PANEL ──────────────────────────────
+
 function showOwnerPanelIfNeeded() {
     const panel = document.getElementById('owner-panel');
     if (!panel) return;
@@ -1324,6 +1421,7 @@ window.saveOwnerSettings = async function() {
     const services = {};
     document.querySelectorAll('#owner-toggle-services input[data-flag-service]').forEach(cb => { services[cb.dataset.flagService] = cb.checked; });
     const registration_open = document.getElementById('owner-toggle-registration')?.checked !== false;
+    // Сохраняем tabs/services/registration_open, но не затираем банер, который мог сохранить админ отдельно
     const flags = Object.assign({}, window.siteFlags, { tabs, services, registration_open });
     window.siteFlags = flags;
     try {
@@ -1353,6 +1451,8 @@ window.ownerRenameUser = async function() {
     } catch (e) { notify('Не удалось переименовать: ' + (e.message||'неизвестная ошибка'), false); }
 };
 
+// FIX: удаление документов больше не привязано к срокам действия — сроки отменены полностью.
+
 window.copyProfileLink = function() {
     if (!window.currentUser) return notify('Войдите в аккаунт', false);
     const url = location.origin + location.pathname + '#profile';
@@ -1362,21 +1462,21 @@ window.copyProfileLink = function() {
     );
 };
 
+// ─── УВЕДОМЛЕНИЯ ПОЛЬЗОВАТЕЛЮ (напр. просьба сменить ник) ──
+// Требуется таблица в Supabase: notifications (id, user_id, type text, text text, read bool default false, created_at timestamptz default now())
+
 window.sendDiscordFixRequest = async function() {
     if (!isAdmin(window.currentUser)) return notify('Нет доступа', false);
     const uEl = document.getElementById('discord-req-username');
-    const fEl = document.getElementById('discord-req-field');
     const mEl = document.getElementById('discord-req-message');
     const username = uEl?.value.trim();
-    const field = fEl?.value || 'username';
-    const fieldLabel = field === 'nick' ? 'Discord Никнейм' : 'Discord Юзернейм';
     const comment = mEl?.value.trim();
     if (!username) return notify('Введите ник игрока на сайте', false);
     const users = await db(`users?username=eq.${encodeURIComponent(username)}`);
     if (!Array.isArray(users) || !users.length) return notify('Пользователь не найден', false);
-    const text = `Администрация не может найти вас в Discord. Пожалуйста, проверьте и исправьте: ${fieldLabel}.` + (comment ? ` Комментарий: ${comment}` : '');
+    const text = `Администрация не может найти вас в Discord. Пожалуйста, проверьте и исправьте Discord Юзернейм.` + (comment ? ` Комментарий: ${comment}` : '');
     try {
-        const res = await db('notifications', { method:'POST', body: JSON.stringify({ user_id: users[0].id, type:'discord_fix_request', text, field, read:false }) });
+        const res = await db('notifications', { method:'POST', body: JSON.stringify({ user_id: users[0].id, type:'discord_fix_request', text, field:'username', read:false }) });
         const failed = !res || !Array.isArray(res) || !res.length || res.code || res.message;
         if (failed) { console.warn('sendDiscordFixRequest failed', res); return notify('Не удалось отправить: проверьте таблицу notifications в Supabase', false); }
         notify('Запрос отправлен игроку ' + username);
@@ -1395,6 +1495,9 @@ window.sendRenameRequest = async function() {
     if (!Array.isArray(users) || !users.length) return notify('Пользователь не найден', false);
     try {
         const res = await db('notifications', { method:'POST', body: JSON.stringify({ user_id: users[0].id, type:'rename_request', text, read:false }) });
+        // FIX: PostgREST не возвращает { error: ... } — при ошибке ответ выглядит как
+        // { message, code, details, hint } и НЕ является массивом. Раньше это ложно
+        // считалось успехом, из-за чего уведомление «не приходило» на другой аккаунт.
         const failed = !res || !Array.isArray(res) || !res.length || res.code || res.message;
         if (failed) {
             console.warn('sendRenameRequest insert failed', res);
@@ -1436,9 +1539,8 @@ function renderNotificationCard(n) {
         </div>`;
     }
     if (n.type === 'discord_fix_request') {
-        const isNick = n.field === 'nick';
         return `<div class="profile-card" style="border-color:rgba(248,113,113,0.35);background:rgba(248,113,113,0.05)">
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><span style="font-size:20px">🛠️</span><div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;color:#f87171">Проверьте ваш Discord-юзернейм</div></div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><span style="font-size:20px">🛠️</span><div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;color:#f87171">Проверьте ваши Discord-данные</div></div>
             <div style="color:var(--text);font-size:14px;margin-bottom:14px;line-height:1.6">${escHtml(n.text||'')}</div>
             <div class="form-group"><input type="text" id="notif-discord-${n.id}" placeholder="Правильный Discord Юзернейм" class="form-input"></div>
             <button class="form-submit" onclick="respondDiscordFixRequest(${n.id}, 'username')">Сохранить исправление</button>
@@ -1447,7 +1549,7 @@ function renderNotificationCard(n) {
     return `<div class="profile-card"><div style="color:var(--text);font-size:14px;line-height:1.6">${escHtml(n.text||'')}</div><button onclick="dismissNotification(${n.id})" style="margin-top:10px;background:none;border:none;color:var(--cyan);font-size:12px;cursor:pointer;letter-spacing:1px">ПОНЯТНО, СКРЫТЬ</button></div>`;
 }
 
-window.respondDiscordFixRequest = async function(notifId, field) {
+window.respondDiscordFixRequest = async function(notifId) {
     const input = document.getElementById('notif-discord-' + notifId);
     const next = input?.value.trim().replace(/^@/, '');
     if (!next) return notify('Введите значение', false);
@@ -1483,6 +1585,8 @@ window.dismissNotification = async function(id) {
     loadUserNotifications();
 };
 
+// ─── NEWS ─────────────────────────────────────
+
 const TAG_STYLES    = { 'Важно':'tag-important', 'Обновление':'tag-update', 'Мероприятие':'tag-event', 'Свой Вариант':'tag-custom' };
 const TAG_ICONS     = { 'Важно':'🔴', 'Обновление':'⚙️', 'Мероприятие':'🎉', 'Свой Вариант':'✏️' };
 const TAG_PLACEHOLDERS = { 'Важно':'❗', 'Обновление':'⚙️', 'Мероприятие':'🎉', 'Свой Вариант':'✏️' };
@@ -1512,6 +1616,7 @@ window.handleNewsImageFile = function(input) {
     reader.readAsDataURL(file);
 };
 
+// FIX 1: Панель публикации видна только для Администрации (от Ассистента и выше) и ГТРК
 window.loadNews = async function() {
     const feed = document.getElementById('news-feed');
     if (!feed) return;
@@ -1561,6 +1666,8 @@ window.deleteNews = async function(id) {
     } catch (e) { notify('Не удалось удалить: ' + (e.message||'неизвестная ошибка'), false); }
 };
 
+// ─── SUBMIT FORM ──────────────────────────────
+
 window.submitForm = async function(type) {
     let data = {};
     if (type === 'passport') {
@@ -1573,6 +1680,7 @@ window.submitForm = async function(type) {
         data = { type:'medbook', username:u, char_name:n, dob, address:job, reason:pos, note:gl+'|'+dis+(nt?'|'+nt:''), status:'pending', user_id:window.currentUser?.id };
     } else if (type === 'license') {
         const u=document.getElementById('license-username').value.trim(), n=document.getElementById('license-name').value.trim(), dob=document.getElementById('license-dob').value, job=document.getElementById('license-job').value.trim(), fac=document.getElementById('license-faction').value, rsn=document.getElementById('license-reason').value.trim(), sgn=document.getElementById('license-sign').value.trim();
+        // чекбоксы оружия лежат в #weapons-checkboxes — читаем отмеченные чекбоксы
         const wpnBox = document.getElementById('weapons-checkboxes');
         const wpn = wpnBox ? Array.from(wpnBox.querySelectorAll('input[type=checkbox]:checked')).map(o => o.value).join(', ') : '';
         if (!u||!n||!job||!rsn||!wpn) return notify('Заполните поля и отметьте хотя бы один вид оружия', false);
@@ -1613,6 +1721,10 @@ window.submitForm = async function(type) {
     }
 };
 
+// ─── MY DOCS ──────────────────────────────────
+// FIX: сроки действия документов (паспорт/мед.книжка/лицензия) полностью отменены —
+// все одобренные документы действуют бессрочно, без функций продления/просрочки.
+
 window.loadMyDocs = async function() {
     const guestDiv = document.getElementById('mydocs-guest');
     const listDiv  = document.getElementById('mydocs-list');
@@ -1641,6 +1753,8 @@ window.deleteRequest = async function(id, section) {
         if (section==='passports') loadPassports(); else loadMyDocs();
     } catch (e) { notify('Не удалось удалить: ' + (e.message||'неизвестная ошибка'), false); }
 };
+
+// ─── ADMIN REQUESTS ───────────────────────────
 
 const REQUEST_TYPE_NAMES = { passport:'🪪 Паспорт', medbook:'🏥 Мед. книжка', license:'🔫 Лицензия', driving_license:'🚗 Права на вождение', faction_join:'🏛️ Вступление во фракцию', court:'⚖️ Судебный иск', government:'📋 Правительство', lawyer:'👨‍⚖️ Адвокат', opg_create:'💀 Создание ОПГ', opg_join:'💀 Вступление в ОПГ', mafia_create:'🤵 Создание Мафии', mafia_join:'🤵 Вступление в Мафию' };
 
@@ -1724,6 +1838,9 @@ window.reviewRequest = async function(id, status) {
     loadAdminRequests();
 };
 
+// Если название фракции на сайте отличается от точного названия роли в Discord — впишите соответствие сюда.
+// Ключ — как фракция называется на сайте, значение — как называется роль в Discord (регистр не важен).
+// Если фракция не указана в списке, бот попробует найти роль с точно таким же именем, как на сайте.
 const DISCORD_ROLE_NAME_MAP = {
     // 'Патрульная Полиция (ДПС)': 'ДПС',
 };
@@ -1747,6 +1864,15 @@ async function assignDiscordRole(discordUsername, factionValue, oldFactionValue)
         console.warn('assignDiscordRole error', e);
     }
 }
+
+// FIX 6: При одобрении заявки на вступление во фракцию/ОПГ/Мафию — фракция сразу
+// проставляется пользователю на сайте (аналогично ручному изменению в таблице пользователей).
+// Если у игрока указан ник Discord в профиле — сайт просит бота снять старую роль фракции
+// (если она была) и выдать новую.
+// applyApprovalSideEffects была перенесена в Edge Function actionReviewRequest
+// (изменение фракции пользователя теперь происходит на сервере, а не из браузера).
+
+// ─── DOCUMENTS VIEWER ─────────────────────────
 
 function renderDocCard(r, fields, icon, section) {
     const statusBadge = '<span class="badge badge-approved">✓ Действителен (бессрочно)</span>';
@@ -1830,7 +1956,10 @@ function renderPassportsList() {
 
 window.filterPassports = function() { renderPassportsList(); };
 
+// ─── RULES ────────────────────────────────────
+
 const RULES_DATA = {
+    // FIX 2: Полный текст всех правил Discord — каждый пункт с полным описанием
     discord: [
         { title:'Неадекватное поведение, токсичность', text:'Запрещено неадекватное поведение, токсичность, спам, флуд, агрессия, угрозы, оскорбление родных.', punishment:'Предупреждение → мут (30 мин – 24 ч) → кик → перм бан', color:'red' },
         { title:'Реклама сторонних проектов', text:'Запрещена реклама сторонних проектов, других платформ, ссылок или скам-ссылок.', punishment:'Предупреждение → мут (1 – 24 ч) → кик → перм бан', color:'red' },
@@ -1974,6 +2103,7 @@ const RULE_COLORS = {
     green:  { bg:'rgba(34,197,94,0.06)',  border:'rgba(34,197,94,0.2)',  badge:'rgba(34,197,94,0.15)',  text:'#22c55e' },
 };
 
+// FIX 2: renderRuleCard теперь всегда показывает полный текст
 function renderRuleCard(r) {
     const c = RULE_COLORS[r.color] || RULE_COLORS.blue;
     const num = r.num ? `<span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:${c.text};background:${c.badge};padding:2px 8px;border-radius:6px;margin-right:8px">§${r.num}</span>` : '';
@@ -2001,10 +2131,14 @@ window.switchRules = function(section) {
     renderRuleSection(section, 'rules-' + section + '-list');
 };
 
+// ─── UTILS ────────────────────────────────────
+
 function escHtml(str) {
     if (!str) return '';
     return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
+// ─── INIT ─────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', () => {
     updateAuthZone();
@@ -2046,9 +2180,10 @@ function startUpdateCountdown(targetIso) {
 
         let timerText = "";
         if (days > 0) timerText += `${days}д `;
-
+        
+        // Добавляем нули перед цифрами для красоты (например, 09ч 05м 02с)
         const formatNum = (num) => num < 10 ? '0' + num : num;
-
+        
         timerText += `${formatNum(hours)}ч ${formatNum(minutes)}м ${formatNum(seconds)}с`;
 
         timerElement.innerHTML = timerText;
