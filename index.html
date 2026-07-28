@@ -45,7 +45,7 @@
         .btn-discord:hover{background:#4752c4;transform:translateY(-2px);box-shadow:0 12px 30px rgba(88,101,242,0.4)}
         .btn-why{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#fff;font-family:'Rajdhani',sans-serif;font-weight:600;font-size:15px;letter-spacing:1px;text-transform:uppercase;padding:16px 28px;border-radius:14px;cursor:pointer;transition:all 0.2s}
         .btn-why:hover{background:rgba(255,255,255,0.1);transform:translateY(-2px)}
-        .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:64px}
+        .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:64px}
         .stat-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;text-align:center;position:relative;overflow:hidden;transition:transform 0.25s,border-color 0.25s}
         .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--cyan),var(--blue));transform:scaleX(0);transition:transform 0.3s;transform-origin:left}
         .stat-card:hover{transform:translateY(-3px);border-color:rgba(0,245,255,0.25)}
@@ -210,6 +210,22 @@
         .portal-nav-btn:hover{background:rgba(0,245,255,0.06);border-color:rgba(0,245,255,0.2);color:#fff;transform:translateY(-1px)}
         .portal-nav-btn.active{background:rgba(0,245,255,0.12);border-color:rgba(0,245,255,0.35);color:var(--cyan);box-shadow:0 4px 16px rgba(0,245,255,0.12)}
         .sep{height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);margin:32px 0}
+        /* ── Редизайн карточек правил ── */
+        .rule-search{width:100%;padding:12px 16px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid var(--border);color:#fff;font-family:'Rajdhani',sans-serif;font-size:14px;margin-bottom:18px}
+        .rule-search:focus{outline:none;border-color:rgba(0,245,255,0.35)}
+        .rule-card{position:relative;background:rgba(255,255,255,0.025);border:1px solid var(--border);border-left:3px solid var(--rule-c,#38bdf8);border-radius:12px;padding:16px 18px 16px 20px;margin-bottom:10px;transition:transform 0.18s ease,border-color 0.18s ease;}
+        .rule-card:hover{transform:translateX(2px);border-color:var(--rule-c,#38bdf8)}
+        .rule-card-title{font-size:15px;font-weight:700;color:#fff;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+        .rule-card-num{font-family:'JetBrains Mono',monospace;font-size:11px;padding:2px 8px;border-radius:6px;background:var(--rule-c-bg,rgba(56,189,248,0.15));color:var(--rule-c,#38bdf8)}
+        .rule-card-body{color:var(--text);font-size:14px;line-height:1.7;white-space:pre-line;margin-top:6px}
+        .rule-card-punish{margin-top:10px;display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;color:var(--rule-c,#38bdf8);background:var(--rule-c-bg,rgba(56,189,248,0.12));padding:4px 12px;border-radius:20px}
+        .rule-card-admin-btns{position:absolute;top:12px;right:14px;display:flex;gap:6px;opacity:0;transition:opacity 0.15s}
+        .rule-card:hover .rule-card-admin-btns{opacity:1}
+        .rule-card-admin-btns button{background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--text);width:26px;height:26px;border-radius:7px;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center}
+        .rule-card-admin-btns button:hover{color:#fff;border-color:rgba(0,245,255,0.3)}
+        .rule-admin-panel{background:rgba(0,245,255,0.04);border:1px dashed rgba(0,245,255,0.25);border-radius:14px;padding:16px;margin-bottom:22px}
+        .rule-admin-panel .form-group{margin-bottom:10px}
+        .rule-empty{text-align:center;padding:30px;color:var(--text);opacity:0.6;font-size:14px}
         .empty{text-align:center;padding:60px 20px;color:var(--text)}
         .empty-icon{font-size:48px;margin-bottom:16px;opacity:0.5}
         .loading-text{text-align:center;padding:40px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px}
@@ -218,7 +234,7 @@
         ::-webkit-scrollbar-thumb{background:rgba(0,245,255,0.2);border-radius:3px}
         .mobile-menu-btn{display:none;background:none;border:1px solid var(--border);color:var(--text);width:38px;height:38px;border-radius:10px;align-items:center;justify-content:center;cursor:pointer;font-size:18px;flex-shrink:0}
         @media(max-width:768px){
-            .stats{grid-template-columns:repeat(3,1fr);gap:10px}
+            .stats{grid-template-columns:repeat(2,1fr);gap:10px}
             .stat-card{padding:16px 10px}
             .stat-num{font-size:32px}
             .hero{padding:36px 16px;margin-bottom:32px;border-radius:16px}
@@ -333,7 +349,8 @@
   <div class="stats">
     <div class="stat-card"><div class="stat-num">14</div><div class="stat-label">Фракций</div></div>
     <div class="stat-card"><div class="stat-num">--/-</div><div class="stat-label">Онлайн</div></div>
-    <div class="stat-card"><div class="stat-num">52</div><div class="stat-label">Участников в Дискорд</div></div>
+    <div class="stat-card"><div class="stat-num" id="stat-discord-members">--</div><div class="stat-label">Участников в Дискорд</div></div>
+    <div class="stat-card"><div class="stat-num" id="stat-discord-online">--</div><div class="stat-label">🟢 Онлайн в Discord</div></div>
   </div>
   <div class="faction-category">
     <div style="margin-bottom:16px"><div class="section-title">Государственные Структуры</div><div class="section-sub">Правопорядок, правосудие и государственное управление</div></div>
@@ -407,8 +424,15 @@
         <div class="portal-card" data-flag-service="court" onclick="requireAuth(function(){openModal('court')})"><span class="portal-icon">⚖️</span><div class="portal-title">Подать в суд</div><div class="portal-desc">Открыть судебное дело против игрока</div></div>
         <div class="portal-card" data-flag-service="government" onclick="requireAuth(function(){openModal('government')})"><span class="portal-icon">📋</span><div class="portal-title">Обращение в Правительство</div><div class="portal-desc">Официальная жалоба или предложение</div></div>
         <div class="portal-card" data-flag-service="lawyer" onclick="requireAuth(function(){openModal('lawyer')})"><span class="portal-icon">👨‍⚖️</span><div class="portal-title">К Адвокату</div><div class="portal-desc">Запросить юридическую помощь</div></div>
-        <div class="portal-card highlight" data-flag-service="home" style="position:relative" onclick="showComingSoon('home')"><span class="portal-badge-new">СКОРО</span><span class="portal-icon">🏠</span><div class="portal-title">Дома</div><div class="portal-desc">Приобретение и управление недвижимостью</div></div>
-        <div class="portal-card highlight" data-flag-service="credit" style="position:relative" onclick="showComingSoon('credit')"><span class="portal-badge-new">СКОРО</span><span class="portal-icon">💳</span><div class="portal-title">Кредиты</div><div class="portal-desc">Оформление кредита на жильё, авто или бизнес</div></div>
+        <div class="portal-card" data-flag-service="home" onclick="requireAuth(function(){openModal('home')})"><span class="portal-icon">🏠</span><div class="portal-title">Дома</div><div class="portal-desc">Приобретение недвижимости (номер дома из Discord-канала)</div></div>
+        <div class="portal-card" data-flag-service="credit" onclick="requireAuth(function(){openModal('credit')})"><span class="portal-icon">💳</span><div class="portal-title">Кредиты</div><div class="portal-desc">Оформление кредита на жильё, авто или бизнес</div></div>
+      </div>
+      <div style="margin:28px 0 14px"><div class="section-title" style="font-size:20px">Обращения к администрации</div><div class="section-sub">Вотум недоверия/доверия, жалоба или похвала на игрока, фракцию или сотрудника</div></div>
+      <div class="portal-grid">
+        <div class="portal-card" onclick="requireAuth(function(){openAppealModal('Вотум недоверия')})"><span class="portal-icon">🔴</span><div class="portal-title">Вотум недоверия</div><div class="portal-desc">Выразить недоверие сотруднику или фракции</div></div>
+        <div class="portal-card" onclick="requireAuth(function(){openAppealModal('Вотум доверия')})"><span class="portal-icon">🟢</span><div class="portal-title">Вотум доверия</div><div class="portal-desc">Выразить доверие сотруднику или фракции</div></div>
+        <div class="portal-card" onclick="requireAuth(function(){openAppealModal('Жалоба')})"><span class="portal-icon">⚠️</span><div class="portal-title">Жалоба</div><div class="portal-desc">Пожаловаться на игрока, фракцию или сотрудника</div></div>
+        <div class="portal-card" onclick="requireAuth(function(){openAppealModal('Похвала')})"><span class="portal-icon">👍</span><div class="portal-title">Похвала</div><div class="portal-desc">Отметить хорошую работу игрока или сотрудника</div></div>
       </div>
     </div>
     <div id="portal-mydocs" style="display:none">
@@ -491,6 +515,8 @@
           <option value="court">⚖️ Суд</option>
           <option value="government">📋 Обращение в Правительство</option>
           <option value="lawyer">👨‍⚖️ К адвокату</option>
+          <option value="appeal">🗳️ Админская заявка (вотум/жалоба/похвала)</option>
+          <option value="home-purchase">🏠 Покупка дома</option>
           <option value="credit">💳 Кредит</option>
         </select>
         <div class="requests-count-pill" id="requests-count">Загрузка...</div>
@@ -507,6 +533,17 @@
           <option value="license">🔫 Лицензия на оружие</option>
           <option value="driving_license">🚗 Права на вождение</option>
           <option value="medbook">🏥 Мед. книжка</option>
+          <option value="faction_join">🏛️ Вступление во фракцию</option>
+          <option value="court">⚖️ Судебный иск</option>
+          <option value="government">📋 Обращение в Правительство</option>
+          <option value="lawyer">👨‍⚖️ К адвокату</option>
+          <option value="opg_create">💀 Создание ОПГ</option>
+          <option value="opg_join">💀 Вступление в ОПГ</option>
+          <option value="mafia_create">🤵 Создание Мафии</option>
+          <option value="mafia_join">🤵 Вступление в Мафию</option>
+          <option value="appeal">🗳️ Админская заявка</option>
+          <option value="home_purchase">🏠 Покупка дома</option>
+          <option value="credit">💳 Кредит</option>
         </select>
         <div class="requests-count-pill" id="passports-count">Загрузка...</div>
       </div>
@@ -667,52 +704,30 @@
       </div>
       <div class="profile-card">
         <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:#fff;margin-bottom:4px">🧯 Экстренное отключение</div>
-        <div style="color:var(--text);font-size:13px;margin-bottom:14px">Быстро скрыть раздел сайта при обнаружении критического бага — данные не удаляются</div>
+        <div style="color:var(--text);font-size:13px;margin-bottom:14px">Управляйте статусом любого раздела или услуги: «Включено» — работает как обычно; «Скоро» — раздел виден, но при нажатии показывается экран «скоро откроется»; «Техработы» — показывается экран «закрыто по техническим причинам»; «Скрыто» — раздел/кнопка полностью пропадает с сайта. Данные при этом никуда не удаляются. Владелец при статусах «Скоро»/«Техработы» видит на карточке маленький жёлтый/красный бейдж, но сам клик у владельца НЕ блокируется (чтобы можно было пользоваться разделом при тестировании) — блокировка действует только для обычных игроков.</div>
         <div style="font-size:12px;color:var(--cyan);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Разделы сайта</div>
-        <div id="owner-toggle-tabs" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px;margin-bottom:18px">
-          <label class="owner-toggle"><input type="checkbox" data-flag-tab="portal" checked> Портал</label>
-          <label class="owner-toggle"><input type="checkbox" data-flag-tab="news" checked> Новости</label>
-          <label class="owner-toggle"><input type="checkbox" data-flag-tab="team" checked> Команда</label>
-          <label class="owner-toggle"><input type="checkbox" data-flag-tab="rules" checked> Правила</label>
+        <div id="owner-toggle-tabs" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin-bottom:18px">
+          <div class="owner-toggle" style="cursor:default;justify-content:space-between"><span>Портал</span><select data-flag-tab="portal" class="form-input" style="width:auto;padding:5px 8px;font-size:12px;margin-left:8px"><option value="on">✅ Включено</option><option value="soon">🚧 Скоро</option><option value="maintenance">🛠️ Техработы</option><option value="off">🚫 Скрыто</option></select></div>
+          <div class="owner-toggle" style="cursor:default;justify-content:space-between"><span>Новости</span><select data-flag-tab="news" class="form-input" style="width:auto;padding:5px 8px;font-size:12px;margin-left:8px"><option value="on">✅ Включено</option><option value="soon">🚧 Скоро</option><option value="maintenance">🛠️ Техработы</option><option value="off">🚫 Скрыто</option></select></div>
+          <div class="owner-toggle" style="cursor:default;justify-content:space-between"><span>Команда</span><select data-flag-tab="team" class="form-input" style="width:auto;padding:5px 8px;font-size:12px;margin-left:8px"><option value="on">✅ Включено</option><option value="soon">🚧 Скоро</option><option value="maintenance">🛠️ Техработы</option><option value="off">🚫 Скрыто</option></select></div>
+          <div class="owner-toggle" style="cursor:default;justify-content:space-between"><span>Правила</span><select data-flag-tab="rules" class="form-input" style="width:auto;padding:5px 8px;font-size:12px;margin-left:8px"><option value="on">✅ Включено</option><option value="soon">🚧 Скоро</option><option value="maintenance">🛠️ Техработы</option><option value="off">🚫 Скрыто</option></select></div>
         </div>
         <div style="font-size:12px;color:var(--cyan);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Услуги портала</div>
-        <div id="owner-toggle-services" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px;margin-bottom:16px">
-          <label class="owner-toggle"><input type="checkbox" data-flag-service="passport" checked> Паспорт</label>
-          <label class="owner-toggle"><input type="checkbox" data-flag-service="medbook" checked> Мед. книжка</label>
-          <label class="owner-toggle"><input type="checkbox" data-flag-service="license" checked> Лицензия на оружие</label>
-          <label class="owner-toggle"><input type="checkbox" data-flag-service="driving-license" checked> Права на вождение</label>
-          <label class="owner-toggle"><input type="checkbox" data-flag-service="faction-join" checked> Вступить во фракцию</label>
-          <label class="owner-toggle"><input type="checkbox" data-flag-service="court" checked> Подать в суд</label>
-          <label class="owner-toggle"><input type="checkbox" data-flag-service="government" checked> Обращение в Правительство</label>
-          <label class="owner-toggle"><input type="checkbox" data-flag-service="lawyer" checked> К адвокату</label>
-          <label class="owner-toggle"><input type="checkbox" data-flag-service="home" checked> Дома</label>
-          <label class="owner-toggle"><input type="checkbox" data-flag-service="credit" checked> Кредиты</label>
-          <label class="owner-toggle"><input type="checkbox" data-flag-service="opg-mafia" checked> ОПГ / Мафия</label>
+        <div id="owner-toggle-services" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin-bottom:16px">
+          <div class="owner-toggle" style="cursor:default;justify-content:space-between"><span>Паспорт</span><select data-flag-service="passport" class="form-input" style="width:auto;padding:5px 8px;font-size:12px;margin-left:8px"><option value="on">✅ Включено</option><option value="soon">🚧 Скоро</option><option value="maintenance">🛠️ Техработы</option><option value="off">🚫 Скрыто</option></select></div>
+          <div class="owner-toggle" style="cursor:default;justify-content:space-between"><span>Мед. книжка</span><select data-flag-service="medbook" class="form-input" style="width:auto;padding:5px 8px;font-size:12px;margin-left:8px"><option value="on">✅ Включено</option><option value="soon">🚧 Скоро</option><option value="maintenance">🛠️ Техработы</option><option value="off">🚫 Скрыто</option></select></div>
+          <div class="owner-toggle" style="cursor:default;justify-content:space-between"><span>Лицензия на оружие</span><select data-flag-service="license" class="form-input" style="width:auto;padding:5px 8px;font-size:12px;margin-left:8px"><option value="on">✅ Включено</option><option value="soon">🚧 Скоро</option><option value="maintenance">🛠️ Техработы</option><option value="off">🚫 Скрыто</option></select></div>
+          <div class="owner-toggle" style="cursor:default;justify-content:space-between"><span>Права на вождение</span><select data-flag-service="driving-license" class="form-input" style="width:auto;padding:5px 8px;font-size:12px;margin-left:8px"><option value="on">✅ Включено</option><option value="soon">🚧 Скоро</option><option value="maintenance">🛠️ Техработы</option><option value="off">🚫 Скрыто</option></select></div>
+          <div class="owner-toggle" style="cursor:default;justify-content:space-between"><span>Вступить во фракцию</span><select data-flag-service="faction-join" class="form-input" style="width:auto;padding:5px 8px;font-size:12px;margin-left:8px"><option value="on">✅ Включено</option><option value="soon">🚧 Скоро</option><option value="maintenance">🛠️ Техработы</option><option value="off">🚫 Скрыто</option></select></div>
+          <div class="owner-toggle" style="cursor:default;justify-content:space-between"><span>Подать в суд</span><select data-flag-service="court" class="form-input" style="width:auto;padding:5px 8px;font-size:12px;margin-left:8px"><option value="on">✅ Включено</option><option value="soon">🚧 Скоро</option><option value="maintenance">🛠️ Техработы</option><option value="off">🚫 Скрыто</option></select></div>
+          <div class="owner-toggle" style="cursor:default;justify-content:space-between"><span>Обращение в Правительство</span><select data-flag-service="government" class="form-input" style="width:auto;padding:5px 8px;font-size:12px;margin-left:8px"><option value="on">✅ Включено</option><option value="soon">🚧 Скоро</option><option value="maintenance">🛠️ Техработы</option><option value="off">🚫 Скрыто</option></select></div>
+          <div class="owner-toggle" style="cursor:default;justify-content:space-between"><span>К адвокату</span><select data-flag-service="lawyer" class="form-input" style="width:auto;padding:5px 8px;font-size:12px;margin-left:8px"><option value="on">✅ Включено</option><option value="soon">🚧 Скоро</option><option value="maintenance">🛠️ Техработы</option><option value="off">🚫 Скрыто</option></select></div>
+          <div class="owner-toggle" style="cursor:default;justify-content:space-between"><span>Дома</span><select data-flag-service="home" class="form-input" style="width:auto;padding:5px 8px;font-size:12px;margin-left:8px"><option value="on">✅ Включено</option><option value="soon">🚧 Скоро</option><option value="maintenance">🛠️ Техработы</option><option value="off">🚫 Скрыто</option></select></div>
+          <div class="owner-toggle" style="cursor:default;justify-content:space-between"><span>Кредиты</span><select data-flag-service="credit" class="form-input" style="width:auto;padding:5px 8px;font-size:12px;margin-left:8px"><option value="on">✅ Включено</option><option value="soon">🚧 Скоро</option><option value="maintenance">🛠️ Техработы</option><option value="off">🚫 Скрыто</option></select></div>
+          <div class="owner-toggle" style="cursor:default;justify-content:space-between"><span>ОПГ / Мафия</span><select data-flag-service="opg-mafia" class="form-input" style="width:auto;padding:5px 8px;font-size:12px;margin-left:8px"><option value="on">✅ Включено</option><option value="soon">🚧 Скоро</option><option value="maintenance">🛠️ Техработы</option><option value="off">🚫 Скрыто</option></select></div>
         </div>
         <label class="owner-toggle" style="margin-bottom:16px;max-width:340px"><input type="checkbox" id="owner-toggle-registration" checked> ✅ Регистрация новых пользователей разрешена</label>
         <button class="form-submit" onclick="saveOwnerSettings()">Сохранить настройки</button>
-      </div>
-      <div class="profile-card">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:#fff;margin-bottom:4px">🏷️ Управление фракциями</div>
-        <div style="color:var(--text);font-size:13px;margin-bottom:14px">Цвет карточки, категория (определяет, в каком разделе главной страницы будет карточка — Государственные / Криминальные / Другое), описание и статус «скоро» — если включить «Скоро», карточка фракции на главной при нажатии будет показывать экран «скоро откроется» вместо формы вступления. Кнопка «✕» полностью убирает фракцию с сайта.</div>
-        <div class="profile-card" style="padding:0;overflow:auto;margin-bottom:16px">
-          <table class="salary-table" style="width:100%"><thead><tr><th style="padding:10px 12px">Фракция</th><th style="padding:10px 12px">Цвет</th><th style="padding:10px 12px">Категория</th><th style="padding:10px 12px">Описание</th><th style="padding:10px 12px">Скоро</th><th style="padding:10px 12px">Действие</th></tr></thead><tbody id="faction-manager-body"><tr><td colspan="6" style="padding:14px;opacity:0.5">Загрузка...</td></tr></tbody></table>
-        </div>
-        <div style="font-size:12px;color:var(--cyan);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Добавить новую фракцию</div>
-        <div style="display:grid;grid-template-columns:2fr auto 1.4fr auto;gap:10px;margin-bottom:10px;align-items:center">
-          <input type="text" id="faction-add-name" class="form-input" placeholder="Название фракции">
-          <input type="color" id="faction-add-color" value="#00f5ff" style="width:48px;height:40px;border:none;border-radius:8px;background:none;cursor:pointer">
-          <select id="faction-add-category" class="form-input">
-            <option value="government">Государственная (раздел «Государственные»)</option>
-            <option value="criminal">Криминальная (раздел «Криминальные»)</option>
-            <option value="other">Иное (раздел «Другое»)</option>
-          </select>
-          <label class="owner-toggle" style="margin:0"><input type="checkbox" id="faction-add-soon"> Скоро</label>
-        </div>
-        <div class="form-group">
-          <input type="text" id="faction-add-desc" class="form-input" placeholder="Описание фракции (необязательно, покажется на карточке)">
-        </div>
-        <button class="form-submit" onclick="addManagedFaction()">Добавить фракцию</button>
       </div>
     </div>
     <div id="admin-banner-panel" style="display:none">
@@ -777,31 +792,31 @@
   </div>
   <div id="rules-discord" class="rules-section">
     <div style="background:rgba(88,101,242,0.08);border:1px solid rgba(88,101,242,0.25);border-radius:16px;padding:20px;margin-bottom:20px;display:flex;align-items:center;gap:12px"><span style="font-size:28px">📕</span><div><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff">Правила Discord сервера</div><div style="color:var(--text);font-size:13px">Нарушение = предупреждение → мут → кик → перм бан</div></div></div>
-    <div id="rules-discord-list"></div>
+    <input type="text" class="rule-search" id="rules-discord-search" placeholder="🔍 Поиск по правилам..." oninput="filterRuleSection('discord')"><div id="rules-discord-admin"></div><div id="rules-discord-list"></div>
   </div>
   <div id="rules-rp" class="rules-section" style="display:none">
     <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:16px;padding:20px;margin-bottom:20px;display:flex;align-items:center;gap:12px"><span style="font-size:28px">📄</span><div><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff">Правила по РП</div><div style="color:var(--text);font-size:13px">NON RP — неподобающее игровому миру поведение</div></div></div>
-    <div id="rules-rp-list"></div>
+    <input type="text" class="rule-search" id="rules-rp-search" placeholder="🔍 Поиск по правилам..." oninput="filterRuleSection('rp')"><div id="rules-rp-admin"></div><div id="rules-rp-list"></div>
   </div>
   <div id="rules-ic" class="rules-section" style="display:none">
     <div style="background:rgba(14,165,233,0.08);border:1px solid rgba(14,165,233,0.25);border-radius:16px;padding:20px;margin-bottom:20px;display:flex;align-items:center;gap:12px"><span style="font-size:28px">📘</span><div><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff">IC Правила</div><div style="color:var(--text);font-size:13px">Все игроки ведут себя как реальные люди в городе</div></div></div>
-    <div id="rules-ic-list"></div>
+    <input type="text" class="rule-search" id="rules-ic-search" placeholder="🔍 Поиск по правилам..." oninput="filterRuleSection('ic')"><div id="rules-ic-admin"></div><div id="rules-ic-list"></div>
   </div>
   <div id="rules-uk" class="rules-section" style="display:none">
     <div style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.25);border-radius:16px;padding:20px;margin-bottom:20px;display:flex;align-items:center;gap:12px"><span style="font-size:28px">📗</span><div><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff">Уголовный Кодекс</div><div style="color:var(--text);font-size:13px">1 год = 1 минута &nbsp;•&nbsp; 1 сутки = 10 секунд</div></div></div>
-    <div id="rules-uk-list"></div>
+    <input type="text" class="rule-search" id="rules-uk-search" placeholder="🔍 Поиск по правилам..." oninput="filterRuleSection('uk')"><div id="rules-uk-admin"></div><div id="rules-uk-list"></div>
   </div>
   <div id="rules-police" class="rules-section" style="display:none">
     <div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.25);border-radius:16px;padding:20px;margin-bottom:20px;display:flex;align-items:center;gap:12px"><span style="font-size:28px">📙</span><div><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff">Федеральный закон о полиции</div><div style="color:var(--text);font-size:13px">Уголовно-процессуальный кодекс</div></div></div>
-    <div id="rules-police-list"></div>
+    <input type="text" class="rule-search" id="rules-police-search" placeholder="🔍 Поиск по правилам..." oninput="filterRuleSection('police')"><div id="rules-police-admin"></div><div id="rules-police-list"></div>
   </div>
   <div id="rules-admin" class="rules-section" style="display:none">
     <div style="background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.25);border-radius:16px;padding:20px;margin-bottom:20px;display:flex;align-items:center;gap:12px"><span style="font-size:28px">📜</span><div><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff">Правила для администрации</div><div style="color:var(--text);font-size:13px">Администрация — лицо сервера</div></div></div>
-    <div id="rules-admin-list"></div>
+    <input type="text" class="rule-search" id="rules-admin-search" placeholder="🔍 Поиск по правилам..." oninput="filterRuleSection('admin')"><div id="rules-admin-admin"></div><div id="rules-admin-list"></div>
   </div>
   <div id="rules-pdd" class="rules-section" style="display:none">
     <div style="background:rgba(0,245,255,0.06);border:1px solid rgba(0,245,255,0.2);border-radius:16px;padding:20px;margin-bottom:20px;display:flex;align-items:center;gap:12px"><span style="font-size:28px">🚗</span><div><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff">Правила дорожного движения</div><div style="color:var(--text);font-size:13px">Движение строго по правой полосе</div></div></div>
-    <div id="rules-pdd-list"></div>
+    <input type="text" class="rule-search" id="rules-pdd-search" placeholder="🔍 Поиск по правилам..." oninput="filterRuleSection('pdd')"><div id="rules-pdd-admin"></div><div id="rules-pdd-list"></div>
   </div>
 </div></div>
 
@@ -860,6 +875,35 @@
 <div class="modal-overlay" id="modal-government"><div class="modal-box"><button class="modal-close" onclick="closeModal('government')">&#10005;</button><div class="modal-header"><div class="modal-title">&#1054;&#1073;&#1088;&#1072;&#1097;&#1077;&#1085;&#1080;&#1077; &#1074; &#1055;&#1088;&#1072;&#1074;&#1080;&#1090;&#1077;&#1083;&#1100;&#1089;&#1090;&#1074;&#1086;</div></div><div class="modal-body"><div class="form-group"><label class="form-label">&#1053;&#1080;&#1082;</label><input type="text" id="gov-username" class="form-input"></div><div class="form-group"><label class="form-label">&#1058;&#1077;&#1084;&#1072;</label><select id="gov-type" class="form-input"><option>&#1046;&#1072;&#1083;&#1086;&#1073;&#1072;</option><option>&#1055;&#1088;&#1077;&#1076;&#1083;&#1086;&#1078;&#1077;&#1085;&#1080;&#1077;</option><option>&#1055;&#1088;&#1086;&#1089;&#1100;&#1073;&#1072;</option><option>&#1044;&#1088;&#1091;&#1075;&#1086;&#1077;</option></select></div><div class="form-group"><label class="form-label">&#1058;&#1077;&#1082;&#1089;&#1090;</label><textarea id="gov-text" class="form-input"></textarea></div><button class="form-submit" onclick="submitForm('government')">&#1054;&#1090;&#1087;&#1088;&#1072;&#1074;&#1080;&#1090;&#1100;</button></div></div></div>
 
 <div class="modal-overlay" id="modal-lawyer"><div class="modal-box"><button class="modal-close" onclick="closeModal('lawyer')">&#10005;</button><div class="modal-header"><div class="modal-title">&#1054;&#1073;&#1088;&#1072;&#1097;&#1077;&#1085;&#1080;&#1077; &#1082; &#1040;&#1076;&#1074;&#1086;&#1082;&#1072;&#1090;&#1091;</div></div><div class="modal-body"><div class="form-group"><label class="form-label">&#1053;&#1080;&#1082;</label><input type="text" id="lawyer-username" class="form-input"></div><div class="form-group"><label class="form-label">&#1057;&#1080;&#1090;&#1091;&#1072;&#1094;&#1080;&#1103;</label><select id="lawyer-situation" class="form-input"><option>&#1040;&#1088;&#1077;&#1089;&#1090; / &#1047;&#1072;&#1076;&#1077;&#1088;&#1078;&#1072;&#1085;&#1080;&#1077;</option><option>&#1057;&#1091;&#1076;&#1077;&#1073;&#1085;&#1086;&#1077; &#1076;&#1077;&#1083;&#1086;</option><option>&#1053;&#1072;&#1088;&#1091;&#1096;&#1077;&#1085;&#1080;&#1077; &#1087;&#1088;&#1072;&#1074;</option><option>&#1044;&#1088;&#1091;&#1075;&#1086;&#1077;</option></select></div><div class="form-group"><label class="form-label">&#1054;&#1087;&#1080;&#1089;&#1072;&#1085;&#1080;&#1077;</label><textarea id="lawyer-text" class="form-input"></textarea></div><button class="form-submit" onclick="submitForm('lawyer')">&#1047;&#1072;&#1087;&#1088;&#1086;&#1089;&#1080;&#1090;&#1100; &#1087;&#1086;&#1084;&#1086;&#1097;&#1100;</button></div></div></div>
+
+<div class="modal-overlay" id="modal-appeal"><div class="modal-box"><button class="modal-close" onclick="closeModal('appeal')">✕</button><div class="modal-header"><div class="modal-title" id="appeal-modal-title">Обращение к администрации</div></div><div class="modal-body">
+  <input type="hidden" id="appeal-type-value">
+  <div class="form-group"><label class="form-label">Ваш ник</label><input type="text" id="appeal-username" class="form-input"></div>
+  <div class="form-group"><label class="form-label">На кого/на какую фракцию (ник или название)</label><input type="text" id="appeal-target" class="form-input" placeholder="Например: Иванов_Иван или ФСБ"></div>
+  <div class="form-group"><label class="form-label">Причина <span style="color:#f87171">*</span></label><textarea id="appeal-text" class="form-input" placeholder="Опишите ситуацию подробно — что произошло и почему вы подаёте это обращение"></textarea></div>
+  <div class="form-group"><label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;color:var(--text);cursor:pointer"><input type="checkbox" id="appeal-confirm" style="margin-top:3px;flex-shrink:0"> Подтверждаю, что указанная информация достоверна, и готов(а) предоставить доказательства при необходимости</label></div>
+  <button class="form-submit" onclick="submitForm('appeal')">Отправить обращение</button>
+</div></div></div>
+
+<div class="modal-overlay" id="modal-home"><div class="modal-box"><button class="modal-close" onclick="closeModal('home')">✕</button><div class="modal-header"><div class="modal-title">Приобретение дома</div></div><div class="modal-body">
+  <div class="form-group"><label class="form-label">Ваш ник</label><input type="text" id="home-username" class="form-input"></div>
+  <div class="form-group"><label class="form-label">Номер дома <span style="color:#f87171">*</span></label><input type="text" id="home-house" class="form-input" placeholder="Номер дома из Discord-канала со списком домов"><div style="color:var(--text);font-size:11px;margin-top:5px">Посмотрите актуальный список свободных домов и их номера в соответствующем канале Discord</div></div>
+  <div class="form-group"><label class="form-label">Комментарий (необязательно)</label><textarea id="home-comment" class="form-input" placeholder="Например, способ оплаты"></textarea></div>
+  <button class="form-submit" onclick="submitForm('home')">Отправить заявку</button>
+</div></div></div>
+
+<div class="modal-overlay" id="modal-credit"><div class="modal-box"><button class="modal-close" onclick="closeModal('credit')">✕</button><div class="modal-header"><div class="modal-title">Оформление кредита</div></div><div class="modal-body">
+  <div class="form-group"><label class="form-label">Ваш ник</label><input type="text" id="credit-username" class="form-input"></div>
+  <div class="form-group"><label class="form-label">Тип кредита</label><select id="credit-type" class="form-input">
+    <option>Жильё</option>
+    <option>Авто</option>
+    <option>Бизнес</option>
+  </select></div>
+  <div class="form-group"><label class="form-label">Для чего нужен кредит <span style="color:#f87171">*</span></label><textarea id="credit-purpose" class="form-input" placeholder="Опишите цель кредита"></textarea></div>
+  <div class="form-group"><label class="form-label">Сумма кредита <span style="color:#f87171">*</span></label><input type="text" id="credit-amount" class="form-input" placeholder="Например: 50000"></div>
+  <div class="form-group"><label class="form-label">Комментарий (необязательно)</label><textarea id="credit-comment" class="form-input"></textarea></div>
+  <button class="form-submit" onclick="submitForm('credit')">Отправить заявку</button>
+</div></div></div>
 
 <div class="modal-overlay" id="modal-opg-create"><div class="modal-box"><button class="modal-close" onclick="closeModal('opg-create')">&#10005;</button><div class="modal-header"><div class="modal-title">&#1057;&#1086;&#1079;&#1076;&#1072;&#1090;&#1100; &#1054;&#1055;&#1043;</div></div><div class="modal-body"><div class="form-group"><label class="form-label">&#1053;&#1080;&#1082;</label><input type="text" id="opg-create-username" class="form-input"></div><div class="form-group"><label class="form-label">&#1053;&#1072;&#1079;&#1074;&#1072;&#1085;&#1080;&#1077; *</label><input type="text" id="opg-create-name" class="form-input"></div><div class="form-group"><label class="form-label">&#1054;&#1087;&#1080;&#1089;&#1072;&#1085;&#1080;&#1077;</label><textarea id="opg-create-desc" class="form-input"></textarea></div><div class="form-group"><label class="form-label">&#1058;&#1077;&#1075; (3-4 &#1089;&#1080;&#1084;&#1074;&#1086;&#1083;&#1072;)</label><input type="text" id="opg-create-tag" class="form-input" maxlength="4"></div><button class="form-submit" onclick="submitCreateOpg()">&#1057;&#1086;&#1079;&#1076;&#1072;&#1090;&#1100; &#1054;&#1055;&#1043;</button></div></div></div>
 
