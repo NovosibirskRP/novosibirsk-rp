@@ -30,6 +30,9 @@ const WEBHOOK_BY_TYPE = {
     court:           WEBHOOK_COURT,
     government:      WEBHOOK_PASSPORT_LICENSE,
     lawyer:          WEBHOOK_MEDBOOK,
+    appeal:          WEBHOOK_PASSPORT_LICENSE,
+    home_purchase:   WEBHOOK_COURT,
+    credit:          WEBHOOK_COURT,
 };
 
 const ADMIN_RANKS = [
@@ -156,14 +159,9 @@ const DEFAULT_SITE_FLAGS = {
         info: 'Ювелирный магазин & Дальнобойщики',
         timerLabel: 'ДО ВЫХОДА',
         timerTarget: '2026-07-10T21:00:00+03:00'
-    },
-    // FIX 7: метаданные фракций (цвет / категория / статус "скоро"), редактируемые в панели владельца
-    factionMeta: {}
+    }
 };
 window.siteFlags = DEFAULT_SITE_FLAGS;
-
-const FACTION_CATEGORY_LABELS = { government:'ГОСУДАРСТВЕННАЯ', criminal:'КРИМИНАЛЬНАЯ', other:'ИНОЕ' };
-const FACTION_CATEGORY_COLORS = { government:'#3b82f6', criminal:'#f87171', other:'#a855f7' };
 
 async function loadSiteSettings() {
     try {
@@ -173,8 +171,7 @@ async function loadSiteSettings() {
             window.siteFlags = Object.assign({}, DEFAULT_SITE_FLAGS, flags, {
                 tabs: Object.assign({}, DEFAULT_SITE_FLAGS.tabs, flags.tabs || {}),
                 services: Object.assign({}, DEFAULT_SITE_FLAGS.services, flags.services || {}),
-                banner: Object.assign({}, DEFAULT_SITE_FLAGS.banner, flags.banner || {}),
-                factionMeta: Object.assign({}, DEFAULT_SITE_FLAGS.factionMeta, flags.factionMeta || {})
+                banner: Object.assign({}, DEFAULT_SITE_FLAGS.banner, flags.banner || {})
             });
         } else {
             await db('site_settings', { method:'POST', body: JSON.stringify({ key:'site_flags', value: DEFAULT_SITE_FLAGS }) }).catch(()=>{});
@@ -183,8 +180,6 @@ async function loadSiteSettings() {
     applySiteFlags();
     renderUpdateBanner();
     fillBannerAdminForm();
-    applyFactionMeta();
-    loadFactionManager();
 }
 
 // ─── БАННЕР ОБНОВЛЕНИЙ (редактируется админами из профиля) ──
@@ -292,26 +287,73 @@ window.saveBannerSettings = async function() {
     } catch(e) { console.error('saveBannerSettings error', e); notify('Не удалось сохранить баннер: ' + (e.message||e), false); }
 };
 
+// Статус раздела/услуги: поддерживаем и старый формат (true/false), и новый ('on'/'soon'/'maintenance'/'off')
+function flagStatus(v) {
+    if (v === true || v === undefined || v === null) return 'on';
+    if (v === false) return 'off';
+    return v;
+}
+const TAB_LABELS = { main:'Главная', portal:'Городской портал', news:'Новости', team:'Команда', rules:'Правила', profile:'Профиль' };
+
+window.showServiceStatus = function(status, key) {
+    const cardTitle = document.querySelector(`[data-flag-service="${key}"] .portal-title`);
+    const label = cardTitle ? cardTitle.textContent.trim() : (TAB_LABELS[key] || key);
+    const info = status === 'maintenance'
+        ? { icon:'🛠️', title:'Закрыто по техническим причинам', desc:`Раздел «${label}» временно закрыт по техническим причинам. Пожалуйста, загляните позже.` }
+        : { icon:'🚧', title:'Скоро!', desc:`Раздел «${label}» скоро откроется — следите за новостями.` };
+    const el = document.getElementById('fullscreen-cs');
+    if (!el) return;
+    const iconEl  = document.getElementById('fs-cs-icon');
+    const titleEl = document.getElementById('fs-cs-title');
+    const descEl  = document.getElementById('fs-cs-desc');
+    if (iconEl)  iconEl.textContent  = info.icon;
+    if (titleEl) titleEl.textContent = info.title;
+    if (descEl)  descEl.textContent  = info.desc;
+    el.classList.add('open');
+};
+
 function applySiteFlags() {
     const f = window.siteFlags || DEFAULT_SITE_FLAGS;
     document.querySelectorAll('.nav-btn[data-flag-tab], .mobile-nav-btn[data-flag-tab]').forEach(el => {
         const key = el.dataset.flagTab;
-        const enabled = f.tabs ? f.tabs[key] !== false : true;
-        el.style.display = enabled ? '' : 'none';
+        const status = flagStatus(f.tabs ? f.tabs[key] : undefined);
+        el.style.display = status === 'off' ? 'none' : '';
     });
     document.querySelectorAll('.portal-card[data-flag-service]').forEach(el => {
         const key = el.dataset.flagService;
-        const enabled = f.services ? f.services[key] !== false : true;
-        el.style.display = enabled ? '' : 'none';
+        const status = flagStatus(f.services ? f.services[key] : undefined);
+        el.style.display = status === 'off' ? 'none' : '';
+        if (el.dataset.originalOnclick === undefined) el.dataset.originalOnclick = el.getAttribute('onclick') || '';
+        // Видимый бейдж статуса на карточке — виден всем, включая владельца, чтобы можно было
+        // убедиться, что настройка действительно применилась, даже если сам владелец не заблокирован.
+        let badge = el.querySelector('.service-status-badge');
+        if (status === 'soon' || status === 'maintenance') {
+            if (!badge) {
+                badge = document.createElement('span');
+                badge.className = 'service-status-badge';
+                badge.style.cssText = 'position:absolute;top:8px;right:8px;font-size:10px;padding:3px 8px;border-radius:6px;font-family:"JetBrains Mono",monospace;letter-spacing:0.5px;z-index:2';
+                el.style.position = 'relative';
+                el.appendChild(badge);
+            }
+            if (status === 'soon') { badge.textContent = '🚧 СКОРО'; badge.style.background = 'rgba(56,189,248,0.15)'; badge.style.color = '#38bdf8'; badge.style.border = '1px solid rgba(56,189,248,0.4)'; }
+            else { badge.textContent = '🛠️ ТЕХРАБОТЫ'; badge.style.background = 'rgba(248,113,113,0.15)'; badge.style.color = '#f87171'; badge.style.border = '1px solid rgba(248,113,113,0.4)'; }
+        } else if (badge) {
+            badge.remove();
+        }
+        if (!isOwner(window.currentUser) && (status === 'soon' || status === 'maintenance')) {
+            el.setAttribute('onclick', `showServiceStatus('${status}', '${key}')`);
+        } else if (el.dataset.originalOnclick) {
+            el.setAttribute('onclick', el.dataset.originalOnclick);
+        }
     });
     const canRegister = f.registration_open !== false;
     const regTabBtn = document.getElementById('auth-tab-register');
     if (regTabBtn) regTabBtn.style.display = canRegister ? '' : 'none';
-    // Если владелец отключил вкладку, в которой сейчас находится обычный пользователь — вернуть на главную
+    // Если владелец полностью скрыл вкладку, в которой сейчас находится обычный пользователь — вернуть на главную
     const activeTab = document.querySelector('.tab.active');
     if (activeTab && !isOwner(window.currentUser)) {
         const tabId = activeTab.id.replace('tab-', '');
-        if (f.tabs && f.tabs[tabId] === false) switchTab('main');
+        if (flagStatus(f.tabs ? f.tabs[tabId] : undefined) === 'off') switchTab('main');
     }
 }
 
@@ -319,198 +361,6 @@ function canRegisterNow() {
     const f = window.siteFlags || DEFAULT_SITE_FLAGS;
     return f.registration_open !== false;
 }
-
-// ─── УПРАВЛЕНИЕ ФРАКЦИЯМИ (цвет / категория / статус "скоро") ──
-// Фракции, добавленные через админ-панель, теперь реально создают карточку
-// на главной странице (в нужной категории), а не только сохраняют настройки "вслепую".
-const FACTION_GRID_IDS = { government: 'grid-government', criminal: 'grid-criminal', other: 'grid-other' };
-
-function getAllFactionCardNames() {
-    return Array.from(document.querySelectorAll('.faction-card .faction-name'))
-        .map(el => el.textContent.trim())
-        .filter((v, i, arr) => v && arr.indexOf(v) === i);
-}
-
-function slugifyFactionName(name) {
-    return 'custom-' + name.toLowerCase().replace(/[^a-zа-я0-9]+/gi, '-').replace(/(^-|-$)/g, '');
-}
-
-// Создаёт недостающие карточки для фракций, которых ещё нет на странице (managed-факции)
-function ensureManagedFactionCards(meta) {
-    const existingNames = new Set(getAllFactionCardNames());
-    Object.keys(meta).forEach(name => {
-        const m = meta[name];
-        if (m.hidden) return; // фракция удалена администратором — карточку не создаём
-        if (existingNames.has(name)) return; // карточка уже есть на сайте — просто применим стили ниже
-        const gridId = FACTION_GRID_IDS[m.category] || FACTION_GRID_IDS.other;
-        const grid = document.getElementById(gridId);
-        if (!grid) return;
-        const slug = slugifyFactionName(name);
-        if (document.getElementById('managed-card-' + slug)) return; // уже создана ранее
-        const color = m.color || '#00f5ff';
-        const desc = m.desc || 'Фракция, добавленная администрацией сервера.';
-        const card = document.createElement('div');
-        card.className = 'faction-card animate-fade-in';
-        card.id = 'managed-card-' + slug;
-        card.dataset.managed = '1';
-        card.innerHTML = `<div class="faction-icon" style="background:${color}14;border-color:${color}40">🏷️</div><div class="faction-name">${escHtml(name)}</div><div class="faction-desc">${escHtml(desc)}</div><span class="faction-tag" style="color:${FACTION_CATEGORY_COLORS[m.category]||color};border-color:${(FACTION_CATEGORY_COLORS[m.category]||color)}40">${FACTION_CATEGORY_LABELS[m.category]||'ФРАКЦИЯ'}</span><div class="faction-arrow">→</div>`;
-        card.setAttribute('onclick', m.soon ? `showComingSoon('faction-soon', ${JSON.stringify(name)})` : `requireAuth(function(){openModal('faction-join')})`);
-        grid.appendChild(card);
-    });
-    // Показываем/прячем категорию "Другое" в зависимости от того, есть ли в ней карточки
-    const otherCat = document.getElementById('other-factions-category');
-    const otherGrid = document.getElementById('grid-other');
-    if (otherCat && otherGrid) otherCat.style.display = otherGrid.children.length ? '' : 'none';
-}
-
-// Полностью убирает карточку фракции со страницы (используется для удалённых/скрытых фракций)
-function removeFactionCardByName(name) {
-    document.querySelectorAll('.faction-card').forEach(card => {
-        const nameEl = card.querySelector('.faction-name');
-        if (nameEl && nameEl.textContent.trim() === name) card.remove();
-    });
-}
-
-function applyFactionMeta() {
-    const meta = (window.siteFlags && window.siteFlags.factionMeta) || {};
-    // Сначала убираем карточки фракций, которые были удалены администратором —
-    // это касается и добавленных вручную, и «встроенных» фракций (ФСБ, ФСО и т.д.)
-    Object.keys(meta).forEach(name => { if (meta[name].hidden) removeFactionCardByName(name); });
-    ensureManagedFactionCards(meta);
-    document.querySelectorAll('.faction-card').forEach(card => {
-        const nameEl = card.querySelector('.faction-name');
-        if (!nameEl) return;
-        const name = nameEl.textContent.trim();
-        const m = meta[name];
-        if (!m) return;
-        const icon = card.querySelector('.faction-icon');
-        if (icon && m.color) {
-            icon.style.background = m.color + '14';
-            icon.style.borderColor = m.color + '40';
-        }
-        const descEl = card.querySelector('.faction-desc');
-        if (descEl && m.desc) descEl.textContent = m.desc;
-        const tag = card.querySelector('.faction-tag');
-        if (tag && m.category) {
-            tag.textContent = FACTION_CATEGORY_LABELS[m.category] || tag.textContent;
-            tag.style.color = FACTION_CATEGORY_COLORS[m.category] || '';
-            tag.style.borderColor = (FACTION_CATEGORY_COLORS[m.category] || '') + '40';
-        }
-        // Переносим карточку в раздел (grid), соответствующий выбранной категории
-        if (m.category) {
-            const targetGridId = FACTION_GRID_IDS[m.category] || FACTION_GRID_IDS.other;
-            const targetGrid = document.getElementById(targetGridId);
-            if (targetGrid && card.parentElement !== targetGrid) targetGrid.appendChild(card);
-        }
-        // Сохраняем оригинальный onclick один раз, чтобы можно было включать/выключать "скоро" без потери формы вступления
-        if (!card.dataset.originalOnclick) card.dataset.originalOnclick = card.getAttribute('onclick') || '';
-        if (m.soon) {
-            card.setAttribute('onclick', `showComingSoon('faction-soon', ${JSON.stringify(name)})`);
-        } else if (card.dataset.originalOnclick) {
-            card.setAttribute('onclick', card.dataset.originalOnclick);
-        }
-    });
-    // Обновляем видимость категории "Другое" после возможного переноса карточек
-    const otherCat = document.getElementById('other-factions-category');
-    const otherGrid = document.getElementById('grid-other');
-    if (otherCat && otherGrid) otherCat.style.display = otherGrid.children.length ? '' : 'none';
-}
-
-window.loadFactionManager = function() {
-    const body = document.getElementById('faction-manager-body');
-    if (!body) return;
-    const meta = (window.siteFlags && window.siteFlags.factionMeta) || {};
-    const names = getAllFactionCardNames();
-    // Показываем и фракции с карточками на сайте, и те, что были добавлены вручную, но пока без карточки.
-    // Скрытые (удалённые) фракции из списка управления убираем.
-    const allNames = names.concat(Object.keys(meta).filter(n => !names.includes(n)))
-        .filter(n => !(meta[n] && meta[n].hidden));
-    if (!allNames.length) { body.innerHTML = '<tr><td colspan="6" style="padding:14px;opacity:0.5">Фракций не найдено</td></tr>'; return; }
-    body.innerHTML = allNames.map(name => {
-        const m = meta[name] || { color:'#00f5ff', category:'government', soon:false, desc:'' };
-        const safeId = name.replace(/[^a-zA-Zа-яА-Я0-9]/g, '_');
-        return `<tr>
-            <td style="padding:10px 12px;color:#fff">${escHtml(name)}</td>
-            <td style="padding:10px 12px"><input type="color" id="fm-color-${safeId}" value="${m.color || '#00f5ff'}" style="width:40px;height:32px;border:none;border-radius:6px;background:none;cursor:pointer"></td>
-            <td style="padding:10px 12px"><select id="fm-cat-${safeId}" class="form-input" style="padding:6px 10px;font-size:13px">
-                <option value="government" ${m.category==='government'?'selected':''}>Государственная</option>
-                <option value="criminal" ${m.category==='criminal'?'selected':''}>Криминальная</option>
-                <option value="other" ${m.category==='other'?'selected':''}>Иное</option>
-            </select></td>
-            <td style="padding:10px 12px;min-width:160px"><input type="text" id="fm-desc-${safeId}" class="form-input" style="padding:6px 10px;font-size:13px" value="${escHtml(m.desc || '')}" placeholder="Описание фракции"></td>
-            <td style="padding:10px 12px"><input type="checkbox" id="fm-soon-${safeId}" ${m.soon?'checked':''}></td>
-            <td style="padding:10px 12px;white-space:nowrap">
-                <button class="form-submit" style="padding:6px 12px;font-size:12px;margin:0 6px 0 0;display:inline-block;width:auto" onclick="saveManagedFaction(${JSON.stringify(name)}, '${safeId}')">Сохранить</button>
-                <button style="background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);color:#f87171;padding:6px 10px;border-radius:8px;cursor:pointer;font-size:12px" onclick="deleteManagedFaction(${JSON.stringify(name)})">✕</button>
-            </td>
-        </tr>`;
-    }).join('');
-};
-
-async function persistFactionMeta(newMeta) {
-    const newFlags = Object.assign({}, window.siteFlags, { factionMeta: newMeta });
-    try {
-        const existingRes = await fetch(SUPABASE_URL + '/rest/v1/site_settings?key=eq.site_flags', { headers: H });
-        const existing = await existingRes.json();
-        let saveRes;
-        if (Array.isArray(existing) && existing.length) {
-            saveRes = await fetch(SUPABASE_URL + '/rest/v1/site_settings?key=eq.site_flags', { method:'PATCH', headers: H, body: JSON.stringify({ value: newFlags }) });
-        } else {
-            saveRes = await fetch(SUPABASE_URL + '/rest/v1/site_settings', { method:'POST', headers: H, body: JSON.stringify({ key:'site_flags', value: newFlags }) });
-        }
-        if (!saveRes.ok) { notify('Не сохранилось: сервер вернул ошибку ' + saveRes.status, false); return false; }
-        window.siteFlags = newFlags;
-        applyFactionMeta();
-        return true;
-    } catch(e) { console.error(e); notify('Ошибка сохранения фракции', false); return false; }
-}
-
-window.saveManagedFaction = async function(name, safeId) {
-    if (!isOwner(window.currentUser)) return notify('Нет доступа', false);
-    const color = document.getElementById('fm-color-' + safeId)?.value || '#00f5ff';
-    const category = document.getElementById('fm-cat-' + safeId)?.value || 'government';
-    const desc = document.getElementById('fm-desc-' + safeId)?.value.trim() || '';
-    const soon = document.getElementById('fm-soon-' + safeId)?.checked || false;
-    const meta = Object.assign({}, window.siteFlags.factionMeta);
-    meta[name] = { color, category, soon, desc };
-    if (await persistFactionMeta(meta)) notify('Фракция «' + name + '» обновлена');
-};
-
-window.deleteManagedFaction = async function(name) {
-    if (!isOwner(window.currentUser)) return notify('Нет доступа', false);
-    if (!confirm('Убрать фракцию «' + name + '»? Её карточка будет полностью удалена с главной страницы.')) return;
-    // Помечаем фракцию как скрытую, а не просто стираем запись из настроек — иначе
-    // «встроенные» фракции (ФСБ, ФСО и т.п.), у которых карточка прописана прямо в HTML,
-    // при следующей загрузке страницы снова попадали бы в список, ведь их карточка никуда не девалась.
-    const meta = Object.assign({}, window.siteFlags.factionMeta);
-    meta[name] = Object.assign({}, meta[name], { hidden: true });
-    if (await persistFactionMeta(meta)) {
-        removeFactionCardByName(name);
-        const otherCat = document.getElementById('other-factions-category');
-        const otherGrid = document.getElementById('grid-other');
-        if (otherCat && otherGrid) otherCat.style.display = otherGrid.children.length ? '' : 'none';
-        notify('Фракция убрана');
-        loadFactionManager();
-    }
-};
-
-window.addManagedFaction = async function() {
-    if (!isOwner(window.currentUser)) return notify('Нет доступа', false);
-    const name = document.getElementById('faction-add-name')?.value.trim();
-    const color = document.getElementById('faction-add-color')?.value || '#00f5ff';
-    const category = document.getElementById('faction-add-category')?.value || 'government';
-    const desc = document.getElementById('faction-add-desc')?.value.trim() || '';
-    const soon = document.getElementById('faction-add-soon')?.checked || false;
-    if (!name) return notify('Введите название фракции', false);
-    const meta = Object.assign({}, window.siteFlags.factionMeta);
-    meta[name] = { color, category, soon, desc, hidden:false };
-    if (await persistFactionMeta(meta)) {
-        notify('Фракция «' + name + '» создана и уже отображается на главной странице');
-        document.getElementById('faction-add-name').value = '';
-        if (document.getElementById('faction-add-desc')) document.getElementById('faction-add-desc').value = '';
-        loadFactionManager();
-    }
-};
 
 async function db(path, opts) {
     let res;
@@ -615,6 +465,12 @@ window.closeMobileMenu = function() {
 // ─── NAV / TAB SWITCHING ──────────────────────
 
 window.switchTab = function(tab, updateHistory = true) {
+    const f = window.siteFlags || DEFAULT_SITE_FLAGS;
+    const tabStatus = flagStatus(f.tabs ? f.tabs[tab] : undefined);
+    if (!isOwner(window.currentUser) && (tabStatus === 'soon' || tabStatus === 'maintenance')) {
+        showServiceStatus(tabStatus, tab);
+        return;
+    }
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.remove('active'));
@@ -856,11 +712,21 @@ window.openModal = function(id) {
     const m = document.getElementById('modal-' + id);
     if (m) m.classList.add('open');
     if (window.currentUser) {
-        ['passport','medbook','license','dl','faction','court','gov','lawyer','opg-create','opg-join','mafia-create','mafia-join'].forEach(p => {
+        ['passport','medbook','license','dl','faction','court','gov','lawyer','opg-create','opg-join','mafia-create','mafia-join','home','credit','appeal'].forEach(p => {
             const el = document.getElementById(p + '-username');
             if (el) el.value = window.currentUser.username;
         });
     }
+};
+
+window.openAppealModal = function(presetType) {
+    openModal('appeal');
+    const hidden = document.getElementById('appeal-type-value');
+    if (hidden) hidden.value = presetType || '';
+    const title = document.getElementById('appeal-modal-title');
+    if (title) title.textContent = presetType || 'Обращение к администрации';
+    const confirmCb = document.getElementById('appeal-confirm');
+    if (confirmCb) confirmCb.checked = false;
 };
 
 window.closeModal = function(id) {
@@ -1302,10 +1168,9 @@ const TEAM_STATUS_LABELS = {
 
 function teamStatusBadge(m) {
     const s = TEAM_STATUS_LABELS[m.status] || TEAM_STATUS_LABELS.active;
-    if (m.status === 'active') return '';
     let range = '';
     if (m.status_until) range = ` до ${new Date(m.status_until).toLocaleDateString('ru-RU')}`;
-    const note = m.status_note ? `: ${escHtml(m.status_note)}` : range;
+    const note = (m.status !== 'active' && m.status_note) ? `: ${escHtml(m.status_note)}` : (m.status !== 'active' ? range : '');
     return `<span style="font-size:11px;background:${s.color}22;color:${s.color};border:1px solid ${s.color}55;padding:2px 8px;border-radius:6px;margin-left:6px;font-family:'JetBrains Mono',monospace;vertical-align:middle">${s.emoji} ${s.label}${note}</span>`;
 }
 
@@ -1404,11 +1269,11 @@ function showOwnerPanelIfNeeded() {
 
 function syncOwnerCheckboxes() {
     const f = window.siteFlags || DEFAULT_SITE_FLAGS;
-    document.querySelectorAll('#owner-toggle-tabs input[data-flag-tab]').forEach(cb => {
-        cb.checked = f.tabs ? f.tabs[cb.dataset.flagTab] !== false : true;
+    document.querySelectorAll('#owner-toggle-tabs select[data-flag-tab]').forEach(sel => {
+        sel.value = flagStatus(f.tabs ? f.tabs[sel.dataset.flagTab] : undefined);
     });
-    document.querySelectorAll('#owner-toggle-services input[data-flag-service]').forEach(cb => {
-        cb.checked = f.services ? f.services[cb.dataset.flagService] !== false : true;
+    document.querySelectorAll('#owner-toggle-services select[data-flag-service]').forEach(sel => {
+        sel.value = flagStatus(f.services ? f.services[sel.dataset.flagService] : undefined);
     });
     const regCb = document.getElementById('owner-toggle-registration');
     if (regCb) regCb.checked = f.registration_open !== false;
@@ -1417,9 +1282,9 @@ function syncOwnerCheckboxes() {
 window.saveOwnerSettings = async function() {
     if (!isOwner(window.currentUser)) return notify('Нет доступа', false);
     const tabs = {};
-    document.querySelectorAll('#owner-toggle-tabs input[data-flag-tab]').forEach(cb => { tabs[cb.dataset.flagTab] = cb.checked; });
+    document.querySelectorAll('#owner-toggle-tabs select[data-flag-tab]').forEach(sel => { tabs[sel.dataset.flagTab] = sel.value; });
     const services = {};
-    document.querySelectorAll('#owner-toggle-services input[data-flag-service]').forEach(cb => { services[cb.dataset.flagService] = cb.checked; });
+    document.querySelectorAll('#owner-toggle-services select[data-flag-service]').forEach(sel => { services[sel.dataset.flagService] = sel.value; });
     const registration_open = document.getElementById('owner-toggle-registration')?.checked !== false;
     // Сохраняем tabs/services/registration_open, но не затираем банер, который мог сохранить админ отдельно
     const flags = Object.assign({}, window.siteFlags, { tabs, services, registration_open });
@@ -1707,6 +1572,19 @@ window.submitForm = async function(type) {
         const u=document.getElementById('lawyer-username').value.trim(), s=document.getElementById('lawyer-situation').value, tx=document.getElementById('lawyer-text').value.trim();
         if (!u||!tx) return notify('Заполните обязательные поля', false);
         data = { type:'lawyer', username:u, situation:s, text:tx, status:'pending', user_id:window.currentUser?.id };
+    } else if (type === 'appeal') {
+        const u=document.getElementById('appeal-username').value.trim(), at=document.getElementById('appeal-type-value').value, tg=document.getElementById('appeal-target').value.trim(), tx=document.getElementById('appeal-text').value.trim(), conf=document.getElementById('appeal-confirm').checked;
+        if (!u||!tg||!tx) return notify('Заполните обязательные поля', false);
+        if (!conf) return notify('Подтвердите достоверность информации', false);
+        data = { type:'appeal', username:u, request_type:at, defendant:tg, text:tx, status:'pending', user_id:window.currentUser?.id };
+    } else if (type === 'home') {
+        const u=document.getElementById('home-username').value.trim(), h=document.getElementById('home-house').value.trim(), c=document.getElementById('home-comment').value.trim();
+        if (!u||!h) return notify('Укажите номер дома из Discord-канала со списком домов', false);
+        data = { type:'home_purchase', username:u, address:h, note:c, text:'Заявка на покупку дома № ' + h, status:'pending', user_id:window.currentUser?.id };
+    } else if (type === 'credit') {
+        const u=document.getElementById('credit-username').value.trim(), ct=document.getElementById('credit-type').value, purpose=document.getElementById('credit-purpose').value.trim(), am=document.getElementById('credit-amount').value.trim(), c=document.getElementById('credit-comment').value.trim();
+        if (!u||!purpose||!am) return notify('Заполните обязательные поля', false);
+        data = { type:'credit', username:u, request_type:ct, reason:purpose, experience:am, note:c, text:'Заявка на кредит («' + ct + '»), сумма: ' + am, status:'pending', user_id:window.currentUser?.id };
     }
     setModalBusy(type, true);
     try {
@@ -1734,8 +1612,8 @@ window.loadMyDocs = async function() {
     listDiv.innerHTML = '<div class="loading-text">Загрузка...</div>';
     const reqs = await db(`requests?user_id=eq.${window.currentUser.id}&order=created_at.desc`);
     if (!Array.isArray(reqs) || !reqs.length) { listDiv.innerHTML = '<div class="loading-text" style="opacity:0.5">У вас нет заявок</div>'; return; }
-    const typeLabels = { passport:'🪪 Паспорт', medbook:'🏥 Мед. книжка', license:'🔫 Лицензия', driving_license:'🚗 Права на вождение', faction_join:'🏛️ Вступление во фракцию', court:'⚖️ Судебный иск', government:'📋 Обращение в правительство', lawyer:'👨‍⚖️ Адвокат', opg_create:'💀 Создание ОПГ', opg_join:'💀 Вступление в ОПГ', mafia_create:'🤵 Создание Мафии', mafia_join:'🤵 Вступление в Мафию' };
-    const typeIcons  = { passport:'🪪', medbook:'🏥', license:'🔫', driving_license:'🚗', faction_join:'🏛️', court:'⚖️', government:'📋', lawyer:'👨‍⚖️', opg_create:'💀', opg_join:'💀', mafia_create:'🤵', mafia_join:'🤵' };
+    const typeLabels = { passport:'🪪 Паспорт', medbook:'🏥 Мед. книжка', license:'🔫 Лицензия', driving_license:'🚗 Права на вождение', faction_join:'🏛️ Вступление во фракцию', court:'⚖️ Судебный иск', government:'📋 Обращение в правительство', lawyer:'👨‍⚖️ Адвокат', opg_create:'💀 Создание ОПГ', opg_join:'💀 Вступление в ОПГ', mafia_create:'🤵 Создание Мафии', mafia_join:'🤵 Вступление в Мафию', appeal:'🗳️ Админская заявка', home_purchase:'🏠 Покупка дома', credit:'💳 Кредит' };
+    const typeIcons  = { passport:'🪪', medbook:'🏥', license:'🔫', driving_license:'🚗', faction_join:'🏛️', court:'⚖️', government:'📋', lawyer:'👨‍⚖️', opg_create:'💀', opg_join:'💀', mafia_create:'🤵', mafia_join:'🤵', appeal:'🗳️', home_purchase:'🏠', credit:'💳' };
     const canM = canManageDocs(window.currentUser);
     listDiv.innerHTML = reqs.map(r => {
         const sb  = r.status==='approved' ? '<span class="badge badge-approved">✓ Одобрено</span>' : r.status==='rejected' ? '<span class="badge badge-rejected">✕ Отклонено</span>' : '<span class="badge badge-pending">⏳ На рассмотрении</span>';
@@ -1756,7 +1634,7 @@ window.deleteRequest = async function(id, section) {
 
 // ─── ADMIN REQUESTS ───────────────────────────
 
-const REQUEST_TYPE_NAMES = { passport:'🪪 Паспорт', medbook:'🏥 Мед. книжка', license:'🔫 Лицензия', driving_license:'🚗 Права на вождение', faction_join:'🏛️ Вступление во фракцию', court:'⚖️ Судебный иск', government:'📋 Правительство', lawyer:'👨‍⚖️ Адвокат', opg_create:'💀 Создание ОПГ', opg_join:'💀 Вступление в ОПГ', mafia_create:'🤵 Создание Мафии', mafia_join:'🤵 Вступление в Мафию' };
+const REQUEST_TYPE_NAMES = { passport:'🪪 Паспорт', medbook:'🏥 Мед. книжка', license:'🔫 Лицензия', driving_license:'🚗 Права на вождение', faction_join:'🏛️ Вступление во фракцию', court:'⚖️ Судебный иск', government:'📋 Правительство', lawyer:'👨‍⚖️ Адвокат', opg_create:'💀 Создание ОПГ', opg_join:'💀 Вступление в ОПГ', mafia_create:'🤵 Создание Мафии', mafia_join:'🤵 Вступление в Мафию', appeal:'🗳️ Админская заявка (вотум/жалоба/похвала)', home_purchase:'🏠 Покупка дома', credit:'💳 Кредит' };
 
 window._adminRequestsCache = [];
 
@@ -1816,16 +1694,22 @@ window.reviewRequest = async function(id, status) {
         }
     }
     const webhook = WEBHOOK_BY_TYPE[req.type] || WEBHOOK_PASSPORT_LICENSE;
-    const typeNames = { passport:'🪪 Паспорт', medbook:'🏥 Мед. книжка', license:'🔫 Лицензия', driving_license:'🚗 Права на вождение', faction_join:'🏛️ Вступление во фракцию', court:'⚖️ Судебный иск', government:'📋 Правительство', lawyer:'👨‍⚖️ Адвокат', opg_create:'💀 Создание ОПГ', opg_join:'💀 Вступление в ОПГ', mafia_create:'🤵 Создание Мафии', mafia_join:'🤵 Вступление в Мафию' };
+    const typeNames = { passport:'🪪 Паспорт', medbook:'🏥 Мед. книжка', license:'🔫 Лицензия', driving_license:'🚗 Права на вождение', faction_join:'🏛️ Вступление во фракцию', court:'⚖️ Судебный иск', government:'📋 Правительство', lawyer:'👨‍⚖️ Адвокат', opg_create:'💀 Создание ОПГ', opg_join:'💀 Вступление в ОПГ', mafia_create:'🤵 Создание Мафии', mafia_join:'🤵 Вступление в Мафию', appeal:'🗳️ Админская заявка', home_purchase:'🏠 Покупка дома', credit:'💳 Кредит' };
     const emoji = status==='approved' ? '✅' : '❌';
     const label = status==='approved' ? 'ОДОБРЕНО' : 'ОТКЛОНЕНО';
     const dataFields = [];
     if (req.char_name)   dataFields.push({ name:'📛 ФИО',            value:req.char_name,   inline:true });
     if (req.dob)         dataFields.push({ name:'🎂 Дата рождения',  value:req.dob,         inline:true });
     if (req.reason)      dataFields.push({ name:'ℹ️ Доп. инфо',      value:req.reason,      inline:true });
-    if (req.address)     dataFields.push({ name:'💼 Место работы',   value:req.address,     inline:true });
+    if (req.address)     dataFields.push({ name:'💼 Место работы / номер дома', value:req.address, inline:true });
+    if (req.experience)  dataFields.push({ name:'📊 Доп. данные (сумма/стаж и т.п.)', value:req.experience, inline:true });
     if (req.faction)     dataFields.push({ name:'🏛️ Фракция',        value:req.faction,     inline:true });
     if (req.weapon_type) dataFields.push({ name:'🔫 Оружие',         value:req.weapon_type, inline:false });
+    if (req.request_type)dataFields.push({ name:'📌 Тип обращения',  value:req.request_type,inline:true });
+    if (req.defendant)   dataFields.push({ name:'⚖️ Объект/ответчик', value:req.defendant,  inline:true });
+    if (req.claim)       dataFields.push({ name:'📄 Суть иска',       value:req.claim,      inline:false });
+    if (req.evidence)    dataFields.push({ name:'📎 Доказательства',  value:req.evidence,    inline:false });
+    if (req.text)        dataFields.push({ name:'📝 Текст',          value:req.text,        inline:false });
     if (req.note)        dataFields.push({ name:'📋 Примечание',     value:req.note,        inline:false });
     await sendDiscordWebhook(webhook, {
         title: `${emoji} ${typeNames[req.type]||req.type} — ${label}`,
@@ -1881,30 +1765,51 @@ function renderDocCard(r, fields, icon, section) {
     return `<div class="doc-card" style="flex-direction:column;align-items:stretch;gap:0"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff">${icon} ${escHtml(r.char_name||r.username)}</div><div style="text-align:right">${statusBadge}</div></div><div style="color:var(--text);font-size:14px;line-height:1.9;margin-top:12px;border-top:1px solid var(--border);padding-top:12px">${fields}</div>${btns}</div>`;
 }
 
-window._passportsCache = { passports: [], licenses: [], drivingLicenses: [], medbooks: [] };
+const DOC_TYPES = [
+    { type:'passport',        icon:'🪪', title:'Паспорта граждан' },
+    { type:'license',         icon:'🔫', title:'Лицензии на оружие' },
+    { type:'driving_license', icon:'🚗', title:'Права на вождение' },
+    { type:'medbook',         icon:'🏥', title:'Медицинские книжки', medOk:true },
+    { type:'faction_join',    icon:'🏛️', title:'Вступления во фракции' },
+    { type:'court',           icon:'⚖️', title:'Судебные иски' },
+    { type:'government',      icon:'📋', title:'Обращения в Правительство' },
+    { type:'lawyer',          icon:'👨‍⚖️', title:'Обращения к адвокату' },
+    { type:'opg_create',      icon:'💀', title:'Созданные ОПГ' },
+    { type:'opg_join',        icon:'💀', title:'Вступления в ОПГ' },
+    { type:'mafia_create',    icon:'🤵', title:'Созданные Мафии' },
+    { type:'mafia_join',      icon:'🤵', title:'Вступления в Мафию' },
+    { type:'appeal',          icon:'🗳️', title:'Админские заявки (вотум/жалоба/похвала)' },
+    { type:'home_purchase',   icon:'🏠', title:'Купленные дома' },
+    { type:'credit',          icon:'💳', title:'Кредиты' },
+];
+const DOC_FIELD_LABELS = {
+    char_name:'📛 ФИО', dob:'🎂 Дата рождения', reason:'ℹ️ Доп. инфо', address:'💼 Место работы / номер дома',
+    experience:'📊 Доп. данные', faction:'🏛️ Фракция', weapon_type:'🔫 Оружие/категории', note:'📋 Примечание',
+    defendant:'⚖️ Объект/ответчик', claim:'📄 Суть иска', evidence:'📎 Доказательства', request_type:'📌 Тип',
+    situation:'📌 Ситуация', text:'📝 Текст',
+};
+function docFieldsHtml(r) {
+    const skip = new Set(['id','type','status','user_id','created_at','expires_at','username','char_name']);
+    return Object.entries(r).filter(([k,v]) => !skip.has(k) && v).map(([k,v]) => `<b>${DOC_FIELD_LABELS[k]||k}:</b> ${escHtml(String(v))}`).join('<br>') || '<span style="opacity:0.5">Нет дополнительных данных</span>';
+}
+
+window._passportsCache = {};
 
 window.loadPassports = async function() {
     const listEl = document.getElementById('passports-list');
     const loadEl = document.getElementById('passports-loading');
-    const countEl = document.getElementById('passports-count');
     const u = window.currentUser;
     if (!u) return;
     const canSeeAll = isAdmin(u) || isPolice(u);
     const canMedbok = isMedic(u);
-    if (!canSeeAll && !canMedbok) { if (listEl) listEl.innerHTML = '<div class="empty"><div class="empty-icon">🔒</div><p>Нет доступа</p></div>'; if (countEl) countEl.textContent = ''; return; }
+    if (!canSeeAll && !canMedbok) { if (listEl) listEl.innerHTML = '<div class="empty"><div class="empty-icon">🔒</div><p>Нет доступа</p></div>'; return; }
     if (loadEl) loadEl.style.display = '';
-    const [passports, licenses, drivingLicenses, medbooks] = await Promise.all([
-        canSeeAll ? db('requests?type=eq.passport&status=eq.approved&order=created_at.desc') : Promise.resolve([]),
-        canSeeAll ? db('requests?type=eq.license&status=eq.approved&order=created_at.desc') : Promise.resolve([]),
-        canSeeAll ? db('requests?type=eq.driving_license&status=eq.approved&order=created_at.desc') : Promise.resolve([]),
-        (canSeeAll || canMedbok) ? db('requests?type=eq.medbook&status=eq.approved&order=created_at.desc') : Promise.resolve([]),
-    ]);
-    window._passportsCache = {
-        passports: Array.isArray(passports) ? passports : [],
-        licenses:  Array.isArray(licenses)  ? licenses  : [],
-        drivingLicenses: Array.isArray(drivingLicenses) ? drivingLicenses : [],
-        medbooks:  Array.isArray(medbooks)  ? medbooks  : [],
-    };
+    const results = await Promise.all(DOC_TYPES.map(cfg => {
+        const allowed = canSeeAll || (cfg.medOk && canMedbok);
+        return allowed ? db(`requests?type=eq.${cfg.type}&status=eq.approved&order=created_at.desc`) : Promise.resolve([]);
+    }));
+    window._passportsCache = {};
+    DOC_TYPES.forEach((cfg, i) => { window._passportsCache[cfg.type] = Array.isArray(results[i]) ? results[i] : []; });
     if (loadEl) loadEl.style.display = 'none';
     const searchEl = document.getElementById('passports-search');
     const filterEl = document.getElementById('passports-filter');
@@ -1923,35 +1828,20 @@ function renderPassportsList() {
     const q = (document.getElementById('passports-search')?.value || '').toLowerCase().trim();
     const filterType = document.getElementById('passports-filter')?.value || 'all';
     const matchQ = r => !q || (r.username||'').toLowerCase().includes(q) || (r.char_name||'').toLowerCase().includes(q);
-    const { passports, licenses, drivingLicenses, medbooks } = window._passportsCache;
     let html = '', total = 0;
-
-    if (canSeeAll && (filterType === 'all' || filterType === 'passport')) {
-        const list = passports.filter(matchQ);
+    DOC_TYPES.forEach(cfg => {
+        const allowed = canSeeAll || (cfg.medOk && canMedbok);
+        if (!allowed) return;
+        if (filterType !== 'all' && filterType !== cfg.type) return;
+        const list = (window._passportsCache[cfg.type] || []).filter(matchQ);
         total += list.length;
-        html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;color:#fff;margin-bottom:16px">🪪 Паспорта граждан</div>`;
-        html += !list.length ? '<div class="loading-text" style="opacity:0.5;margin-bottom:32px">Ничего не найдено</div>' : '<div style="display:grid;gap:12px;margin-bottom:40px">' + list.map(r=>renderDocCard(r,`<b>👤 Игрок:</b> ${escHtml(r.username)}<br><b>📛 ФИО:</b> ${escHtml(r.char_name||'—')}<br><b>🎂 Дата рождения:</b> ${r.dob||'—'}<br><b>⚧ Пол:</b> ${escHtml(r.reason||'—')}<br><b>💼 Место работы:</b> ${escHtml(r.address||'—')}<br><b>🏠 Адрес:</b> ${escHtml(r.experience||'—')}`,'🪪','passports')).join('') + '</div>';
-    }
-    if (canSeeAll && (filterType === 'all' || filterType === 'license')) {
-        const list = licenses.filter(matchQ);
-        total += list.length;
-        html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;color:#fff;margin-bottom:16px">🔫 Лицензии на оружие</div>`;
-        html += !list.length ? '<div class="loading-text" style="opacity:0.5;margin-bottom:32px">Ничего не найдено</div>' : '<div style="display:grid;gap:12px;margin-bottom:40px">' + list.map(r=>renderDocCard(r,`<b>👤 Игрок:</b> ${escHtml(r.username)}<br><b>📛 ФИО:</b> ${escHtml(r.char_name||'—')}<br><b>🏛️ Фракция:</b> ${escHtml(r.faction||'—')}<br><b>🔫 Оружие:</b> ${escHtml(r.weapon_type||'—')}`,'🔫','passports')).join('') + '</div>';
-    }
-    if (canSeeAll && (filterType === 'all' || filterType === 'driving_license')) {
-        const list = drivingLicenses.filter(matchQ);
-        total += list.length;
-        html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;color:#fff;margin-bottom:16px">🚗 Права на вождение</div>`;
-        html += !list.length ? '<div class="loading-text" style="opacity:0.5;margin-bottom:32px">Ничего не найдено</div>' : '<div style="display:grid;gap:12px;margin-bottom:40px">' + list.map(r=>renderDocCard(r,`<b>👤 Игрок:</b> ${escHtml(r.username)}<br><b>📛 ФИО:</b> ${escHtml(r.char_name||'—')}<br><b>🎂 Дата рождения:</b> ${r.dob||'—'}<br><b>💼 Место работы:</b> ${escHtml(r.address||'—')}<br><b>🚗 Категории:</b> ${escHtml(r.weapon_type||'—')}`,'🚗','passports')).join('') + '</div>';
-    }
-    if ((canSeeAll || canMedbok) && (filterType === 'all' || filterType === 'medbook')) {
-        const list = medbooks.filter(matchQ);
-        total += list.length;
-        html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;color:#fff;margin-bottom:16px">🏥 Медицинские книжки</div>`;
-        html += !list.length ? '<div class="loading-text" style="opacity:0.5">Ничего не найдено</div>' : '<div style="display:grid;gap:12px">' + list.map(r=>renderDocCard(r,`<b>👤 Игрок:</b> ${escHtml(r.username)}<br><b>📛 ФИО:</b> ${escHtml(r.char_name||'—')}<br><b>💼 Место работы:</b> ${escHtml(r.address||'—')}<br><b>🏥 Болезнь:</b> ${escHtml(r.note||'—')}`,'🏥','passports')).join('') + '</div>';
-    }
+        html += `<div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;color:#fff;margin-bottom:16px">${cfg.icon} ${cfg.title}</div>`;
+        html += !list.length
+            ? '<div class="loading-text" style="opacity:0.5;margin-bottom:32px">Ничего не найдено</div>'
+            : '<div style="display:grid;gap:12px;margin-bottom:40px">' + list.map(r => renderDocCard(r, docFieldsHtml(r), cfg.icon, 'passports')).join('') + '</div>';
+    });
     if (countEl) countEl.textContent = total + (total === 1 ? ' документ' : ' документов');
-    listEl.innerHTML = html;
+    listEl.innerHTML = html || '<div class="loading-text" style="opacity:0.5">Ничего не найдено</div>';
 }
 
 window.filterPassports = function() { renderPassportsList(); };
@@ -2097,30 +1987,171 @@ const RULES_DATA = {
 };
 
 const RULE_COLORS = {
-    red:    { bg:'rgba(239,68,68,0.06)',  border:'rgba(239,68,68,0.2)',  badge:'rgba(239,68,68,0.15)',  text:'#f87171' },
-    yellow: { bg:'rgba(251,191,36,0.06)', border:'rgba(251,191,36,0.2)', badge:'rgba(251,191,36,0.15)', text:'#fbbf24' },
-    blue:   { bg:'rgba(14,165,233,0.06)', border:'rgba(14,165,233,0.2)', badge:'rgba(14,165,233,0.15)', text:'#38bdf8' },
-    green:  { bg:'rgba(34,197,94,0.06)',  border:'rgba(34,197,94,0.2)',  badge:'rgba(34,197,94,0.15)',  text:'#22c55e' },
+    red:    { text:'#f87171', bg:'rgba(239,68,68,0.15)' },
+    yellow: { text:'#fbbf24', bg:'rgba(251,191,36,0.15)' },
+    blue:   { text:'#38bdf8', bg:'rgba(56,189,248,0.15)' },
+    green:  { text:'#22c55e', bg:'rgba(34,197,94,0.15)' },
 };
+const RULE_CATEGORIES = [
+    { key:'discord', label:'Discord' }, { key:'rp', label:'Правила РП' }, { key:'ic', label:'IC Правила' },
+    { key:'uk', label:'УК РФ' }, { key:'police', label:'Закон о полиции' }, { key:'admin', label:'Для администрации' },
+    { key:'pdd', label:'Правила ПДД' },
+];
 
-// FIX 2: renderRuleCard теперь всегда показывает полный текст
+window._rulesCache = null; // { category: [ {id,category,num,title,body,punishment,color,sort_order} ] }
+window._rulesLoading = null;
+
+// Правила теперь хранятся в таблице Supabase `rules` и редактируются администрацией прямо на сайте.
+// При самом первом обращении (если таблица ещё пустая) переносим туда встроенный набор правил —
+// дальше всё живёт в базе, а не в коде.
+async function loadRulesFromDB() {
+    if (window._rulesCache) return window._rulesCache;
+    if (window._rulesLoading) return window._rulesLoading;
+    window._rulesLoading = (async () => {
+        let rows = null;
+        try { rows = await db('rules?select=*&order=category.asc,sort_order.asc,id.asc'); }
+        catch(e) { console.warn('rules load error', e); }
+        if (Array.isArray(rows) && !rows.length) {
+            const seed = [];
+            Object.keys(RULES_DATA).forEach(cat => {
+                RULES_DATA[cat].forEach((r, i) => seed.push({ category:cat, num:r.num||null, title:r.title||'', body:r.text||'', punishment:r.punishment||'', color:r.color||'blue', sort_order:i }));
+            });
+            try {
+                await db('rules', { method:'POST', body: JSON.stringify(seed) });
+                rows = await db('rules?select=*&order=category.asc,sort_order.asc,id.asc');
+            } catch(e) { console.warn('rules seed error', e); }
+        }
+        const cache = {};
+        RULE_CATEGORIES.forEach(c => cache[c.key] = []);
+        (Array.isArray(rows) ? rows : []).forEach(r => { (cache[r.category] = cache[r.category] || []).push(r); });
+        window._rulesCache = cache;
+        window._rulesLoading = null;
+        return cache;
+    })();
+    return window._rulesLoading;
+}
+
 function renderRuleCard(r) {
     const c = RULE_COLORS[r.color] || RULE_COLORS.blue;
-    const num = r.num ? `<span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:${c.text};background:${c.badge};padding:2px 8px;border-radius:6px;margin-right:8px">§${r.num}</span>` : '';
-    const punishment = r.punishment ? `<div style="margin-top:8px;display:flex;align-items:flex-start;gap:8px"><span style="font-size:13px">⚠️</span><span style="font-size:13px;color:${c.text};font-weight:600">${escHtml(r.punishment)}</span></div>` : '';
-    const titleHtml = r.title ? `<div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:${r.text?'6px':'0'}">${num}${escHtml(r.title)}</div>` : '';
-    const bodyHtml  = r.text  ? `<div style="color:var(--text);font-size:14px;line-height:1.7;white-space:pre-line">${escHtml(r.text)}</div>` : '';
-    return `<div style="background:${c.bg};border:1px solid ${c.border};border-radius:14px;padding:16px 18px;margin-bottom:10px"><div style="flex:1;min-width:200px">${titleHtml}${bodyHtml}${punishment}</div></div>`;
+    const num = r.num ? `<span class="rule-card-num" style="--rule-c:${c.text};--rule-c-bg:${c.bg}">§${escHtml(r.num)}</span>` : '';
+    const punishment = r.punishment ? `<div class="rule-card-punish" style="--rule-c:${c.text};--rule-c-bg:${c.bg}">⚠️ ${escHtml(r.punishment)}</div>` : '';
+    const titleHtml = r.title ? `<div class="rule-card-title">${num}${escHtml(r.title)}</div>` : '';
+    const bodyHtml  = r.body  ? `<div class="rule-card-body">${escHtml(r.body)}</div>` : '';
+    const adminBtns = isAdmin(window.currentUser) ? `<div class="rule-card-admin-btns"><button onclick="startEditRule(${r.id})" title="Изменить">✏️</button><button onclick="deleteRule(${r.id})" title="Удалить">🗑</button></div>` : '';
+    return `<div class="rule-card" id="rule-card-${r.id}" style="--rule-c:${c.text}">${adminBtns}${titleHtml}${bodyHtml}${punishment}</div>`;
 }
 
-function renderRuleSection(key, targetId) {
+async function renderRuleSection(key, targetId) {
     const el = document.getElementById(targetId);
-    if (!el || el.dataset.loaded) return;
-    const rules = RULES_DATA[key];
-    if (!rules) return;
-    el.innerHTML = rules.map(r => renderRuleCard(r)).join('');
-    el.dataset.loaded = '1';
+    if (!el) return;
+    el.innerHTML = '<div class="rule-empty">Загрузка правил...</div>';
+    const cache = await loadRulesFromDB();
+    renderRuleAdminPanel(key);
+    paintRuleList(key, targetId, cache[key] || []);
 }
+
+function paintRuleList(key, targetId, rules) {
+    const el = document.getElementById(targetId);
+    if (!el) return;
+    const q = (document.getElementById(`rules-${key}-search`)?.value || '').toLowerCase().trim();
+    const filtered = q ? rules.filter(r => (r.title||'').toLowerCase().includes(q) || (r.body||'').toLowerCase().includes(q)) : rules;
+    el.innerHTML = filtered.length ? filtered.map(r => renderRuleCard(r)).join('') : '<div class="rule-empty">Правил пока нет.</div>';
+}
+
+window.filterRuleSection = function(key) {
+    const cache = window._rulesCache || {};
+    paintRuleList(key, `rules-${key}-list`, cache[key] || []);
+};
+
+function renderRuleAdminPanel(key) {
+    const el = document.getElementById(`rules-${key}-admin`);
+    if (!el) return;
+    if (!isAdmin(window.currentUser)) { el.innerHTML = ''; return; }
+    el.innerHTML = `<div class="rule-admin-panel">
+        <div style="font-size:12px;color:var(--cyan);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">➕ Добавить правило в «${RULE_CATEGORIES.find(c=>c.key===key)?.label||key}»</div>
+        <input type="hidden" id="rule-form-${key}-editid">
+        <div style="display:grid;grid-template-columns:80px 1fr 140px;gap:10px" class="form-group">
+            <input type="text" id="rule-form-${key}-num" class="form-input" placeholder="№ (необяз.)">
+            <input type="text" id="rule-form-${key}-title" class="form-input" placeholder="Название правила">
+            <select id="rule-form-${key}-color" class="form-input">
+                <option value="blue">🔵 Инфо</option>
+                <option value="yellow">🟡 Предупреждение</option>
+                <option value="red">🔴 Серьёзное</option>
+                <option value="green">🟢 Разрешено</option>
+            </select>
+        </div>
+        <div class="form-group"><textarea id="rule-form-${key}-body" class="form-input" placeholder="Описание правила"></textarea></div>
+        <div class="form-group"><input type="text" id="rule-form-${key}-punish" class="form-input" placeholder="Наказание (необязательно)"></div>
+        <div style="display:flex;gap:8px">
+            <button class="form-submit" style="width:auto;padding:10px 20px" onclick="saveRuleForm('${key}')">Сохранить правило</button>
+            <button style="background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text);padding:10px 16px;border-radius:10px;cursor:pointer;display:none" id="rule-form-${key}-cancel" onclick="cancelEditRule('${key}')">Отменить</button>
+        </div>
+    </div>`;
+}
+
+window.saveRuleForm = async function(key) {
+    if (!isAdmin(window.currentUser)) return notify('Нет доступа', false);
+    const editId = document.getElementById(`rule-form-${key}-editid`)?.value;
+    const num = document.getElementById(`rule-form-${key}-num`)?.value.trim();
+    const title = document.getElementById(`rule-form-${key}-title`)?.value.trim();
+    const body = document.getElementById(`rule-form-${key}-body`)?.value.trim();
+    const punishment = document.getElementById(`rule-form-${key}-punish`)?.value.trim();
+    const color = document.getElementById(`rule-form-${key}-color`)?.value || 'blue';
+    if (!title) return notify('Введите название правила', false);
+    try {
+        if (editId) {
+            await db(`rules?id=eq.${editId}`, { method:'PATCH', body: JSON.stringify({ num: num||null, title, body, punishment, color }) });
+            notify('Правило обновлено');
+        } else {
+            const cache = window._rulesCache || {};
+            const sort_order = (cache[key] || []).length;
+            await db('rules', { method:'POST', body: JSON.stringify({ category:key, num: num||null, title, body, punishment, color, sort_order }) });
+            notify('Правило добавлено');
+        }
+    } catch(e) { console.error(e); notify('Не удалось сохранить правило: ' + (e.message||'неизвестная ошибка'), false); return; }
+    window._rulesCache = null; // сброс кэша — перечитаем актуальные данные
+    cancelEditRule(key);
+    await renderRuleSection(key, `rules-${key}-list`);
+};
+
+window.startEditRule = function(id) {
+    const cache = window._rulesCache || {};
+    let rule = null, key = null;
+    Object.keys(cache).forEach(k => { const found = (cache[k]||[]).find(r => r.id === id); if (found) { rule = found; key = k; } });
+    if (!rule) return;
+    document.getElementById(`rule-form-${key}-editid`).value = rule.id;
+    document.getElementById(`rule-form-${key}-num`).value = rule.num || '';
+    document.getElementById(`rule-form-${key}-title`).value = rule.title || '';
+    document.getElementById(`rule-form-${key}-body`).value = rule.body || '';
+    document.getElementById(`rule-form-${key}-punish`).value = rule.punishment || '';
+    document.getElementById(`rule-form-${key}-color`).value = rule.color || 'blue';
+    const cancelBtn = document.getElementById(`rule-form-${key}-cancel`);
+    if (cancelBtn) cancelBtn.style.display = '';
+    document.getElementById(`rules-${key}-admin`)?.scrollIntoView({ behavior:'smooth', block:'center' });
+};
+
+window.cancelEditRule = function(key) {
+    const editEl = document.getElementById(`rule-form-${key}-editid`);
+    if (editEl) editEl.value = '';
+    ['num','title','body','punish'].forEach(f => { const el = document.getElementById(`rule-form-${key}-${f}`); if (el) el.value = ''; });
+    const colorEl = document.getElementById(`rule-form-${key}-color`);
+    if (colorEl) colorEl.value = 'blue';
+    const cancelBtn = document.getElementById(`rule-form-${key}-cancel`);
+    if (cancelBtn) cancelBtn.style.display = 'none';
+};
+
+window.deleteRule = async function(id) {
+    if (!isAdmin(window.currentUser)) return notify('Нет доступа', false);
+    if (!confirm('Удалить это правило?')) return;
+    try {
+        await db(`rules?id=eq.${id}`, { method:'DELETE' });
+        notify('Правило удалено');
+    } catch(e) { notify('Не удалось удалить: ' + (e.message||'неизвестная ошибка'), false); return; }
+    window._rulesCache = null;
+    const activeSection = document.querySelector('.rules-section:not([style*="display: none"])');
+    const key = activeSection ? activeSection.id.replace('rules-','') : 'discord';
+    await renderRuleSection(key, `rules-${key}-list`);
+};
 
 window.switchRules = function(section) {
     document.querySelectorAll('.rules-section').forEach(el => el.style.display = 'none');
@@ -2140,6 +2171,25 @@ function escHtml(str) {
 
 // ─── INIT ─────────────────────────────────────
 
+// ─── DISCORD STATS (участники / онлайн по публичному инвайту, без бота) ──
+const DISCORD_INVITE_CODE = 'rp9btukQV5';
+async function loadDiscordStats() {
+    const membersEl = document.getElementById('stat-discord-members');
+    const onlineEl  = document.getElementById('stat-discord-online');
+    if (!membersEl && !onlineEl) return;
+    try {
+        const res = await fetch(`https://discord.com/api/v10/invites/${DISCORD_INVITE_CODE}?with_counts=true`);
+        if (!res.ok) throw new Error('bad status ' + res.status);
+        const data = await res.json();
+        if (membersEl && typeof data.approximate_member_count === 'number') membersEl.textContent = data.approximate_member_count.toLocaleString('ru-RU');
+        if (onlineEl && typeof data.approximate_presence_count === 'number') onlineEl.textContent = data.approximate_presence_count.toLocaleString('ru-RU');
+    } catch (e) {
+        console.warn('Discord stats error', e);
+        if (membersEl) membersEl.textContent = '—';
+        if (onlineEl) onlineEl.textContent = '—';
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     updateAuthZone();
     renderProfile();
@@ -2147,6 +2197,8 @@ document.addEventListener('DOMContentLoaded', () => {
     loadCriminalCounters();
     loadTeamPublic();
     loadSiteSettings();
+    loadDiscordStats();
+    setInterval(loadDiscordStats, 60000);
 
     document.getElementById('login-password')?.addEventListener('keydown', e => { if(e.key==='Enter') handleLogin(); });
     document.getElementById('reg-password2')?.addEventListener('keydown',  e => { if(e.key==='Enter') handleRegister(); });
