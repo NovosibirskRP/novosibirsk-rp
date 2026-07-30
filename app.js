@@ -148,9 +148,25 @@ function isOwner(u) { return u && OWNER_ROLES.includes(u.role); }
 
 // ─── SITE SETTINGS (экстренное отключение разделов) ──
 const DEFAULT_SITE_FLAGS = {
-    tabs: { portal:true, news:true, team:true, rules:true },
-    services: { passport:true, medbook:true, license:true, 'driving-license':true, 'faction-join':true, court:true, government:true, lawyer:true, home:true, credit:true, 'opg-mafia':true },
+    tabs: { portal:true, news:true, rules:true },
+    services: {
+        passport:true, medbook:true, license:true, 'driving-license':true, 'faction-join':true,
+        court:true, government:true, lawyer:true, home:true, credit:true, 'opg-mafia':true,
+        // Блок «Команда» на главной странице (раньше был отдельной вкладкой — теперь встроен в Главную)
+        team: true,
+        // Обращения к администрации (вкладка Портал)
+        'vote-no-confidence': true, 'vote-confidence': true, complaint: true, praise: true
+    },
     registration_open: true,
+    // Отдельные, более точечные рубильники — каждый можно выключить сам по себе, не трогая остальное
+    login_enabled: true,      // вход в аккаунт для обычных пользователей (Владелец/Зам всегда могут войти)
+    webhooks_enabled: true,   // отправка уведомлений в Discord по вебхукам (заявки и т.д.)
+    // Отдельный "большой рубильник" — полностью гасит сайт для всех, кроме Владельца/Зама.
+    // Специально вынесен отдельно от разделов/услуг выше, чтобы не выключить всё случайно.
+    maintenance: {
+        active: false,
+        message: 'Сайт временно на техническом обслуживании. Мы скоро вернёмся!'
+    },
     banner: {
         active: true,
         label: 'ОБНОВЛЕНИЕ',
@@ -159,6 +175,14 @@ const DEFAULT_SITE_FLAGS = {
         info: 'Ювелирный магазин & Дальнобойщики',
         timerLabel: 'ДО ВЫХОДА',
         timerTarget: '2026-07-10T21:00:00+03:00'
+    },
+    // Отдельный, более заметный баннер «Сервер запущен» — включается одной кнопкой из профиля админа
+    serverBanner: {
+        active: false,
+        text: '🟢 СЕРВЕР ЗАПУЩЕН! Заходите играть прямо сейчас',
+        autoCloseMinutes: null, // необязательно, например 5 — через сколько минут баннер скроется сам
+        position: 'top',        // 'top' — сверху страницы, 'bottom' — снизу страницы
+        activatedAt: null       // выставляется автоматически в момент включения кнопкой
     }
 };
 window.siteFlags = DEFAULT_SITE_FLAGS;
@@ -171,7 +195,9 @@ async function loadSiteSettings() {
             window.siteFlags = Object.assign({}, DEFAULT_SITE_FLAGS, flags, {
                 tabs: Object.assign({}, DEFAULT_SITE_FLAGS.tabs, flags.tabs || {}),
                 services: Object.assign({}, DEFAULT_SITE_FLAGS.services, flags.services || {}),
-                banner: Object.assign({}, DEFAULT_SITE_FLAGS.banner, flags.banner || {})
+                banner: Object.assign({}, DEFAULT_SITE_FLAGS.banner, flags.banner || {}),
+                serverBanner: Object.assign({}, DEFAULT_SITE_FLAGS.serverBanner, flags.serverBanner || {}),
+                maintenance: Object.assign({}, DEFAULT_SITE_FLAGS.maintenance, flags.maintenance || {})
             });
         } else {
             await db('site_settings', { method:'POST', body: JSON.stringify({ key:'site_flags', value: DEFAULT_SITE_FLAGS }) }).catch(()=>{});
@@ -180,6 +206,9 @@ async function loadSiteSettings() {
     applySiteFlags();
     renderUpdateBanner();
     fillBannerAdminForm();
+    renderServerLiveBanner();
+    fillServerBannerAdminForm();
+    renderMaintenanceOverlay();
 }
 
 // ─── БАННЕР ОБНОВЛЕНИЙ (редактируется админами из профиля) ──
@@ -287,6 +316,131 @@ window.saveBannerSettings = async function() {
     } catch(e) { console.error('saveBannerSettings error', e); notify('Не удалось сохранить баннер: ' + (e.message||e), false); }
 };
 
+// ─── БАННЕР «СЕРВЕР ЗАПУЩЕН» ──────────────────────────────────
+// Отдельный от баннера обновлений выше баннер — ярче, со свечением
+// и пульсацией, крепится поверх сайта сверху или снизу. Включается
+// и выключается ОДНОЙ кнопкой из панели администратора (профиль).
+// Необязательный таймер автозакрытия (например, 5 минут) считается
+// от момента включения (activatedAt) и хранится вместе с баннером
+// в той же записи site_settings/site_flags в Supabase.
+window._serverBannerCloseTimer = null;
+
+function renderServerLiveBanner() {
+    const b = (window.siteFlags && window.siteFlags.serverBanner) || DEFAULT_SITE_FLAGS.serverBanner;
+    const el = document.getElementById('server-live-banner');
+    if (!el) return;
+
+    if (window._serverBannerCloseTimer) { clearTimeout(window._serverBannerCloseTimer); window._serverBannerCloseTimer = null; }
+    document.body.classList.remove('server-banner-top-active', 'server-banner-bottom-active');
+
+    // Если у баннера было автозакрытие и время уже вышло (например, страницу открыли позже) — не показываем
+    let active = b.active === true;
+    if (active && b.autoCloseMinutes && b.activatedAt) {
+        const elapsedMs = Date.now() - new Date(b.activatedAt).getTime();
+        const limitMs = Number(b.autoCloseMinutes) * 60 * 1000;
+        if (elapsedMs >= limitMs) active = false;
+    }
+
+    if (!active) { el.style.display = 'none'; return; }
+
+    const position = b.position === 'bottom' ? 'bottom' : 'top';
+    el.style.display = '';
+    el.classList.remove('pos-top', 'pos-bottom');
+    el.classList.add(position === 'bottom' ? 'pos-bottom' : 'pos-top');
+    document.body.classList.add(position === 'bottom' ? 'server-banner-bottom-active' : 'server-banner-top-active');
+
+    const textEl = document.getElementById('server-live-text');
+    if (textEl) textEl.innerHTML = b.text || DEFAULT_SITE_FLAGS.serverBanner.text;
+
+    const timerEl = document.getElementById('server-live-timer');
+    if (timerEl) {
+        if (b.autoCloseMinutes && b.activatedAt) {
+            timerEl.style.display = '';
+            const targetMs = new Date(b.activatedAt).getTime() + Number(b.autoCloseMinutes) * 60 * 1000;
+            const tick = () => {
+                const left = targetMs - Date.now();
+                if (left <= 0) {
+                    el.style.display = 'none';
+                    document.body.classList.remove('server-banner-top-active', 'server-banner-bottom-active');
+                    return;
+                }
+                const m = Math.floor(left / 60000);
+                const s = Math.floor((left % 60000) / 1000);
+                timerEl.textContent = `закроется через ${m}:${s < 10 ? '0' : ''}${s}`;
+                window._serverBannerCloseTimer = setTimeout(tick, 1000);
+            };
+            tick();
+        } else {
+            timerEl.style.display = 'none';
+            timerEl.textContent = '';
+        }
+    }
+}
+
+function fillServerBannerAdminForm() {
+    const b = (window.siteFlags && window.siteFlags.serverBanner) || DEFAULT_SITE_FLAGS.serverBanner;
+    const textEl = document.getElementById('server-banner-text'); if (textEl && document.activeElement !== textEl) textEl.value = b.text || '';
+    const minEl = document.getElementById('server-banner-minutes'); if (minEl && document.activeElement !== minEl) minEl.value = b.autoCloseMinutes || '';
+    const posEl = document.getElementById('server-banner-position'); if (posEl) posEl.value = b.position === 'bottom' ? 'bottom' : 'top';
+    const btn = document.getElementById('server-banner-toggle-btn');
+    if (btn) {
+        const isActive = b.active === true;
+        btn.textContent = isActive ? '🔴 Выключить баннер «Сервер запущен»' : '🟢 Включить баннер «Сервер запущен»';
+        btn.style.background = isActive ? 'linear-gradient(135deg,#dc2626,#ef4444)' : 'linear-gradient(135deg,#16a34a,#22c55e)';
+        btn.style.borderColor = isActive ? '#ef4444' : '#22c55e';
+    }
+}
+
+// Единственная кнопка: включает/выключает баннер и сразу же применяет
+// текст, автозакрытие и расположение из полей формы выше.
+window.toggleServerLiveBanner = async function() {
+    if (!isAdmin(window.currentUser)) return notify('Нет доступа', false);
+    const current = (window.siteFlags && window.siteFlags.serverBanner) || DEFAULT_SITE_FLAGS.serverBanner;
+    const turningOn = current.active !== true;
+
+    const text = document.getElementById('server-banner-text')?.value.trim() || DEFAULT_SITE_FLAGS.serverBanner.text;
+    const minutesRaw = document.getElementById('server-banner-minutes')?.value;
+    const autoCloseMinutes = minutesRaw ? Number(minutesRaw) : null;
+    const position = document.getElementById('server-banner-position')?.value === 'bottom' ? 'bottom' : 'top';
+
+    const serverBanner = {
+        active: turningOn,
+        text,
+        autoCloseMinutes,
+        position,
+        activatedAt: turningOn ? new Date().toISOString() : current.activatedAt
+    };
+    const newFlags = Object.assign({}, window.siteFlags, { serverBanner });
+    try {
+        const existingRes = await fetch(SUPABASE_URL + '/rest/v1/site_settings?key=eq.site_flags', { headers: H });
+        const existing = await existingRes.json();
+        let saveRes;
+        if (Array.isArray(existing) && existing.length) {
+            saveRes = await fetch(SUPABASE_URL + '/rest/v1/site_settings?key=eq.site_flags', { method:'PATCH', headers: H, body: JSON.stringify({ value: newFlags }) });
+        } else {
+            saveRes = await fetch(SUPABASE_URL + '/rest/v1/site_settings', { method:'POST', headers: H, body: JSON.stringify({ key:'site_flags', value: newFlags }) });
+        }
+        if (!saveRes.ok) {
+            const errBody = await saveRes.text().catch(()=> '');
+            console.error('toggleServerLiveBanner: сервер отклонил сохранение', saveRes.status, errBody);
+            return notify('Не сохранилось: сервер вернул ошибку ' + saveRes.status + '. Проверьте права (RLS) на таблицу site_settings в Supabase', false);
+        }
+        window.siteFlags = newFlags;
+        renderServerLiveBanner();
+        fillServerBannerAdminForm();
+        notify(turningOn ? 'Баннер «Сервер запущен» включён — уже виден всем на сайте' : 'Баннер «Сервер запущен» выключен');
+    } catch(e) { console.error('toggleServerLiveBanner error', e); notify('Не удалось сохранить: ' + (e.message||e), false); }
+};
+
+// Крестик у самого баннера скрывает его только локально, у конкретного посетителя
+// в этой вкладке (не трогает базу) — глобально баннер выключает только админ кнопкой выше.
+window.closeServerLiveBanner = function() {
+    const el = document.getElementById('server-live-banner');
+    if (el) el.style.display = 'none';
+    document.body.classList.remove('server-banner-top-active', 'server-banner-bottom-active');
+    if (window._serverBannerCloseTimer) { clearTimeout(window._serverBannerCloseTimer); window._serverBannerCloseTimer = null; }
+};
+
 // Статус раздела/услуги: поддерживаем и старый формат (true/false), и новый ('on'/'soon'/'maintenance'/'off')
 function flagStatus(v) {
     if (v === true || v === undefined || v === null) return 'on';
@@ -319,10 +473,15 @@ function applySiteFlags() {
         const status = flagStatus(f.tabs ? f.tabs[key] : undefined);
         el.style.display = status === 'off' ? 'none' : '';
     });
-    document.querySelectorAll('.portal-card[data-flag-service]').forEach(el => {
+    document.querySelectorAll('[data-flag-service]:not(select)').forEach(el => {
         const key = el.dataset.flagService;
         const status = flagStatus(f.services ? f.services[key] : undefined);
-        el.style.display = status === 'off' ? 'none' : '';
+        const isPortalCard = el.classList.contains('portal-card');
+        // Для обычных карточек услуг «скоро»/«техработы» оставляют карточку видимой (с бейджем и заглушкой по клику).
+        // Для остальных блоков (например, секции «Команда» на главной) единого экрана-заглушки нет,
+        // поэтому любой статус, кроме «Включено», просто скрывает блок целиком.
+        el.style.display = (status === 'off' || (!isPortalCard && status !== 'on')) ? 'none' : '';
+        if (!isPortalCard) return;
         if (el.dataset.originalOnclick === undefined) el.dataset.originalOnclick = el.getAttribute('onclick') || '';
         // Видимый бейдж статуса на карточке — виден всем, включая владельца, чтобы можно было
         // убедиться, что настройка действительно применилась, даже если сам владелец не заблокирован.
@@ -360,6 +519,26 @@ function applySiteFlags() {
 function canRegisterNow() {
     const f = window.siteFlags || DEFAULT_SITE_FLAGS;
     return f.registration_open !== false;
+}
+
+// ─── ПОЛНАЯ ОСТАНОВКА САЙТА (отдельный "большой рубильник") ──
+// В отличие от разделов/услуг выше, этот флаг гасит вообще всё для
+// обычных посетителей полноэкранным экраном техобслуживания. Владелец
+// и Заместитель Главного Владельца по-прежнему видят обычный сайт,
+// чтобы можно было включить всё обратно.
+function renderMaintenanceOverlay() {
+    const f = window.siteFlags || DEFAULT_SITE_FLAGS;
+    const m = f.maintenance || DEFAULT_SITE_FLAGS.maintenance;
+    const overlay = document.getElementById('maintenance-overlay');
+    if (!overlay) return;
+    const bypass = isOwner(window.currentUser);
+    if (m.active === true && !bypass) {
+        overlay.style.display = 'flex';
+        const textEl = document.getElementById('maintenance-overlay-text');
+        if (textEl) textEl.textContent = m.message || DEFAULT_SITE_FLAGS.maintenance.message;
+    } else {
+        overlay.style.display = 'none';
+    }
 }
 
 async function db(path, opts) {
@@ -401,6 +580,8 @@ function setModalBusy(modalId, busy, busyText) {
 }
 
 async function sendDiscordWebhook(url, embed) {
+    const f = window.siteFlags || DEFAULT_SITE_FLAGS;
+    if (f.webhooks_enabled === false) { console.warn('Webhook пропущен: отправка в Discord отключена администрацией'); return; }
     try {
         await fetch(url, {
             method: 'POST',
@@ -801,6 +982,8 @@ window.handleRegister = async function() {
 };
 
 window.handleLogin = async function() {
+    const f = window.siteFlags || DEFAULT_SITE_FLAGS;
+    if (f.login_enabled === false) return notify('Вход в аккаунт временно отключён администрацией сайта', false);
     const u = document.getElementById('login-username').value.trim().replace(/^@/, '').toLowerCase();
     const p = document.getElementById('login-password').value;
     if (!u || !p) return notify('Заполните все поля', false);
@@ -826,6 +1009,7 @@ window.logout = function() {
 function updateAuthZone() {
     const zone = document.getElementById('auth-zone');
     updateDiscordMissingIndicators();
+    renderMaintenanceOverlay();
     if (!zone) return;
     if (window.currentUser) {
         const role    = window.currentUser.role    || 'Пользователь';
@@ -917,6 +1101,10 @@ window.renderProfile = async function() {
     const bannerP = document.getElementById('admin-banner-panel');
     if (bannerP) bannerP.style.display = isAdmin(window.currentUser) ? '' : 'none';
     if (isAdmin(window.currentUser)) fillBannerAdminForm();
+
+    const serverBannerP = document.getElementById('admin-server-banner-panel');
+    if (serverBannerP) serverBannerP.style.display = isAdmin(window.currentUser) ? '' : 'none';
+    if (isAdmin(window.currentUser)) fillServerBannerAdminForm();
 
     const discordReqP = document.getElementById('admin-discord-request-panel');
     if (discordReqP) discordReqP.style.display = isAdmin(window.currentUser) ? '' : 'none';
@@ -1265,6 +1453,7 @@ function showOwnerPanelIfNeeded() {
         loadAdminTeamManage();
         loadAdminGangs();
     }
+    renderMaintenanceOverlay();
 }
 
 function syncOwnerCheckboxes() {
@@ -1272,11 +1461,30 @@ function syncOwnerCheckboxes() {
     document.querySelectorAll('#owner-toggle-tabs select[data-flag-tab]').forEach(sel => {
         sel.value = flagStatus(f.tabs ? f.tabs[sel.dataset.flagTab] : undefined);
     });
-    document.querySelectorAll('#owner-toggle-services select[data-flag-service]').forEach(sel => {
+    document.querySelectorAll('#owner-panel select[data-flag-service]').forEach(sel => {
         sel.value = flagStatus(f.services ? f.services[sel.dataset.flagService] : undefined);
     });
     const regCb = document.getElementById('owner-toggle-registration');
     if (regCb) regCb.checked = f.registration_open !== false;
+    const loginCb = document.getElementById('owner-toggle-login');
+    if (loginCb) loginCb.checked = f.login_enabled !== false;
+    const webhookCb = document.getElementById('owner-toggle-webhooks');
+    if (webhookCb) webhookCb.checked = f.webhooks_enabled !== false;
+    fillMaintenanceAdminForm();
+}
+
+function fillMaintenanceAdminForm() {
+    const f = window.siteFlags || DEFAULT_SITE_FLAGS;
+    const m = f.maintenance || DEFAULT_SITE_FLAGS.maintenance;
+    const msgEl = document.getElementById('maintenance-message');
+    if (msgEl && document.activeElement !== msgEl) msgEl.value = m.message || '';
+    const btn = document.getElementById('maintenance-toggle-btn');
+    if (btn) {
+        const isActive = m.active === true;
+        btn.textContent = isActive ? '✅ Вернуть сайт из техобслуживания' : '🚨 Включить полную остановку сайта';
+        btn.style.background = isActive ? 'linear-gradient(135deg,#16a34a,#22c55e)' : 'linear-gradient(135deg,#b91c1c,#ef4444)';
+        btn.style.borderColor = isActive ? '#22c55e' : '#ef4444';
+    }
 }
 
 window.saveOwnerSettings = async function() {
@@ -1284,16 +1492,43 @@ window.saveOwnerSettings = async function() {
     const tabs = {};
     document.querySelectorAll('#owner-toggle-tabs select[data-flag-tab]').forEach(sel => { tabs[sel.dataset.flagTab] = sel.value; });
     const services = {};
-    document.querySelectorAll('#owner-toggle-services select[data-flag-service]').forEach(sel => { services[sel.dataset.flagService] = sel.value; });
+    document.querySelectorAll('#owner-panel select[data-flag-service]').forEach(sel => { services[sel.dataset.flagService] = sel.value; });
     const registration_open = document.getElementById('owner-toggle-registration')?.checked !== false;
-    // Сохраняем tabs/services/registration_open, но не затираем банер, который мог сохранить админ отдельно
-    const flags = Object.assign({}, window.siteFlags, { tabs, services, registration_open });
+    const login_enabled = document.getElementById('owner-toggle-login')?.checked !== false;
+    const webhooks_enabled = document.getElementById('owner-toggle-webhooks')?.checked !== false;
+    // Сохраняем tabs/services/registration_open и т.д., но не затираем банер/техобслуживание,
+    // которые могли быть сохранены отдельно (баннер — из своей панели, техобслуживание — своей кнопкой)
+    const flags = Object.assign({}, window.siteFlags, { tabs, services, registration_open, login_enabled, webhooks_enabled });
     window.siteFlags = flags;
     try {
         await callSiteApi('saveOwnerSettings', { flags });
     } catch(e) { console.warn('saveOwnerSettings error', e); notify('Не удалось сохранить настройки: ' + (e.message||'неизвестная ошибка'), false); }
     applySiteFlags();
+    renderMaintenanceOverlay();
     notify('Настройки сайта сохранены');
+};
+
+// Отдельная, специально изолированная кнопка полной остановки сайта.
+// Умышленно не завязана на кнопку «Сохранить настройки» выше, чтобы
+// владелец не мог случайно погасить весь сайт заодно с обычными разделами.
+window.toggleMaintenanceMode = async function() {
+    if (!isOwner(window.currentUser)) return notify('Нет доступа', false);
+    const current = (window.siteFlags && window.siteFlags.maintenance) || DEFAULT_SITE_FLAGS.maintenance;
+    const turningOn = current.active !== true;
+    if (turningOn) {
+        const sure = confirm('Вы точно хотите ПОЛНОСТЬЮ остановить сайт для всех обычных посетителей? Это отдельно от разделов/услуг выше и скроет вообще всё, кроме владельцев.');
+        if (!sure) return;
+    }
+    const message = document.getElementById('maintenance-message')?.value.trim() || DEFAULT_SITE_FLAGS.maintenance.message;
+    const maintenance = { active: turningOn, message };
+    const flags = Object.assign({}, window.siteFlags, { maintenance });
+    window.siteFlags = flags;
+    try {
+        await callSiteApi('saveOwnerSettings', { flags });
+    } catch(e) { console.warn('toggleMaintenanceMode error', e); notify('Не удалось сохранить: ' + (e.message||'неизвестная ошибка'), false); }
+    renderMaintenanceOverlay();
+    fillMaintenanceAdminForm();
+    notify(turningOn ? 'Сайт полностью остановлен для посетителей (техобслуживание)' : 'Сайт снова доступен всем посетителям');
 };
 
 window.ownerRenameUser = async function() {
