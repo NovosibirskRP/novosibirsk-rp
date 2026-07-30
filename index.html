@@ -266,6 +266,23 @@
     </style>
 </head>
 <body>
+<!-- НАЧАЛО БАННЕРА «СЕРВЕР ЗАПУЩЕН» (отдельный от баннера обновлений ниже,
+     включается/выключается одной кнопкой из панели администратора,
+     может крепиться сверху или снизу страницы) -->
+<div class="server-live-banner pos-top" id="server-live-banner" style="display:none">
+    <span class="server-live-dot"></span>
+    <span class="server-live-text" id="server-live-text"><b>🟢 СЕРВЕР ЗАПУЩЕН!</b> Заходите играть прямо сейчас</span>
+    <span class="server-live-timer" id="server-live-timer" style="display:none"></span>
+    <button class="server-live-close" id="server-live-close" onclick="closeServerLiveBanner()" title="Скрыть у себя">✕</button>
+</div>
+<!-- КОНЕЦ БАННЕРА «СЕРВЕР ЗАПУЩЕН» -->
+<!-- ЭКРАН ПОЛНОЙ ОСТАНОВКИ САЙТА (отдельный «большой рубильник» из панели Владельца —
+     показывается всем обычным посетителям, если включён; Владелец/Зам видят сайт как обычно) -->
+<div id="maintenance-overlay" style="display:none;position:fixed;inset:0;z-index:100000;background:radial-gradient(circle at 50% 20%,#111827 0%,#030712 70%);flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px">
+    <div style="font-size:60px;margin-bottom:18px">🛠️</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:3px;color:#f87171;margin-bottom:14px">ТЕХНИЧЕСКОЕ ОБСЛУЖИВАНИЕ</div>
+    <div id="maintenance-overlay-text" style="color:var(--text);font-size:16px;max-width:520px;line-height:1.5">Сайт временно на техническом обслуживании. Мы скоро вернёмся!</div>
+</div>
 <nav>
 <!-- НАЧАЛО ПРЕМИУМ ИНФОРМАЦИОННОЙ ПАНЕЛИ -->
 <div class="update-banner-container" id="site-banner">
@@ -391,7 +408,7 @@
     <div style="margin-bottom:16px"><div class="section-title">Другое</div><div class="section-sub">Дополнительные фракции, добавленные администрацией</div></div>
     <div class="factions-grid" id="grid-other"></div>
   </div>
-  <div class="faction-category" id="main-team-section">
+  <div class="faction-category" id="main-team-section" data-flag-service="team">
     <div style="margin-bottom:16px"><div class="section-title">Команда &amp; О Сервере</div><div class="section-sub">Администрация Novosibirsk RP</div></div>
     <div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px;margin-bottom:24px">
       <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:var(--cyan);margin-bottom:8px">О СЕРВЕРЕ</div>
@@ -429,10 +446,10 @@
       </div>
       <div style="margin:28px 0 14px"><div class="section-title" style="font-size:20px">Обращения к администрации</div><div class="section-sub">Вотум недоверия/доверия, жалоба или похвала на игрока, фракцию или сотрудника</div></div>
       <div class="portal-grid">
-        <div class="portal-card" onclick="requireAuth(function(){openAppealModal('Вотум недоверия')})"><span class="portal-icon">🔴</span><div class="portal-title">Вотум недоверия</div><div class="portal-desc">Выразить недоверие сотруднику или фракции</div></div>
-        <div class="portal-card" onclick="requireAuth(function(){openAppealModal('Вотум доверия')})"><span class="portal-icon">🟢</span><div class="portal-title">Вотум доверия</div><div class="portal-desc">Выразить доверие сотруднику или фракции</div></div>
-        <div class="portal-card" onclick="requireAuth(function(){openAppealModal('Жалоба')})"><span class="portal-icon">⚠️</span><div class="portal-title">Жалоба</div><div class="portal-desc">Пожаловаться на игрока, фракцию или сотрудника</div></div>
-        <div class="portal-card" onclick="requireAuth(function(){openAppealModal('Похвала')})"><span class="portal-icon">👍</span><div class="portal-title">Похвала</div><div class="portal-desc">Отметить хорошую работу игрока или сотрудника</div></div>
+        <div class="portal-card" data-flag-service="vote-no-confidence" onclick="requireAuth(function(){openAppealModal('Вотум недоверия')})"><span class="portal-icon">🔴</span><div class="portal-title">Вотум недоверия</div><div class="portal-desc">Выразить недоверие сотруднику или фракции</div></div>
+        <div class="portal-card" data-flag-service="vote-confidence" onclick="requireAuth(function(){openAppealModal('Вотум доверия')})"><span class="portal-icon">🟢</span><div class="portal-title">Вотум доверия</div><div class="portal-desc">Выразить доверие сотруднику или фракции</div></div>
+        <div class="portal-card" data-flag-service="complaint" onclick="requireAuth(function(){openAppealModal('Жалоба')})"><span class="portal-icon">⚠️</span><div class="portal-title">Жалоба</div><div class="portal-desc">Пожаловаться на игрока, фракцию или сотрудника</div></div>
+        <div class="portal-card" data-flag-service="praise" onclick="requireAuth(function(){openAppealModal('Похвала')})"><span class="portal-icon">👍</span><div class="portal-title">Похвала</div><div class="portal-desc">Отметить хорошую работу игрока или сотрудника</div></div>
       </div>
     </div>
     <div id="portal-mydocs" style="display:none">
@@ -709,7 +726,6 @@
         <div id="owner-toggle-tabs" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin-bottom:18px">
           <div class="owner-toggle" style="cursor:default;justify-content:space-between"><span>Портал</span><select data-flag-tab="portal" class="form-input" style="width:auto;padding:5px 8px;font-size:12px;margin-left:8px"><option value="on">✅ Включено</option><option value="soon">🚧 Скоро</option><option value="maintenance">🛠️ Техработы</option><option value="off">🚫 Скрыто</option></select></div>
           <div class="owner-toggle" style="cursor:default;justify-content:space-between"><span>Новости</span><select data-flag-tab="news" class="form-input" style="width:auto;padding:5px 8px;font-size:12px;margin-left:8px"><option value="on">✅ Включено</option><option value="soon">🚧 Скоро</option><option value="maintenance">🛠️ Техработы</option><option value="off">🚫 Скрыто</option></select></div>
-          <div class="owner-toggle" style="cursor:default;justify-content:space-between"><span>Команда</span><select data-flag-tab="team" class="form-input" style="width:auto;padding:5px 8px;font-size:12px;margin-left:8px"><option value="on">✅ Включено</option><option value="soon">🚧 Скоро</option><option value="maintenance">🛠️ Техработы</option><option value="off">🚫 Скрыто</option></select></div>
           <div class="owner-toggle" style="cursor:default;justify-content:space-between"><span>Правила</span><select data-flag-tab="rules" class="form-input" style="width:auto;padding:5px 8px;font-size:12px;margin-left:8px"><option value="on">✅ Включено</option><option value="soon">🚧 Скоро</option><option value="maintenance">🛠️ Техработы</option><option value="off">🚫 Скрыто</option></select></div>
         </div>
         <div style="font-size:12px;color:var(--cyan);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Услуги портала</div>
@@ -726,8 +742,27 @@
           <div class="owner-toggle" style="cursor:default;justify-content:space-between"><span>Кредиты</span><select data-flag-service="credit" class="form-input" style="width:auto;padding:5px 8px;font-size:12px;margin-left:8px"><option value="on">✅ Включено</option><option value="soon">🚧 Скоро</option><option value="maintenance">🛠️ Техработы</option><option value="off">🚫 Скрыто</option></select></div>
           <div class="owner-toggle" style="cursor:default;justify-content:space-between"><span>ОПГ / Мафия</span><select data-flag-service="opg-mafia" class="form-input" style="width:auto;padding:5px 8px;font-size:12px;margin-left:8px"><option value="on">✅ Включено</option><option value="soon">🚧 Скоро</option><option value="maintenance">🛠️ Техработы</option><option value="off">🚫 Скрыто</option></select></div>
         </div>
-        <label class="owner-toggle" style="margin-bottom:16px;max-width:340px"><input type="checkbox" id="owner-toggle-registration" checked> ✅ Регистрация новых пользователей разрешена</label>
+        <div style="font-size:12px;color:var(--cyan);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Главная страница</div>
+        <div id="owner-toggle-main-services" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin-bottom:16px">
+          <div class="owner-toggle" style="cursor:default;justify-content:space-between"><span>Блок «Команда»</span><select data-flag-service="team" class="form-input" style="width:auto;padding:5px 8px;font-size:12px;margin-left:8px"><option value="on">✅ Включено</option><option value="soon">🚧 Скоро</option><option value="maintenance">🛠️ Техработы</option><option value="off">🚫 Скрыто</option></select></div>
+        </div>
+        <div style="font-size:12px;color:var(--cyan);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Обращения к администрации</div>
+        <div id="owner-toggle-appeal-services" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin-bottom:16px">
+          <div class="owner-toggle" style="cursor:default;justify-content:space-between"><span>Вотум недоверия</span><select data-flag-service="vote-no-confidence" class="form-input" style="width:auto;padding:5px 8px;font-size:12px;margin-left:8px"><option value="on">✅ Включено</option><option value="soon">🚧 Скоро</option><option value="maintenance">🛠️ Техработы</option><option value="off">🚫 Скрыто</option></select></div>
+          <div class="owner-toggle" style="cursor:default;justify-content:space-between"><span>Вотум доверия</span><select data-flag-service="vote-confidence" class="form-input" style="width:auto;padding:5px 8px;font-size:12px;margin-left:8px"><option value="on">✅ Включено</option><option value="soon">🚧 Скоро</option><option value="maintenance">🛠️ Техработы</option><option value="off">🚫 Скрыто</option></select></div>
+          <div class="owner-toggle" style="cursor:default;justify-content:space-between"><span>Жалоба</span><select data-flag-service="complaint" class="form-input" style="width:auto;padding:5px 8px;font-size:12px;margin-left:8px"><option value="on">✅ Включено</option><option value="soon">🚧 Скоро</option><option value="maintenance">🛠️ Техработы</option><option value="off">🚫 Скрыто</option></select></div>
+          <div class="owner-toggle" style="cursor:default;justify-content:space-between"><span>Похвала</span><select data-flag-service="praise" class="form-input" style="width:auto;padding:5px 8px;font-size:12px;margin-left:8px"><option value="on">✅ Включено</option><option value="soon">🚧 Скоро</option><option value="maintenance">🛠️ Техработы</option><option value="off">🚫 Скрыто</option></select></div>
+        </div>
+        <label class="owner-toggle" style="margin-bottom:10px;max-width:340px"><input type="checkbox" id="owner-toggle-registration" checked> ✅ Регистрация новых пользователей разрешена</label>
+        <label class="owner-toggle" style="margin-bottom:10px;max-width:340px"><input type="checkbox" id="owner-toggle-login" checked> ✅ Вход в аккаунт разрешён</label>
+        <label class="owner-toggle" style="margin-bottom:16px;max-width:340px"><input type="checkbox" id="owner-toggle-webhooks" checked> ✅ Отправка уведомлений в Discord (вебхуки) включена</label>
         <button class="form-submit" onclick="saveOwnerSettings()">Сохранить настройки</button>
+      </div>
+      <div class="profile-card" style="border:1px solid rgba(239,68,68,0.4);background:rgba(239,68,68,0.05)">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:#f87171;margin-bottom:4px">🚨 Полная остановка сайта</div>
+        <div style="color:var(--text);font-size:13px;margin-bottom:14px">Отдельный «большой рубильник» — специально вынесен отдельно от «Экстренного отключения» выше. Полностью закрывает сайт для ВСЕХ обычных посетителей экраном «Техническое обслуживание», независимо от того, что настроено в разделах и услугах выше. Владелец и Заместитель Главного Владельца по-прежнему видят и могут пользоваться сайтом (в том числе чтобы включить всё обратно). Используйте только при реальной аварии.</div>
+        <div class="form-group"><label class="form-label">Текст на экране техобслуживания</label><textarea id="maintenance-message" class="form-input" placeholder="Сайт временно на техническом обслуживании. Мы скоро вернёмся!"></textarea></div>
+        <button class="form-submit" id="maintenance-toggle-btn" style="background:linear-gradient(135deg,#b91c1c,#ef4444);border-color:#ef4444" onclick="toggleMaintenanceMode()">🚨 Включить полную остановку сайта</button>
       </div>
     </div>
     <div id="admin-banner-panel" style="display:none">
@@ -756,6 +791,29 @@
         <div class="form-group"><label class="form-label">Ссылка (URL)</label><input type="text" id="banner-admin-cta-url" class="form-input" placeholder="https://discord.gg/..."></div>
         <div style="color:var(--text);font-size:11px;margin-bottom:10px">Кнопка появится в баннере автоматически, если заполнены оба поля выше.</div>
         <button class="form-submit" onclick="saveBannerSettings()">Сохранить баннер</button>
+      </div>
+    </div>
+    <div id="admin-server-banner-panel" style="display:none">
+      <div class="sep"></div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:#4ade80;margin-bottom:4px">🟢 Баннер «Сервер запущен»</div>
+      <div style="color:var(--text);font-size:13px;margin-bottom:16px">Отдельный баннер, гораздо заметнее баннера обновлений выше — со свечением и пульсацией. Включается и выключается ОДНОЙ кнопкой ниже. Виден сразу всем посетителям сайта.</div>
+      <div class="profile-card">
+        <div class="form-group"><label class="form-label">Текст баннера</label><input type="text" id="server-banner-text" class="form-input" placeholder="🟢 СЕРВЕР ЗАПУЩЕН! Заходите играть прямо сейчас"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px">
+          <div class="form-group" style="margin-bottom:6px">
+            <label class="form-label">Автозакрытие через, мин (необязательно)</label>
+            <input type="number" min="1" step="1" id="server-banner-minutes" class="form-input" placeholder="Например: 5">
+          </div>
+          <div class="form-group" style="margin-bottom:6px">
+            <label class="form-label">Расположение баннера</label>
+            <select id="server-banner-position" class="form-input">
+              <option value="top">⬆️ Сверху страницы</option>
+              <option value="bottom">⬇️ Снизу страницы</option>
+            </select>
+          </div>
+        </div>
+        <div style="color:var(--text);font-size:11px;margin-bottom:16px">Если поле «Автозакрытие» пустое — баннер будет висеть на сайте, пока вы не выключите его этой же кнопкой. Если указать, например, 5 — баннер сам скроется через 5 минут после включения.</div>
+        <button class="form-submit" id="server-banner-toggle-btn" style="background:linear-gradient(135deg,#16a34a,#22c55e);border-color:#22c55e" onclick="toggleServerLiveBanner()">🟢 Включить баннер «Сервер запущен»</button>
       </div>
     </div>
     <div id="admin-users-panel" style="display:none">
