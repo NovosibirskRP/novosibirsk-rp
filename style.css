@@ -183,6 +183,125 @@
     100% { box-shadow: 0 0 0 0 rgba(255, 71, 87, 0); }
 }
 
+/* ══════════════════════════════════════════════════════════
+   БАННЕР «СЕРВЕР ЗАПУЩЕН» — отдельный от баннера обновлений,
+   максимально заметный, включается/выключается одной кнопкой
+   из панели администратора. Может крепиться сверху или снизу.
+   ══════════════════════════════════════════════════════════ */
+.server-live-banner {
+    position: fixed;
+    left: 0;
+    right: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 14px;
+    padding: 13px 20px;
+    background: linear-gradient(90deg, #052e1c 0%, #064e3b 50%, #052e1c 100%);
+    box-shadow: 0 0 30px rgba(34, 197, 94, 0.45), inset 0 0 60px rgba(34, 197, 94, 0.1);
+    font-family: 'JetBrains Mono', monospace;
+    animation: serverBannerGlow 1.8s ease-in-out infinite;
+}
+
+.server-live-banner.pos-top {
+    top: 0;
+    border-bottom: 2px solid #22c55e;
+}
+
+.server-live-banner.pos-bottom {
+    bottom: 0;
+    border-top: 2px solid #22c55e;
+}
+
+@keyframes serverBannerGlow {
+    0%, 100% { box-shadow: 0 0 30px rgba(34, 197, 94, 0.45), inset 0 0 60px rgba(34, 197, 94, 0.08); }
+    50%      { box-shadow: 0 0 48px rgba(34, 197, 94, 0.8),  inset 0 0 80px rgba(34, 197, 94, 0.18); }
+}
+
+.server-live-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #22c55e;
+    box-shadow: 0 0 10px #22c55e, 0 0 22px #22c55e;
+    animation: serverLiveDotPulse 1.2s ease-in-out infinite;
+    flex-shrink: 0;
+}
+
+@keyframes serverLiveDotPulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50%      { transform: scale(1.5); opacity: 0.55; }
+}
+
+.server-live-text {
+    color: #f0fdf4;
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: 0.3px;
+    text-shadow: 0 0 12px rgba(34, 197, 94, 0.55);
+}
+
+.server-live-text b {
+    color: #4ade80;
+}
+
+.server-live-timer {
+    color: #86efac;
+    font-size: 0.82rem;
+    font-weight: 600;
+    opacity: 0.9;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.server-live-close {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #f0fdf4;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    line-height: 1;
+    flex-shrink: 0;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.server-live-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.08);
+}
+
+/* Отодвигаем контент страницы, чтобы баннер ничего не перекрывал */
+body.server-banner-top-active {
+    padding-top: 48px;
+}
+
+body.server-banner-bottom-active {
+    padding-bottom: 48px;
+}
+
+@media (max-width: 640px) {
+    .server-live-banner {
+        padding: 10px 14px;
+        gap: 8px;
+    }
+    .server-live-text {
+        font-size: 0.82rem;
+    }
+    body.server-banner-top-active {
+        padding-top: 64px;
+    }
+    body.server-banner-bottom-active {
+        padding-bottom: 64px;
+    }
+}
+
 /* Адаптивность для телефонов */
 @media (max-width: 992px) {
     .update-banner-content {
