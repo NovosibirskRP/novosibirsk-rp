@@ -331,7 +331,6 @@
     <div class="nav-links">
       <button class="nav-btn active" id="nav-main" onclick="navigateTo('main')"><span class="nav-btn-ic">🏠</span>Главная</button>
       <button class="nav-btn" id="nav-portal" data-flag-tab="portal" onclick="navigateTo('portal')"><span class="nav-btn-ic">🏛️</span>Портал</button>
-      <button class="nav-btn" id="nav-news" data-flag-tab="news" onclick="navigateTo('news')"><span class="nav-btn-ic">📰</span>Новости</button>
       <button class="nav-btn" id="nav-rules" data-flag-tab="rules" onclick="navigateTo('rules')"><span class="nav-btn-ic">📋</span>Правила</button>
       <button class="nav-btn" id="nav-profile" onclick="navigateTo('profile')"><span class="nav-btn-ic">👤</span>Профиль<span class="notify-dot" id="profile-notify-dot" style="display:none"></span><span class="notify-dot" id="profile-discord-missing-dot" style="display:none;background:#f87171" title="Не заполнены данные Discord"></span></button>
     </div>
@@ -344,7 +343,6 @@
 <div class="mobile-nav" id="mobile-nav">
   <button class="mobile-nav-btn active" id="mnav-main" onclick="navigateTo('main');closeMobileMenu()">🏠 Главная</button>
   <button class="mobile-nav-btn" id="mnav-portal" data-flag-tab="portal" onclick="navigateTo('portal');closeMobileMenu()">🏛️ Портал</button>
-  <button class="mobile-nav-btn" id="mnav-news" data-flag-tab="news" onclick="navigateTo('news');closeMobileMenu()">📰 Новости</button>
   <button class="mobile-nav-btn" id="mnav-rules" data-flag-tab="rules" onclick="navigateTo('rules');closeMobileMenu()">📋 Правила</button>
   <button class="mobile-nav-btn" id="mnav-profile" onclick="navigateTo('profile');closeMobileMenu()">👤 Профиль<span class="notify-dot" id="profile-notify-dot-m" style="display:none"></span><span class="notify-dot" id="profile-discord-missing-dot-m" style="display:none;background:#f87171"></span></button>
 </div>
@@ -362,6 +360,10 @@
         <button class="btn-why" onclick="openModal('why')">❓ Зачем заходить</button>
       </div>
     </div>
+  </div>
+  <div id="main-status-board" style="display:none;margin-bottom:24px">
+    <div style="margin-bottom:12px"><div class="section-title" style="font-size:20px">Статус разделов</div></div>
+    <div id="status-board-list" style="display:grid;gap:10px"></div>
   </div>
   <div class="stats">
     <div class="stat-card"><div class="stat-num">14</div><div class="stat-label">Фракций</div></div>
@@ -417,6 +419,29 @@
     </div>
     <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:3px;color:#fff;margin-bottom:20px">Состав Администрации</div>
     <div id="team-list" style="display:grid;gap:14px"><div class="loading-text" style="opacity:0.5">Загрузка состава администрации...</div></div>
+  </div>
+  <div class="faction-category" id="main-news-section" data-flag-service="news">
+    <div style="margin-bottom:20px"><div class="section-title">Новости Сервера</div><div class="section-sub">Официальные объявления, патчи и события</div></div>
+    <div id="admin-news-panel" style="display:none" class="news-publish-panel">
+      <div style="color:var(--cyan);font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;margin-bottom:16px">🛠️ Опубликовать новость</div>
+      <div class="news-publish-grid">
+        <input type="text" id="news-title" placeholder="Заголовок новости" class="form-input">
+        <select id="news-tag" class="form-input" onchange="handleNewsTagChange(this)">
+          <option value="Важно">🔴 Важно</option><option value="Обновление">⚙️ Обновление</option>
+          <option value="Мероприятие">🎉 Мероприятие</option><option value="Свой Вариант">✏️ Свой Вариант</option>
+        </select>
+      </div>
+      <div id="news-custom-tag-row" style="display:none;margin-bottom:12px"><input type="text" id="news-custom-tag" placeholder="Название тега..." class="form-input"></div>
+      <textarea id="news-text" placeholder="Текст новости..." class="form-input" style="margin-bottom:12px;min-height:120px"></textarea>
+      <div style="margin-bottom:12px">
+        <label class="form-label">Изображение</label>
+        <input type="text" id="news-image-url" placeholder="https://..." class="form-input" oninput="previewNewsImage()" style="margin-bottom:8px">
+        <label style="background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:600;padding:8px 16px;border-radius:10px;cursor:pointer;display:inline-flex;align-items:center;gap:8px">📁 Загрузить файл<input type="file" accept="image/*" style="display:none" onchange="handleNewsImageFile(this)"></label>
+        <img id="news-img-preview" class="news-img-preview" alt="">
+      </div>
+      <button class="form-submit" onclick="createNews()">Опубликовать</button>
+    </div>
+    <div class="news-grid" id="news-feed"><div class="loading-text">Загрузка новостей...</div></div>
   </div>
 </div></div>
 <!-- ПОРТАЛ -->
@@ -578,31 +603,6 @@
   </div>
 </div></div>
 
-<!-- НОВОСТИ -->
-<div class="tab" id="tab-news"><div class="container">
-  <div style="margin-bottom:20px"><div class="section-title">Новости Сервера</div><div class="section-sub">Официальные объявления, патчи и события</div></div>
-  <div id="admin-news-panel" style="display:none" class="news-publish-panel">
-    <div style="color:var(--cyan);font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;margin-bottom:16px">🛠️ Опубликовать новость</div>
-    <div class="news-publish-grid">
-      <input type="text" id="news-title" placeholder="Заголовок новости" class="form-input">
-      <select id="news-tag" class="form-input" onchange="handleNewsTagChange(this)">
-        <option value="Важно">🔴 Важно</option><option value="Обновление">⚙️ Обновление</option>
-        <option value="Мероприятие">🎉 Мероприятие</option><option value="Свой Вариант">✏️ Свой Вариант</option>
-      </select>
-    </div>
-    <div id="news-custom-tag-row" style="display:none;margin-bottom:12px"><input type="text" id="news-custom-tag" placeholder="Название тега..." class="form-input"></div>
-    <textarea id="news-text" placeholder="Текст новости..." class="form-input" style="margin-bottom:12px;min-height:120px"></textarea>
-    <div style="margin-bottom:12px">
-      <label class="form-label">Изображение</label>
-      <input type="text" id="news-image-url" placeholder="https://..." class="form-input" oninput="previewNewsImage()" style="margin-bottom:8px">
-      <label style="background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:600;padding:8px 16px;border-radius:10px;cursor:pointer;display:inline-flex;align-items:center;gap:8px">📁 Загрузить файл<input type="file" accept="image/*" style="display:none" onchange="handleNewsImageFile(this)"></label>
-      <img id="news-img-preview" class="news-img-preview" alt="">
-    </div>
-    <button class="form-submit" onclick="createNews()">Опубликовать</button>
-  </div>
-  <div class="news-grid" id="news-feed"><div class="loading-text">Загрузка новостей...</div></div>
-</div></div>
-
 <!-- ПРОФИЛЬ -->
 <div class="tab" id="tab-profile"><div class="container" style="max-width:720px">
   <div style="margin-bottom:24px"><div class="section-title">Профиль</div></div>
@@ -669,7 +669,7 @@
       <button class="profile-action-btn" onclick="requireAuth(function(){openModal('court')})"><span>⚖️</span> Подать в суд</button>
       <button class="profile-action-btn" onclick="requireAuth(function(){openModal('government')})"><span>📋</span> Обращение в Правительство</button>
       <button class="profile-action-btn" onclick="requireAuth(function(){openModal('lawyer')})"><span>👨‍⚖️</span> К адвокату</button>
-      <button class="profile-action-btn" onclick="navigateTo('news')"><span>📰</span> Новости сервера</button>
+      <button class="profile-action-btn" onclick="goToNewsSection()"><span>📰</span> Новости сервера</button>
       <button class="profile-action-btn" onclick="navigateTo('rules')"><span>📋</span> Правила сервера</button>
       <button class="profile-action-btn" onclick="copyProfileLink()"><span>🔗</span> Скопировать ссылку на профиль</button>
     </div>
@@ -725,7 +725,6 @@
         <div style="font-size:12px;color:var(--cyan);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Разделы сайта</div>
         <div id="owner-toggle-tabs" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin-bottom:18px">
           <div class="owner-toggle" style="cursor:default;justify-content:space-between"><span>Портал</span><select data-flag-tab="portal" class="form-input" style="width:auto;padding:5px 8px;font-size:12px;margin-left:8px"><option value="on">✅ Включено</option><option value="soon">🚧 Скоро</option><option value="maintenance">🛠️ Техработы</option><option value="off">🚫 Скрыто</option></select></div>
-          <div class="owner-toggle" style="cursor:default;justify-content:space-between"><span>Новости</span><select data-flag-tab="news" class="form-input" style="width:auto;padding:5px 8px;font-size:12px;margin-left:8px"><option value="on">✅ Включено</option><option value="soon">🚧 Скоро</option><option value="maintenance">🛠️ Техработы</option><option value="off">🚫 Скрыто</option></select></div>
           <div class="owner-toggle" style="cursor:default;justify-content:space-between"><span>Правила</span><select data-flag-tab="rules" class="form-input" style="width:auto;padding:5px 8px;font-size:12px;margin-left:8px"><option value="on">✅ Включено</option><option value="soon">🚧 Скоро</option><option value="maintenance">🛠️ Техработы</option><option value="off">🚫 Скрыто</option></select></div>
         </div>
         <div style="font-size:12px;color:var(--cyan);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Услуги портала</div>
@@ -745,6 +744,7 @@
         <div style="font-size:12px;color:var(--cyan);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Главная страница</div>
         <div id="owner-toggle-main-services" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin-bottom:16px">
           <div class="owner-toggle" style="cursor:default;justify-content:space-between"><span>Блок «Команда»</span><select data-flag-service="team" class="form-input" style="width:auto;padding:5px 8px;font-size:12px;margin-left:8px"><option value="on">✅ Включено</option><option value="soon">🚧 Скоро</option><option value="maintenance">🛠️ Техработы</option><option value="off">🚫 Скрыто</option></select></div>
+          <div class="owner-toggle" style="cursor:default;justify-content:space-between"><span>Блок «Новости»</span><select data-flag-service="news" class="form-input" style="width:auto;padding:5px 8px;font-size:12px;margin-left:8px"><option value="on">✅ Включено</option><option value="soon">🚧 Скоро</option><option value="maintenance">🛠️ Техработы</option><option value="off">🚫 Скрыто</option></select></div>
         </div>
         <div style="font-size:12px;color:var(--cyan);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Обращения к администрации</div>
         <div id="owner-toggle-appeal-services" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin-bottom:16px">
@@ -752,6 +752,18 @@
           <div class="owner-toggle" style="cursor:default;justify-content:space-between"><span>Вотум доверия</span><select data-flag-service="vote-confidence" class="form-input" style="width:auto;padding:5px 8px;font-size:12px;margin-left:8px"><option value="on">✅ Включено</option><option value="soon">🚧 Скоро</option><option value="maintenance">🛠️ Техработы</option><option value="off">🚫 Скрыто</option></select></div>
           <div class="owner-toggle" style="cursor:default;justify-content:space-between"><span>Жалоба</span><select data-flag-service="complaint" class="form-input" style="width:auto;padding:5px 8px;font-size:12px;margin-left:8px"><option value="on">✅ Включено</option><option value="soon">🚧 Скоро</option><option value="maintenance">🛠️ Техработы</option><option value="off">🚫 Скрыто</option></select></div>
           <div class="owner-toggle" style="cursor:default;justify-content:space-between"><span>Похвала</span><select data-flag-service="praise" class="form-input" style="width:auto;padding:5px 8px;font-size:12px;margin-left:8px"><option value="on">✅ Включено</option><option value="soon">🚧 Скоро</option><option value="maintenance">🛠️ Техработы</option><option value="off">🚫 Скрыто</option></select></div>
+        </div>
+        <div style="font-size:12px;color:var(--cyan);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">✏️ Тексты для статусов «Скоро» / «Техработы»</div>
+        <div style="color:var(--text);font-size:12px;margin-bottom:10px">Этот текст видят посетители, когда нажимают на раздел со статусом «Скоро» или «Техработы». Можно использовать <b>{name}</b> — он автоматически заменится на название раздела.</div>
+        <div class="form-group"><label class="form-label">Текст для статуса «Скоро»</label><textarea id="status-msg-soon" class="form-input" placeholder="Раздел «{name}» скоро откроется — следите за новостями." style="min-height:60px"></textarea></div>
+        <div class="form-group" style="margin-bottom:20px"><label class="form-label">Текст для статуса «Техработы»</label><textarea id="status-msg-maintenance" class="form-input" placeholder="Раздел «{name}» временно закрыт по техническим причинам. Пожалуйста, загляните позже." style="min-height:60px"></textarea></div>
+        <div class="sep"></div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:#fff;margin-bottom:4px">➕ Свои категории</div>
+        <div style="color:var(--text);font-size:13px;margin-bottom:14px">Добавляйте собственные пункты, не привязанные к конкретной кнопке на сайте, — например, статус Discord-сервера, донат-магазина или отдельного мероприятия. Они появятся табло на Главной странице у всех посетителей, каждый со своим статусом и описанием.</div>
+        <div id="custom-toggles-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px"></div>
+        <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+          <input type="text" id="custom-toggle-new-name" class="form-input" placeholder="Название новой категории (например: Discord-сервер)" style="flex:1;min-width:200px">
+          <button type="button" class="form-submit" style="width:auto;padding:10px 18px;white-space:nowrap;margin-bottom:0" onclick="addCustomToggleRow()">➕ Добавить</button>
         </div>
         <label class="owner-toggle" style="margin-bottom:10px;max-width:340px"><input type="checkbox" id="owner-toggle-registration" checked> ✅ Регистрация новых пользователей разрешена</label>
         <label class="owner-toggle" style="margin-bottom:10px;max-width:340px"><input type="checkbox" id="owner-toggle-login" checked> ✅ Вход в аккаунт разрешён</label>
