@@ -736,6 +736,16 @@ function readHash() {
 
 window.addEventListener('popstate', () => readHash());
 
+// Новости теперь на Главной странице, а не отдельной вкладкой — эта кнопка
+// переводит на Главную и сразу прокручивает к блоку с новостями
+window.goToNewsSection = function() {
+    navigateTo('main');
+    setTimeout(() => {
+        const el = document.getElementById('main-news-section');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 60);
+};
+
 // ─── MOBILE MENU ──────────────────────────────
 
 window.toggleMobileMenu = function() {
