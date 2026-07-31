@@ -148,14 +148,26 @@ function isOwner(u) { return u && OWNER_ROLES.includes(u.role); }
 
 // ─── SITE SETTINGS (экстренное отключение разделов) ──
 const DEFAULT_SITE_FLAGS = {
-    tabs: { portal:true, news:true, rules:true },
+    tabs: { portal:true, rules:true },
     services: {
         passport:true, medbook:true, license:true, 'driving-license':true, 'faction-join':true,
         court:true, government:true, lawyer:true, home:true, credit:true, 'opg-mafia':true,
-        // Блок «Команда» на главной странице (раньше был отдельной вкладкой — теперь встроен в Главную)
-        team: true,
+        // Блоки на главной странице (раньше были отдельными вкладками — теперь встроены в Главную)
+        team: true, news: true,
         // Обращения к администрации (вкладка Портал)
         'vote-no-confidence': true, 'vote-confidence': true, complaint: true, praise: true
+    },
+    // Ручной порядок новостей (список id новостей). Новости, которых нет в этом списке
+    // (например, только что опубликованные), показываются после — по дате, как раньше.
+    newsOrder: [],
+    // Собственные категории владельца — не привязаны к конкретной кнопке на сайте,
+    // показываются как общее табло статуса на Главной странице
+    customToggles: [], // [{ id, label, status, description }]
+    // Тексты, которые видят обычные посетители на экране «Скоро»/«Техработы».
+    // {name} автоматически заменяется на название раздела/категории.
+    statusMessages: {
+        soon: 'Раздел «{name}» скоро откроется — следите за новостями.',
+        maintenance: 'Раздел «{name}» временно закрыт по техническим причинам. Пожалуйста, загляните позже.'
     },
     registration_open: true,
     // Отдельные, более точечные рубильники — каждый можно выключить сам по себе, не трогая остальное
@@ -197,7 +209,10 @@ async function loadSiteSettings() {
                 services: Object.assign({}, DEFAULT_SITE_FLAGS.services, flags.services || {}),
                 banner: Object.assign({}, DEFAULT_SITE_FLAGS.banner, flags.banner || {}),
                 serverBanner: Object.assign({}, DEFAULT_SITE_FLAGS.serverBanner, flags.serverBanner || {}),
-                maintenance: Object.assign({}, DEFAULT_SITE_FLAGS.maintenance, flags.maintenance || {})
+                maintenance: Object.assign({}, DEFAULT_SITE_FLAGS.maintenance, flags.maintenance || {}),
+                newsOrder: Array.isArray(flags.newsOrder) ? flags.newsOrder : [],
+                customToggles: Array.isArray(flags.customToggles) ? flags.customToggles : [],
+                statusMessages: Object.assign({}, DEFAULT_SITE_FLAGS.statusMessages, flags.statusMessages || {})
             });
         } else {
             await db('site_settings', { method:'POST', body: JSON.stringify({ key:'site_flags', value: DEFAULT_SITE_FLAGS }) }).catch(()=>{});
@@ -209,6 +224,7 @@ async function loadSiteSettings() {
     renderServerLiveBanner();
     fillServerBannerAdminForm();
     renderMaintenanceOverlay();
+    renderStatusBoard();
 }
 
 // ─── БАННЕР ОБНОВЛЕНИЙ (редактируется админами из профиля) ──
@@ -271,7 +287,14 @@ function fillBannerAdminForm() {
     if (b.timerTarget) {
         const el = document.getElementById('banner-admin-timer');
         if (el && document.activeElement !== el) {
-            try { el.value = new Date(b.timerTarget).toISOString().slice(0,16); } catch(e){}
+            // <input type="datetime-local"> ожидает МЕСТНОЕ время без часового пояса.
+            // Просто .toISOString() всегда возвращает UTC — из-за этого поле показывало
+            // время со сдвигом на разницу с UTC (например, «улетало» на 4 часа).
+            try {
+                const d = new Date(b.timerTarget);
+                const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
+                el.value = local.toISOString().slice(0, 16);
+            } catch(e){}
         }
     }
 }
@@ -447,14 +470,19 @@ function flagStatus(v) {
     if (v === false) return 'off';
     return v;
 }
-const TAB_LABELS = { main:'Главная', portal:'Городской портал', news:'Новости', team:'Команда', rules:'Правила', profile:'Профиль' };
+const TAB_LABELS = { main:'Главная', portal:'Городской портал', rules:'Правила', profile:'Профиль' };
 
 window.showServiceStatus = function(status, key) {
     const cardTitle = document.querySelector(`[data-flag-service="${key}"] .portal-title`);
     const label = cardTitle ? cardTitle.textContent.trim() : (TAB_LABELS[key] || key);
+    const f = window.siteFlags || DEFAULT_SITE_FLAGS;
+    const templates = f.statusMessages || DEFAULT_SITE_FLAGS.statusMessages;
+    const template = status === 'maintenance'
+        ? (templates.maintenance || DEFAULT_SITE_FLAGS.statusMessages.maintenance)
+        : (templates.soon || DEFAULT_SITE_FLAGS.statusMessages.soon);
     const info = status === 'maintenance'
-        ? { icon:'🛠️', title:'Закрыто по техническим причинам', desc:`Раздел «${label}» временно закрыт по техническим причинам. Пожалуйста, загляните позже.` }
-        : { icon:'🚧', title:'Скоро!', desc:`Раздел «${label}» скоро откроется — следите за новостями.` };
+        ? { icon:'🛠️', title:'Закрыто по техническим причинам', desc: template.replace(/\{name\}/g, label) }
+        : { icon:'🚧', title:'Скоро!', desc: template.replace(/\{name\}/g, label) };
     const el = document.getElementById('fullscreen-cs');
     if (!el) return;
     const iconEl  = document.getElementById('fs-cs-icon');
@@ -508,12 +536,93 @@ function applySiteFlags() {
     const canRegister = f.registration_open !== false;
     const regTabBtn = document.getElementById('auth-tab-register');
     if (regTabBtn) regTabBtn.style.display = canRegister ? '' : 'none';
-    // Если владелец полностью скрыл вкладку, в которой сейчас находится обычный пользователь — вернуть на главную
+    // Если владелец скрыл/поставил на паузу вкладку, в которой сейчас находится обычный
+    // пользователь — сразу вернуть его на главную, не дожидаясь перезагрузки страницы
     const activeTab = document.querySelector('.tab.active');
     if (activeTab && !isOwner(window.currentUser)) {
         const tabId = activeTab.id.replace('tab-', '');
-        if (flagStatus(f.tabs ? f.tabs[tabId] : undefined) === 'off') switchTab('main');
+        const tabStatusNow = flagStatus(f.tabs ? f.tabs[tabId] : undefined);
+        if (tabStatusNow === 'off') {
+            switchTab('main');
+        } else if (tabStatusNow === 'soon' || tabStatusNow === 'maintenance') {
+            showServiceStatus(tabStatusNow, tabId);
+            switchTab('main');
+        }
     }
+    renderStatusBoard();
+}
+
+// ─── СВОИ КАТЕГОРИИ (табло статуса на Главной) ────────────────
+// В отличие от разделов/услуг выше, эти категории не привязаны ни к одной
+// конкретной кнопке на сайте — их создаёт сам владелец под любую свою нужду
+// (статус Discord, донат-магазина, отдельного мероприятия и т.д.). Они просто
+// показываются всем посетителям как табло на Главной странице.
+function renderStatusBoard() {
+    const f = window.siteFlags || DEFAULT_SITE_FLAGS;
+    const wrap = document.getElementById('main-status-board');
+    const list = document.getElementById('status-board-list');
+    if (!wrap || !list) return;
+    const items = (f.customToggles || []).filter(ct => ct && ct.label);
+    if (!items.length) { wrap.style.display = 'none'; return; }
+    wrap.style.display = '';
+    const dotByStatus  = { on:'🟢', soon:'🟡', maintenance:'🔴', off:'⚫' };
+    const textByStatus = { on:'Включено', soon:'Скоро', maintenance:'Техработы', off:'Отключено' };
+    list.innerHTML = items.map(ct => {
+        const st = flagStatus(ct.status);
+        return `<div style="display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 16px;background:var(--card);border:1px solid var(--border);border-radius:12px">
+            <div>
+                <div style="font-weight:600;color:#fff;font-size:14px">${escHtml(ct.label)}</div>
+                ${ct.description ? `<div style="color:var(--text);font-size:12px;margin-top:3px">${escHtml(ct.description)}</div>` : ''}
+            </div>
+            <div style="white-space:nowrap;font-size:12px;font-family:'JetBrains Mono',monospace;flex-shrink:0">${dotByStatus[st]||'🟢'} ${textByStatus[st]||'Включено'}</div>
+        </div>`;
+    }).join('');
+}
+
+// Добавляет строку своей категории в панель владельца (используется и при первой
+// загрузке формы из сохранённых данных, и при нажатии «Добавить»)
+window.addCustomToggleRow = function(presetLabel, presetStatus, presetDesc, presetId) {
+    const nameInput = document.getElementById('custom-toggle-new-name');
+    const label = presetLabel !== undefined ? presetLabel : (nameInput?.value.trim() || '');
+    if (presetLabel === undefined && !label) return notify('Введите название категории', false);
+    const id = presetId || ('custom_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7));
+    const list = document.getElementById('custom-toggles-list');
+    if (!list) return;
+    const row = document.createElement('div');
+    row.className = 'owner-toggle custom-toggle-row';
+    row.dataset.id = id;
+    row.style.cssText = 'cursor:default;flex-direction:column;align-items:stretch;gap:6px;padding:10px';
+    row.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <input type="text" class="form-input custom-toggle-label" value="${escHtml(label)}" placeholder="Название категории" style="flex:1;padding:6px 8px;font-size:13px">
+          <select class="form-input custom-toggle-status" style="width:auto;padding:5px 8px;font-size:12px">
+            <option value="on">✅ Включено</option><option value="soon">🚧 Скоро</option><option value="maintenance">🛠️ Техработы</option><option value="off">⚫ Отключено</option>
+          </select>
+          <button type="button" onclick="this.closest('.custom-toggle-row').remove()" style="background:none;border:none;color:#f87171;cursor:pointer;font-size:16px;flex-shrink:0" title="Удалить">🗑</button>
+        </div>
+        <input type="text" class="form-input custom-toggle-desc" placeholder="Описание для табло на Главной (необязательно)" style="font-size:12px;padding:6px 8px">
+    `;
+    list.appendChild(row);
+    const statusSel = row.querySelector('.custom-toggle-status');
+    if (statusSel) statusSel.value = presetStatus || 'on';
+    const descInput = row.querySelector('.custom-toggle-desc');
+    if (descInput && presetDesc) descInput.value = presetDesc;
+    if (nameInput && presetLabel === undefined) nameInput.value = '';
+};
+
+// Перерисовывает список своих категорий и тексты статусов в панели владельца из сохранённых данных
+function syncCustomTogglesAdmin() {
+    const list = document.getElementById('custom-toggles-list');
+    if (list) {
+        list.innerHTML = '';
+        const f = window.siteFlags || DEFAULT_SITE_FLAGS;
+        (f.customToggles || []).forEach(ct => addCustomToggleRow(ct.label, ct.status, ct.description, ct.id));
+    }
+    const f = window.siteFlags || DEFAULT_SITE_FLAGS;
+    const soonEl = document.getElementById('status-msg-soon');
+    if (soonEl && document.activeElement !== soonEl) soonEl.value = (f.statusMessages && f.statusMessages.soon) || '';
+    const maintEl = document.getElementById('status-msg-maintenance');
+    if (maintEl && document.activeElement !== maintEl) maintEl.value = (f.statusMessages && f.statusMessages.maintenance) || '';
 }
 
 function canRegisterNow() {
@@ -601,9 +710,9 @@ function notify(msg, ok = true) {
 
 // ─── URL ROUTING ──────────────────────────────
 
-const VALID_TABS = ['main','portal','news','rules','profile'];
-// Команда теперь отображается прямо на главной странице — старые ссылки #team ведут на главную
-const LEGACY_TAB_REDIRECTS = { team: 'main' };
+const VALID_TABS = ['main','portal','rules','profile'];
+// Команда и Новости теперь отображаются прямо на главной странице — старые ссылки #team и #news ведут на главную
+const LEGACY_TAB_REDIRECTS = { team: 'main', news: 'main' };
 
 window.navigateTo = function(tab, section) {
     tab = LEGACY_TAB_REDIRECTS[tab] || tab;
@@ -665,10 +774,9 @@ window.switchTab = function(tab, updateHistory = true) {
 
     if (updateHistory) history.pushState({ tab }, '', '#' + tab);
 
-    if (tab === 'news')    loadNews();
     if (tab === 'profile') renderProfile();
     if (tab === 'portal')  initPortal();
-    if (tab === 'main')  { loadCriminalCounters(); loadTeamPublic(); }
+    if (tab === 'main')  { loadCriminalCounters(); loadTeamPublic(); loadNews(); }
     if (tab === 'rules')   renderRuleSection('discord', 'rules-discord-list');
 };
 
@@ -1471,6 +1579,7 @@ function syncOwnerCheckboxes() {
     const webhookCb = document.getElementById('owner-toggle-webhooks');
     if (webhookCb) webhookCb.checked = f.webhooks_enabled !== false;
     fillMaintenanceAdminForm();
+    syncCustomTogglesAdmin();
 }
 
 function fillMaintenanceAdminForm() {
@@ -1496,15 +1605,31 @@ window.saveOwnerSettings = async function() {
     const registration_open = document.getElementById('owner-toggle-registration')?.checked !== false;
     const login_enabled = document.getElementById('owner-toggle-login')?.checked !== false;
     const webhooks_enabled = document.getElementById('owner-toggle-webhooks')?.checked !== false;
+    const customToggles = [];
+    document.querySelectorAll('#custom-toggles-list .custom-toggle-row').forEach(row => {
+        const label = row.querySelector('.custom-toggle-label')?.value.trim();
+        if (!label) return;
+        customToggles.push({
+            id: row.dataset.id,
+            label,
+            status: row.querySelector('.custom-toggle-status')?.value || 'on',
+            description: row.querySelector('.custom-toggle-desc')?.value.trim() || ''
+        });
+    });
+    const statusMessages = {
+        soon: document.getElementById('status-msg-soon')?.value.trim() || DEFAULT_SITE_FLAGS.statusMessages.soon,
+        maintenance: document.getElementById('status-msg-maintenance')?.value.trim() || DEFAULT_SITE_FLAGS.statusMessages.maintenance
+    };
     // Сохраняем tabs/services/registration_open и т.д., но не затираем банер/техобслуживание,
     // которые могли быть сохранены отдельно (баннер — из своей панели, техобслуживание — своей кнопкой)
-    const flags = Object.assign({}, window.siteFlags, { tabs, services, registration_open, login_enabled, webhooks_enabled });
+    const flags = Object.assign({}, window.siteFlags, { tabs, services, registration_open, login_enabled, webhooks_enabled, customToggles, statusMessages });
     window.siteFlags = flags;
     try {
         await callSiteApi('saveOwnerSettings', { flags });
     } catch(e) { console.warn('saveOwnerSettings error', e); notify('Не удалось сохранить настройки: ' + (e.message||'неизвестная ошибка'), false); }
     applySiteFlags();
     renderMaintenanceOverlay();
+    renderStatusBoard();
     notify('Настройки сайта сохранены');
 };
 
@@ -1724,8 +1849,31 @@ window.loadNews = async function() {
     if (adminNewsPanel) adminNewsPanel.style.display = canPublishNews(window.currentUser) ? '' : 'none';
     feed.innerHTML = '<div class="loading-text">Загрузка...</div>';
     const news = await db('news?order=created_at.desc');
-    if (!Array.isArray(news) || !news.length) { feed.innerHTML = '<div class="loading-text" style="opacity:0.5">Новостей пока нет</div>'; return; }
-    feed.innerHTML = news.map(n => {
+    window._newsCache = Array.isArray(news) ? news : [];
+    renderNewsFeed();
+};
+
+// Применяет ручной порядок (siteFlags.newsOrder) к загруженным новостям.
+// Новости, которых ещё нет в списке порядка (например, только что опубликованные),
+// добавляются в конец — в своём обычном порядке по дате.
+function orderedNewsList() {
+    const list = window._newsCache || [];
+    const order = (window.siteFlags && Array.isArray(window.siteFlags.newsOrder)) ? window.siteFlags.newsOrder : [];
+    const byId = {};
+    list.forEach(n => { byId[n.id] = n; });
+    const ordered = [];
+    order.forEach(id => { if (byId[id]) { ordered.push(byId[id]); delete byId[id]; } });
+    Object.values(byId).forEach(n => ordered.push(n));
+    return ordered;
+}
+
+function renderNewsFeed() {
+    const feed = document.getElementById('news-feed');
+    if (!feed) return;
+    const list = orderedNewsList();
+    if (!list.length) { feed.innerHTML = '<div class="loading-text" style="opacity:0.5">Новостей пока нет</div>'; return; }
+    const canManage = canPublishNews(window.currentUser);
+    feed.innerHTML = list.map((n, idx) => {
         const tagLabel = n.custom_tag || n.tag;
         const tc   = TAG_STYLES[n.tag] || 'tag-custom';
         const ti   = TAG_ICONS[n.tag]  || '📌';
@@ -1733,9 +1881,45 @@ window.loadNews = async function() {
         const imgHtml = n.image_url
             ? `<img src="${escHtml(n.image_url)}" class="news-card-img" alt="" onerror="this.style.display='none'">`
             : `<div class="news-card-img-placeholder">${TAG_PLACEHOLDERS[n.tag]||'📰'}</div>`;
-        const del = canPublishNews(window.currentUser) ? `<button onclick="deleteNews(${n.id})" style="background:none;border:none;color:#f87171;font-family:'Rajdhani',sans-serif;font-size:13px;cursor:pointer;padding:0">🗑 Удалить</button>` : '';
-        return `<div class="news-card">${imgHtml}<div class="news-card-body"><span class="news-tag ${tc}">${ti} ${escHtml(tagLabel)}</span><div class="news-title">${escHtml(n.title)}</div><div class="news-text">${escHtml(n.text)}</div><div class="news-footer"><span class="news-date">${date}</span><span class="news-author">${n.author ? '@ ' + escHtml(n.author) : ''}</span></div>${del ? `<div style="margin-top:8px">${del}</div>` : ''}</div></div>`;
+        let controls = '';
+        if (canManage) {
+            const upBtn   = idx > 0             ? `<button onclick="moveNewsItem(${n.id},'up')" title="Переместить выше" style="background:none;border:none;color:#94a3b8;cursor:pointer;padding:0;font-size:15px">⬆️</button>` : `<span style="opacity:0.25;font-size:15px">⬆️</span>`;
+            const downBtn = idx < list.length-1 ? `<button onclick="moveNewsItem(${n.id},'down')" title="Переместить ниже" style="background:none;border:none;color:#94a3b8;cursor:pointer;padding:0;font-size:15px">⬇️</button>` : `<span style="opacity:0.25;font-size:15px">⬇️</span>`;
+            controls = `<div style="margin-top:8px;display:flex;align-items:center;gap:14px">${upBtn}${downBtn}<button onclick="deleteNews(${n.id})" style="background:none;border:none;color:#f87171;font-family:'Rajdhani',sans-serif;font-size:13px;cursor:pointer;padding:0">🗑 Удалить</button></div>`;
+        }
+        return `<div class="news-card">${imgHtml}<div class="news-card-body"><span class="news-tag ${tc}">${ti} ${escHtml(tagLabel)}</span><div class="news-title">${escHtml(n.title)}</div><div class="news-text">${escHtml(n.text)}</div><div class="news-footer"><span class="news-date">${date}</span><span class="news-author">${n.author ? '@ ' + escHtml(n.author) : ''}</span></div>${controls}</div></div>`;
     }).join('');
+}
+
+// Переставляет новость вверх/вниз и сохраняет порядок в site_settings (site_flags.newsOrder),
+// чтобы он был одинаковым для всех посетителей сайта.
+window.moveNewsItem = async function(id, direction) {
+    if (!canPublishNews(window.currentUser)) return;
+    const list = orderedNewsList();
+    const idx = list.findIndex(n => n.id === id);
+    if (idx === -1) return;
+    const swapWith = direction === 'up' ? idx - 1 : idx + 1;
+    if (swapWith < 0 || swapWith >= list.length) return;
+    [list[idx], list[swapWith]] = [list[swapWith], list[idx]];
+    const newOrder = list.map(n => n.id);
+    const flags = Object.assign({}, window.siteFlags, { newsOrder: newOrder });
+    window.siteFlags = flags;
+    renderNewsFeed(); // применяем сразу, не дожидаясь ответа сервера
+    try {
+        const existingRes = await fetch(SUPABASE_URL + '/rest/v1/site_settings?key=eq.site_flags', { headers: H });
+        const existing = await existingRes.json();
+        let saveRes;
+        if (Array.isArray(existing) && existing.length) {
+            saveRes = await fetch(SUPABASE_URL + '/rest/v1/site_settings?key=eq.site_flags', { method:'PATCH', headers: H, body: JSON.stringify({ value: flags }) });
+        } else {
+            saveRes = await fetch(SUPABASE_URL + '/rest/v1/site_settings', { method:'POST', headers: H, body: JSON.stringify({ key:'site_flags', value: flags }) });
+        }
+        if (!saveRes.ok) {
+            const errBody = await saveRes.text().catch(()=> '');
+            console.error('moveNewsItem: сервер отклонил сохранение', saveRes.status, errBody);
+            notify('Порядок применён у вас, но не сохранился на сервере (ошибка ' + saveRes.status + '). Проверьте права (RLS) на таблицу site_settings в Supabase', false);
+        }
+    } catch(e) { console.error('moveNewsItem error', e); notify('Не удалось сохранить порядок новостей: ' + (e.message||e), false); }
 };
 
 window.createNews = async function() {
