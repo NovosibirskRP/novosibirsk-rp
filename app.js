@@ -152,17 +152,21 @@ const DEFAULT_SITE_FLAGS = {
     services: {
         passport:true, medbook:true, license:true, 'driving-license':true, 'faction-join':true,
         court:true, government:true, lawyer:true, home:true, credit:true, 'opg-mafia':true,
-        // Блоки на главной странице (раньше были отдельными вкладками — теперь встроены в Главную)
-        team: true, news: true,
+        // Блок «Команда» на главной странице (раньше был отдельной вкладкой — теперь встроен в Главную)
+        team: true,
         // Обращения к администрации (вкладка Портал)
         'vote-no-confidence': true, 'vote-confidence': true, complaint: true, praise: true
     },
-    // Ручной порядок новостей (список id новостей). Новости, которых нет в этом списке
-    // (например, только что опубликованные), показываются после — по дате, как раньше.
-    newsOrder: [],
     // Собственные категории владельца — не привязаны к конкретной кнопке на сайте,
     // показываются как общее табло статуса на Главной странице
     customToggles: [], // [{ id, label, status, description }]
+    // Опросник на Главной странице — полностью управляется владельцем
+    poll: {
+        active: false,
+        question: '',
+        options: [],   // [{ id, text }]
+        votedBy: {}    // { userId: optionId } — по одному голосу на пользователя
+    },
     // Тексты, которые видят обычные посетители на экране «Скоро»/«Техработы».
     // {name} автоматически заменяется на название раздела/категории.
     statusMessages: {
@@ -210,8 +214,8 @@ async function loadSiteSettings() {
                 banner: Object.assign({}, DEFAULT_SITE_FLAGS.banner, flags.banner || {}),
                 serverBanner: Object.assign({}, DEFAULT_SITE_FLAGS.serverBanner, flags.serverBanner || {}),
                 maintenance: Object.assign({}, DEFAULT_SITE_FLAGS.maintenance, flags.maintenance || {}),
-                newsOrder: Array.isArray(flags.newsOrder) ? flags.newsOrder : [],
                 customToggles: Array.isArray(flags.customToggles) ? flags.customToggles : [],
+                poll: Object.assign({}, DEFAULT_SITE_FLAGS.poll, flags.poll || {}),
                 statusMessages: Object.assign({}, DEFAULT_SITE_FLAGS.statusMessages, flags.statusMessages || {})
             });
         } else {
@@ -225,6 +229,7 @@ async function loadSiteSettings() {
     fillServerBannerAdminForm();
     renderMaintenanceOverlay();
     renderStatusBoard();
+    renderPollBlock();
 }
 
 // ─── БАННЕР ОБНОВЛЕНИЙ (редактируется админами из профиля) ──
@@ -550,6 +555,7 @@ function applySiteFlags() {
         }
     }
     renderStatusBoard();
+    renderPollBlock();
 }
 
 // ─── СВОИ КАТЕГОРИИ (табло статуса на Главной) ────────────────
@@ -578,6 +584,152 @@ function renderStatusBoard() {
         </div>`;
     }).join('');
 }
+
+// Общий помощник для точечного сохранения части site_flags напрямую в Supabase
+// (в обход edge-функции) — тот же приём, что уже используется для баннера «Сервер запущен».
+async function saveSiteFlagsPatch(partialFlags) {
+    const newFlags = Object.assign({}, window.siteFlags, partialFlags);
+    window.siteFlags = newFlags;
+    try {
+        const existingRes = await fetch(SUPABASE_URL + '/rest/v1/site_settings?key=eq.site_flags', { headers: H });
+        const existing = await existingRes.json();
+        let saveRes;
+        if (Array.isArray(existing) && existing.length) {
+            saveRes = await fetch(SUPABASE_URL + '/rest/v1/site_settings?key=eq.site_flags', { method:'PATCH', headers: H, body: JSON.stringify({ value: newFlags }) });
+        } else {
+            saveRes = await fetch(SUPABASE_URL + '/rest/v1/site_settings', { method:'POST', headers: H, body: JSON.stringify({ key:'site_flags', value: newFlags }) });
+        }
+        if (!saveRes.ok) {
+            const errBody = await saveRes.text().catch(()=> '');
+            console.error('saveSiteFlagsPatch: сервер отклонил сохранение', saveRes.status, errBody);
+            return false;
+        }
+        return true;
+    } catch(e) { console.error('saveSiteFlagsPatch error', e); return false; }
+}
+
+// ─── ОПРОСНИК НА ГЛАВНОЙ ───────────────────────────────────────
+// Полностью управляется владельцем: вопрос, варианты ответа и сброс голосов —
+// всё редактируется прямо в панели, без обращения ко мне за правками.
+function renderPollBlock() {
+    const wrap = document.getElementById('main-poll-block');
+    if (!wrap) return;
+    const f = window.siteFlags || DEFAULT_SITE_FLAGS;
+    const poll = f.poll || DEFAULT_SITE_FLAGS.poll;
+    const options = Array.isArray(poll.options) ? poll.options : [];
+    if (!poll.active || !poll.question || options.length < 2) { wrap.style.display = 'none'; return; }
+    wrap.style.display = '';
+    const votedBy = poll.votedBy || {};
+    const counts = {};
+    options.forEach(o => { counts[o.id] = 0; });
+    Object.values(votedBy).forEach(optId => { if (counts[optId] !== undefined) counts[optId]++; });
+    const total = Object.values(counts).reduce((a, b) => a + b, 0);
+    const myVote = window.currentUser ? votedBy[window.currentUser.id] : undefined;
+    let bodyHtml;
+    if (!window.currentUser) {
+        bodyHtml = options.map(o => `<div class="poll-option-btn" style="opacity:0.6;cursor:default">${escHtml(o.text)}</div>`).join('')
+            + `<div style="margin-top:6px"><button class="btn-primary" onclick="openModal('auth')">Войти, чтобы проголосовать</button></div>`;
+    } else if (myVote === undefined) {
+        bodyHtml = options.map(o => `<button type="button" class="poll-option-btn" onclick="castPollVote('${o.id}')">${escHtml(o.text)}</button>`).join('');
+    } else {
+        bodyHtml = options.map(o => {
+            const c = counts[o.id] || 0;
+            const pct = total ? Math.round(c / total * 100) : 0;
+            const mine = String(myVote) === String(o.id);
+            return `<div class="poll-result-row"${mine ? ' style="border-color:rgba(0,245,255,0.4)"' : ''}>
+                <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px"><span>${escHtml(o.text)}${mine ? ' ✅' : ''}</span><span style="color:var(--text)">${pct}% (${c})</span></div>
+                <div class="poll-bar-track"><div class="poll-bar-fill" style="width:${pct}%"></div></div>
+            </div>`;
+        }).join('') + `<div style="margin-top:4px;color:var(--text);font-size:12px">Всего проголосовало: ${total}</div>`;
+    }
+    wrap.innerHTML = `<div style="margin-bottom:14px"><div class="section-title" style="font-size:20px">${escHtml(poll.question)}</div></div><div style="display:flex;flex-direction:column;gap:10px">${bodyHtml}</div>`;
+}
+
+window.castPollVote = async function(optionId) {
+    if (!window.currentUser) { notify('Войдите в аккаунт, чтобы проголосовать', false); openModal('auth'); return; }
+    const poll = (window.siteFlags && window.siteFlags.poll) || DEFAULT_SITE_FLAGS.poll;
+    if (!poll.active || !Array.isArray(poll.options) || poll.options.length < 2) return;
+    if (poll.votedBy && poll.votedBy[window.currentUser.id] !== undefined) return; // уже голосовал
+    const votedBy = Object.assign({}, poll.votedBy || {}, { [window.currentUser.id]: optionId });
+    const newPoll = Object.assign({}, poll, { votedBy });
+    window.siteFlags = Object.assign({}, window.siteFlags, { poll: newPoll });
+    renderPollBlock(); // сразу показываем результат, не дожидаясь ответа сервера
+    const ok = await saveSiteFlagsPatch({ poll: newPoll });
+    if (!ok) notify('Голос не сохранился на сервере — попробуйте ещё раз', false);
+};
+
+// Добавляет строку варианта ответа в панели владельца
+window.addPollOptionRow = function(presetText, presetId, presetVotes) {
+    const input = document.getElementById('poll-new-option');
+    const text = presetText !== undefined ? presetText : (input?.value.trim() || '');
+    if (presetText === undefined && !text) return notify('Введите текст варианта', false);
+    const id = presetId || ('opt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7));
+    const list = document.getElementById('poll-options-list');
+    if (!list) return;
+    const row = document.createElement('div');
+    row.className = 'owner-toggle poll-option-row';
+    row.dataset.id = id;
+    row.style.cssText = 'cursor:default;gap:8px';
+    row.innerHTML = `
+        <input type="text" class="form-input poll-option-text" value="${escHtml(text)}" placeholder="Текст варианта" style="flex:1;padding:6px 8px;font-size:13px">
+        <span style="font-size:12px;color:var(--text);white-space:nowrap;font-family:'JetBrains Mono',monospace">${presetVotes||0} голос.</span>
+        <button type="button" onclick="this.closest('.poll-option-row').remove()" style="background:none;border:none;color:#f87171;cursor:pointer;font-size:16px" title="Удалить">🗑</button>
+    `;
+    list.appendChild(row);
+    if (input && presetText === undefined) input.value = '';
+};
+
+// Перерисовывает форму опросника в панели владельца из сохранённых данных (вместе с текущим счётом голосов)
+function syncPollAdmin() {
+    const f = window.siteFlags || DEFAULT_SITE_FLAGS;
+    const poll = f.poll || DEFAULT_SITE_FLAGS.poll;
+    const activeCb = document.getElementById('poll-active');
+    if (activeCb) activeCb.checked = poll.active === true;
+    const qEl = document.getElementById('poll-question');
+    if (qEl && document.activeElement !== qEl) qEl.value = poll.question || '';
+    const list = document.getElementById('poll-options-list');
+    if (list) {
+        list.innerHTML = '';
+        const votedBy = poll.votedBy || {};
+        const counts = {};
+        (poll.options || []).forEach(o => { counts[o.id] = 0; });
+        Object.values(votedBy).forEach(optId => { if (counts[optId] !== undefined) counts[optId]++; });
+        (poll.options || []).forEach(o => addPollOptionRow(o.text, o.id, counts[o.id] || 0));
+    }
+}
+
+window.savePoll = async function() {
+    if (!isOwner(window.currentUser)) return notify('Нет доступа', false);
+    const question = document.getElementById('poll-question')?.value.trim() || '';
+    const active = document.getElementById('poll-active')?.checked === true;
+    const options = [];
+    document.querySelectorAll('#poll-options-list .poll-option-row').forEach(row => {
+        const text = row.querySelector('.poll-option-text')?.value.trim();
+        if (!text) return;
+        options.push({ id: row.dataset.id, text });
+    });
+    if (active && (!question || options.length < 2)) {
+        return notify('Чтобы показать опрос на сайте — заполните вопрос и минимум 2 варианта ответа', false);
+    }
+    const currentPoll = (window.siteFlags && window.siteFlags.poll) || DEFAULT_SITE_FLAGS.poll;
+    // Если какой-то вариант удалили — голоса за него просто перестанут учитываться в результатах
+    const poll = Object.assign({}, currentPoll, { question, options, active });
+    const ok = await saveSiteFlagsPatch({ poll });
+    renderPollBlock();
+    syncPollAdmin();
+    notify(ok ? 'Опрос сохранён' : 'Опрос применён у вас, но не сохранился на сервере — проверьте права (RLS) на site_settings', ok);
+};
+
+window.resetPollVotes = async function() {
+    if (!isOwner(window.currentUser)) return notify('Нет доступа', false);
+    if (!confirm('Сбросить все голоса в этом опросе? Действие необратимо.')) return;
+    const currentPoll = (window.siteFlags && window.siteFlags.poll) || DEFAULT_SITE_FLAGS.poll;
+    const poll = Object.assign({}, currentPoll, { votedBy: {} });
+    const ok = await saveSiteFlagsPatch({ poll });
+    renderPollBlock();
+    syncPollAdmin();
+    notify(ok ? 'Голоса сброшены' : 'Не удалось сохранить сброс на сервере', ok);
+};
 
 // Добавляет строку своей категории в панель владельца (используется и при первой
 // загрузке формы из сохранённых данных, и при нажатии «Добавить»)
@@ -736,16 +888,6 @@ function readHash() {
 
 window.addEventListener('popstate', () => readHash());
 
-// Новости теперь на Главной странице, а не отдельной вкладкой — эта кнопка
-// переводит на Главную и сразу прокручивает к блоку с новостями
-window.goToNewsSection = function() {
-    navigateTo('main');
-    setTimeout(() => {
-        const el = document.getElementById('main-news-section');
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 60);
-};
-
 // ─── MOBILE MENU ──────────────────────────────
 
 window.toggleMobileMenu = function() {
@@ -786,7 +928,7 @@ window.switchTab = function(tab, updateHistory = true) {
 
     if (tab === 'profile') renderProfile();
     if (tab === 'portal')  initPortal();
-    if (tab === 'main')  { loadCriminalCounters(); loadTeamPublic(); loadNews(); }
+    if (tab === 'main')  { loadCriminalCounters(); loadTeamPublic(); }
     if (tab === 'rules')   renderRuleSection('discord', 'rules-discord-list');
 };
 
@@ -1007,7 +1149,38 @@ window.loadCriminalCounters = async function() {
 
 // ─── MODALS ───────────────────────────────────
 
+// Некоторые формы открываются не только с самой карточки услуги (у неё есть data-flag-service
+// и её onclick подменяется на showServiceStatus), но и с других мест — например, с кнопок
+// быстрых действий на странице конкретной фракции. Чтобы статус «Скоро»/«Техработы»/«Скрыто»
+// реально блокировал отправку заявки отовсюду, а не только с одной кнопки, проверяем статус
+// централизованно — прямо внутри openModal()/openAppealModal().
+const MODAL_TO_SERVICE_KEY = {
+    passport:'passport', medbook:'medbook', license:'license', 'driving-license':'driving-license',
+    'faction-join':'faction-join', court:'court', government:'government', lawyer:'lawyer',
+    home:'home', credit:'credit',
+    'opg-create':'opg-mafia', 'opg-join':'opg-mafia', 'mafia-create':'opg-mafia', 'mafia-join':'opg-mafia'
+};
+const APPEAL_TYPE_TO_SERVICE_KEY = {
+    'Вотум недоверия': 'vote-no-confidence',
+    'Вотум доверия': 'vote-confidence',
+    'Жалоба': 'complaint',
+    'Похвала': 'praise'
+};
+
+// Возвращает true, если форму можно открыть (статус «Включено» или пользователь — владелец).
+// Если нельзя — сама показывает нужное сообщение и возвращает false.
+function canOpenGatedModal(serviceKey) {
+    if (!serviceKey || isOwner(window.currentUser)) return true;
+    const f = window.siteFlags || DEFAULT_SITE_FLAGS;
+    const status = flagStatus(f.services ? f.services[serviceKey] : undefined);
+    if (status === 'on') return true;
+    if (status === 'off') { notify('Этот раздел временно недоступен', false); return false; }
+    showServiceStatus(status, serviceKey);
+    return false;
+}
+
 window.openModal = function(id) {
+    if (!canOpenGatedModal(MODAL_TO_SERVICE_KEY[id])) return;
     const m = document.getElementById('modal-' + id);
     if (m) m.classList.add('open');
     if (window.currentUser) {
@@ -1019,6 +1192,7 @@ window.openModal = function(id) {
 };
 
 window.openAppealModal = function(presetType) {
+    if (!canOpenGatedModal(APPEAL_TYPE_TO_SERVICE_KEY[presetType])) return;
     openModal('appeal');
     const hidden = document.getElementById('appeal-type-value');
     if (hidden) hidden.value = presetType || '';
@@ -1590,6 +1764,7 @@ function syncOwnerCheckboxes() {
     if (webhookCb) webhookCb.checked = f.webhooks_enabled !== false;
     fillMaintenanceAdminForm();
     syncCustomTogglesAdmin();
+    syncPollAdmin();
 }
 
 function fillMaintenanceAdminForm() {
@@ -1640,6 +1815,7 @@ window.saveOwnerSettings = async function() {
     applySiteFlags();
     renderMaintenanceOverlay();
     renderStatusBoard();
+    renderPollBlock();
     notify('Настройки сайта сохранены');
 };
 
@@ -1818,146 +1994,6 @@ window.respondRenameRequest = async function(notifId) {
 window.dismissNotification = async function(id) {
     try { await db(`notifications?id=eq.${id}`, { method:'PATCH', body: JSON.stringify({ read:true }) }); } catch(e) {}
     loadUserNotifications();
-};
-
-// ─── NEWS ─────────────────────────────────────
-
-const TAG_STYLES    = { 'Важно':'tag-important', 'Обновление':'tag-update', 'Мероприятие':'tag-event', 'Свой Вариант':'tag-custom' };
-const TAG_ICONS     = { 'Важно':'🔴', 'Обновление':'⚙️', 'Мероприятие':'🎉', 'Свой Вариант':'✏️' };
-const TAG_PLACEHOLDERS = { 'Важно':'❗', 'Обновление':'⚙️', 'Мероприятие':'🎉', 'Свой Вариант':'✏️' };
-
-window.handleNewsTagChange = function(sel) {
-    const row = document.getElementById('news-custom-tag-row');
-    if (row) row.style.display = sel.value === 'Свой Вариант' ? 'block' : 'none';
-};
-
-window.previewNewsImage = function() {
-    const url = document.getElementById('news-image-url')?.value.trim();
-    const preview = document.getElementById('news-img-preview');
-    if (!preview) return;
-    if (url) { preview.src = url; preview.style.display = 'block'; } else { preview.style.display = 'none'; }
-};
-
-window.handleNewsImageFile = function(input) {
-    const file = input.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        const urlInput = document.getElementById('news-image-url');
-        const preview  = document.getElementById('news-img-preview');
-        if (urlInput) urlInput.value = e.target.result;
-        if (preview)  { preview.src = e.target.result; preview.style.display = 'block'; }
-    };
-    reader.readAsDataURL(file);
-};
-
-// FIX 1: Панель публикации видна только для Администрации (от Ассистента и выше) и ГТРК
-window.loadNews = async function() {
-    const feed = document.getElementById('news-feed');
-    if (!feed) return;
-    const adminNewsPanel = document.getElementById('admin-news-panel');
-    if (adminNewsPanel) adminNewsPanel.style.display = canPublishNews(window.currentUser) ? '' : 'none';
-    feed.innerHTML = '<div class="loading-text">Загрузка...</div>';
-    const news = await db('news?order=created_at.desc');
-    window._newsCache = Array.isArray(news) ? news : [];
-    renderNewsFeed();
-};
-
-// Применяет ручной порядок (siteFlags.newsOrder) к загруженным новостям.
-// Новости, которых ещё нет в списке порядка (например, только что опубликованные),
-// добавляются в конец — в своём обычном порядке по дате.
-function orderedNewsList() {
-    const list = window._newsCache || [];
-    const order = (window.siteFlags && Array.isArray(window.siteFlags.newsOrder)) ? window.siteFlags.newsOrder : [];
-    const byId = {};
-    list.forEach(n => { byId[n.id] = n; });
-    const ordered = [];
-    order.forEach(id => { if (byId[id]) { ordered.push(byId[id]); delete byId[id]; } });
-    Object.values(byId).forEach(n => ordered.push(n));
-    return ordered;
-}
-
-function renderNewsFeed() {
-    const feed = document.getElementById('news-feed');
-    if (!feed) return;
-    const list = orderedNewsList();
-    if (!list.length) { feed.innerHTML = '<div class="loading-text" style="opacity:0.5">Новостей пока нет</div>'; return; }
-    const canManage = canPublishNews(window.currentUser);
-    feed.innerHTML = list.map((n, idx) => {
-        const tagLabel = n.custom_tag || n.tag;
-        const tc   = TAG_STYLES[n.tag] || 'tag-custom';
-        const ti   = TAG_ICONS[n.tag]  || '📌';
-        const date = n.created_at ? new Date(n.created_at).toLocaleDateString('ru-RU') : '';
-        const imgHtml = n.image_url
-            ? `<img src="${escHtml(n.image_url)}" class="news-card-img" alt="" onerror="this.style.display='none'">`
-            : `<div class="news-card-img-placeholder">${TAG_PLACEHOLDERS[n.tag]||'📰'}</div>`;
-        let controls = '';
-        if (canManage) {
-            const upBtn   = idx > 0             ? `<button onclick="moveNewsItem(${n.id},'up')" title="Переместить выше" style="background:none;border:none;color:#94a3b8;cursor:pointer;padding:0;font-size:15px">⬆️</button>` : `<span style="opacity:0.25;font-size:15px">⬆️</span>`;
-            const downBtn = idx < list.length-1 ? `<button onclick="moveNewsItem(${n.id},'down')" title="Переместить ниже" style="background:none;border:none;color:#94a3b8;cursor:pointer;padding:0;font-size:15px">⬇️</button>` : `<span style="opacity:0.25;font-size:15px">⬇️</span>`;
-            controls = `<div style="margin-top:8px;display:flex;align-items:center;gap:14px">${upBtn}${downBtn}<button onclick="deleteNews(${n.id})" style="background:none;border:none;color:#f87171;font-family:'Rajdhani',sans-serif;font-size:13px;cursor:pointer;padding:0">🗑 Удалить</button></div>`;
-        }
-        return `<div class="news-card">${imgHtml}<div class="news-card-body"><span class="news-tag ${tc}">${ti} ${escHtml(tagLabel)}</span><div class="news-title">${escHtml(n.title)}</div><div class="news-text">${escHtml(n.text)}</div><div class="news-footer"><span class="news-date">${date}</span><span class="news-author">${n.author ? '@ ' + escHtml(n.author) : ''}</span></div>${controls}</div></div>`;
-    }).join('');
-}
-
-// Переставляет новость вверх/вниз и сохраняет порядок в site_settings (site_flags.newsOrder),
-// чтобы он был одинаковым для всех посетителей сайта.
-window.moveNewsItem = async function(id, direction) {
-    if (!canPublishNews(window.currentUser)) return;
-    const list = orderedNewsList();
-    const idx = list.findIndex(n => n.id === id);
-    if (idx === -1) return;
-    const swapWith = direction === 'up' ? idx - 1 : idx + 1;
-    if (swapWith < 0 || swapWith >= list.length) return;
-    [list[idx], list[swapWith]] = [list[swapWith], list[idx]];
-    const newOrder = list.map(n => n.id);
-    const flags = Object.assign({}, window.siteFlags, { newsOrder: newOrder });
-    window.siteFlags = flags;
-    renderNewsFeed(); // применяем сразу, не дожидаясь ответа сервера
-    try {
-        const existingRes = await fetch(SUPABASE_URL + '/rest/v1/site_settings?key=eq.site_flags', { headers: H });
-        const existing = await existingRes.json();
-        let saveRes;
-        if (Array.isArray(existing) && existing.length) {
-            saveRes = await fetch(SUPABASE_URL + '/rest/v1/site_settings?key=eq.site_flags', { method:'PATCH', headers: H, body: JSON.stringify({ value: flags }) });
-        } else {
-            saveRes = await fetch(SUPABASE_URL + '/rest/v1/site_settings', { method:'POST', headers: H, body: JSON.stringify({ key:'site_flags', value: flags }) });
-        }
-        if (!saveRes.ok) {
-            const errBody = await saveRes.text().catch(()=> '');
-            console.error('moveNewsItem: сервер отклонил сохранение', saveRes.status, errBody);
-            notify('Порядок применён у вас, но не сохранился на сервере (ошибка ' + saveRes.status + '). Проверьте права (RLS) на таблицу site_settings в Supabase', false);
-        }
-    } catch(e) { console.error('moveNewsItem error', e); notify('Не удалось сохранить порядок новостей: ' + (e.message||e), false); }
-};
-
-window.createNews = async function() {
-    if (!canPublishNews(window.currentUser)) return notify('Нет прав на публикацию', false);
-    const title     = document.getElementById('news-title').value.trim();
-    const tag       = document.getElementById('news-tag').value;
-    const customTag = document.getElementById('news-custom-tag')?.value.trim();
-    const text      = document.getElementById('news-text').value.trim();
-    const imageUrl  = document.getElementById('news-image-url')?.value.trim() || null;
-    if (!title || !text) return notify('Заполните заголовок и текст', false);
-    try {
-        await callSiteApi('createNews', { title, tag, custom_tag: tag === 'Свой Вариант' ? (customTag || 'Свой вариант') : null, text, image_url: imageUrl });
-        document.getElementById('news-title').value = '';
-        document.getElementById('news-text').value  = '';
-        if (document.getElementById('news-image-url'))  document.getElementById('news-image-url').value = '';
-        if (document.getElementById('news-custom-tag')) document.getElementById('news-custom-tag').value = '';
-        const preview = document.getElementById('news-img-preview');
-        if (preview) preview.style.display = 'none';
-        notify('Новость опубликована'); loadNews();
-    } catch (e) { notify('Не удалось опубликовать: ' + (e.message||'неизвестная ошибка'), false); }
-};
-
-window.deleteNews = async function(id) {
-    if (!confirm('Удалить новость?')) return;
-    try {
-        await callSiteApi('deleteNews', { id });
-        notify('Удалено'); loadNews();
-    } catch (e) { notify('Не удалось удалить: ' + (e.message||'неизвестная ошибка'), false); }
 };
 
 // ─── SUBMIT FORM ──────────────────────────────
@@ -2460,13 +2496,23 @@ async function loadRulesFromDB() {
     return window._rulesLoading;
 }
 
-function renderRuleCard(r) {
+function renderRuleCard(r, key, idx, total, isSearching) {
     const c = RULE_COLORS[r.color] || RULE_COLORS.blue;
     const num = r.num ? `<span class="rule-card-num" style="--rule-c:${c.text};--rule-c-bg:${c.bg}">§${escHtml(r.num)}</span>` : '';
     const punishment = r.punishment ? `<div class="rule-card-punish" style="--rule-c:${c.text};--rule-c-bg:${c.bg}">⚠️ ${escHtml(r.punishment)}</div>` : '';
     const titleHtml = r.title ? `<div class="rule-card-title">${num}${escHtml(r.title)}</div>` : '';
     const bodyHtml  = r.body  ? `<div class="rule-card-body">${escHtml(r.body)}</div>` : '';
-    const adminBtns = isAdmin(window.currentUser) ? `<div class="rule-card-admin-btns"><button onclick="startEditRule(${r.id})" title="Изменить">✏️</button><button onclick="deleteRule(${r.id})" title="Удалить">🗑</button></div>` : '';
+    let adminBtns = '';
+    if (isAdmin(window.currentUser)) {
+        let moveBtns = '';
+        // Стрелки для перестановки правил не показываем во время поиска — там позиции не совпадают с реальным порядком
+        if (!isSearching) {
+            const upBtn   = idx > 0            ? `<button onclick="moveRule('${key}',${r.id},'up')" title="Переместить выше">⬆️</button>`   : `<button disabled style="opacity:0.25;cursor:default">⬆️</button>`;
+            const downBtn = idx < total - 1    ? `<button onclick="moveRule('${key}',${r.id},'down')" title="Переместить ниже">⬇️</button>` : `<button disabled style="opacity:0.25;cursor:default">⬇️</button>`;
+            moveBtns = upBtn + downBtn;
+        }
+        adminBtns = `<div class="rule-card-admin-btns">${moveBtns}<button onclick="startEditRule(${r.id})" title="Изменить">✏️</button><button onclick="deleteRule(${r.id})" title="Удалить">🗑</button></div>`;
+    }
     return `<div class="rule-card" id="rule-card-${r.id}" style="--rule-c:${c.text}">${adminBtns}${titleHtml}${bodyHtml}${punishment}</div>`;
 }
 
@@ -2483,13 +2529,39 @@ function paintRuleList(key, targetId, rules) {
     const el = document.getElementById(targetId);
     if (!el) return;
     const q = (document.getElementById(`rules-${key}-search`)?.value || '').toLowerCase().trim();
-    const filtered = q ? rules.filter(r => (r.title||'').toLowerCase().includes(q) || (r.body||'').toLowerCase().includes(q)) : rules;
-    el.innerHTML = filtered.length ? filtered.map(r => renderRuleCard(r)).join('') : '<div class="rule-empty">Правил пока нет.</div>';
+    const sorted = rules.slice().sort((a, b) => (a.sort_order||0) - (b.sort_order||0));
+    const filtered = q ? sorted.filter(r => (r.title||'').toLowerCase().includes(q) || (r.body||'').toLowerCase().includes(q)) : sorted;
+    el.innerHTML = filtered.length ? filtered.map((r, idx) => renderRuleCard(r, key, idx, filtered.length, !!q)).join('') : '<div class="rule-empty">Правил пока нет.</div>';
 }
 
 window.filterRuleSection = function(key) {
     const cache = window._rulesCache || {};
     paintRuleList(key, `rules-${key}-list`, cache[key] || []);
+};
+
+// Переставляет правило выше/ниже внутри своей категории и сохраняет sort_order в базе,
+// чтобы порядок был одинаковым у всех посетителей сайта.
+window.moveRule = async function(key, id, direction) {
+    if (!isAdmin(window.currentUser)) return;
+    const cache = window._rulesCache || {};
+    const list = (cache[key] || []).slice().sort((a, b) => (a.sort_order||0) - (b.sort_order||0));
+    const idx = list.findIndex(r => r.id === id);
+    if (idx === -1) return;
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (swapIdx < 0 || swapIdx >= list.length) return;
+    const a = list[idx], b = list[swapIdx];
+    const soA = a.sort_order, soB = b.sort_order;
+    a.sort_order = soB; b.sort_order = soA;
+    cache[key] = list;
+    window._rulesCache = cache;
+    // применяем сразу на экране, не дожидаясь ответа сервера
+    paintRuleList(key, `rules-${key}-list`, list);
+    try {
+        await Promise.all([
+            db(`rules?id=eq.${a.id}`, { method:'PATCH', body: JSON.stringify({ sort_order: a.sort_order }) }),
+            db(`rules?id=eq.${b.id}`, { method:'PATCH', body: JSON.stringify({ sort_order: b.sort_order }) })
+        ]);
+    } catch(e) { console.error('moveRule error', e); notify('Не удалось сохранить порядок правил: ' + (e.message||e), false); }
 };
 
 function renderRuleAdminPanel(key) {
@@ -2622,7 +2694,6 @@ async function loadDiscordStats() {
 document.addEventListener('DOMContentLoaded', () => {
     updateAuthZone();
     renderProfile();
-    loadNews();
     loadCriminalCounters();
     loadTeamPublic();
     loadSiteSettings();
