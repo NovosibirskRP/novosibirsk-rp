@@ -322,3 +322,45 @@ body.server-banner-bottom-active {
         padding-bottom: 0;
     }
 }
+
+/* ══ Опросник на Главной странице ══ */
+.poll-option-btn {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: #fff;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.2s ease, transform 0.2s ease, background 0.2s ease;
+}
+
+.poll-option-btn:hover {
+    border-color: rgba(0, 245, 255, 0.4);
+    background: rgba(0, 245, 255, 0.05);
+    transform: translateY(-1px);
+}
+
+.poll-result-row {
+    padding: 8px 10px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+}
+
+.poll-bar-track {
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 6px;
+    height: 8px;
+    overflow: hidden;
+}
+
+.poll-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--cyan), var(--blue));
+    transition: width 0.3s ease;
+}
