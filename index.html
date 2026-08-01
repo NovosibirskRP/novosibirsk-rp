@@ -180,27 +180,6 @@
         .profile-action-btn{background:rgba(255,255,255,0.03);border:1px solid var(--border);color:var(--text);font-family:'Rajdhani',sans-serif;font-weight:600;font-size:14px;padding:12px 18px;border-radius:12px;cursor:pointer;transition:all 0.2s;width:100%;text-align:left;display:flex;align-items:center;gap:12px;margin-bottom:8px}
         .profile-action-btn:hover{color:#fff;background:rgba(255,255,255,0.07);border-color:rgba(255,255,255,0.15)}
         .profile-action-btn span{font-size:18px}
-        .news-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px}
-        .news-card{background:var(--card);border:1px solid var(--border);border-radius:20px;overflow:hidden;transition:all 0.25s;display:flex;flex-direction:column;position:relative}
-        .news-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--cyan),var(--blue));transform:scaleX(0);transition:transform 0.3s;transform-origin:left;z-index:2}
-        .news-card:hover{border-color:rgba(0,245,255,0.3);transform:translateY(-3px);box-shadow:0 16px 40px rgba(0,0,0,0.5)}
-        .news-card:hover::before{transform:scaleX(1)}
-        .news-card-img{width:100%;height:180px;object-fit:cover;display:block}
-        .news-card-img-placeholder{width:100%;height:180px;background:linear-gradient(135deg,rgba(0,245,255,0.05),rgba(14,165,233,0.05));display:flex;align-items:center;justify-content:center;font-size:48px;border-bottom:1px solid var(--border)}
-        .news-card-body{padding:20px;flex:1;display:flex;flex-direction:column}
-        .news-tag{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:100px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px}
-        .tag-important{background:rgba(239,68,68,0.1);color:#f87171;border:1px solid rgba(239,68,68,0.2)}
-        .tag-update{background:rgba(0,245,255,0.1);color:var(--cyan);border:1px solid rgba(0,245,255,0.2)}
-        .tag-event{background:rgba(168,85,247,0.1);color:#c084fc;border:1px solid rgba(168,85,247,0.2)}
-        .tag-custom{background:rgba(251,191,36,0.1);color:#fbbf24;border:1px solid rgba(251,191,36,0.2)}
-        .news-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:#fff;margin-bottom:10px;line-height:1.2}
-        .news-text{color:var(--text);font-size:14px;line-height:1.7;flex:1}
-        .news-footer{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:12px;border-top:1px solid var(--border)}
-        .news-date{font-family:'JetBrains Mono',monospace;font-size:11px;color:#334155}
-        .news-author{font-family:'JetBrains Mono',monospace;font-size:11px;color:rgba(0,245,255,0.4)}
-        .news-publish-panel{background:var(--card);border:1px solid rgba(0,245,255,0.2);border-radius:20px;padding:24px;margin-bottom:28px}
-        .news-publish-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
-        .news-img-preview{width:100%;max-height:200px;object-fit:cover;border-radius:12px;margin-top:10px;display:none;border:1px solid var(--border)}
         .why-item{display:flex;gap:16px;margin-bottom:20px;align-items:flex-start}
         .why-num{font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--cyan);line-height:1;flex-shrink:0;width:32px}
         .why-text{color:var(--text);font-size:15px;line-height:1.6;padding-top:6px}
@@ -246,7 +225,6 @@
             .portal-grid{grid-template-columns:repeat(2,1fr);gap:10px}
             .factions-grid{grid-template-columns:1fr 1fr;gap:10px}
             .faction-card{padding:16px}
-            .news-grid{grid-template-columns:1fr}
             .modal-box{border-radius:16px;max-height:95vh}
             .modal-body{padding:16px 18px 20px}
             .modal-header{padding:18px 18px 0}
@@ -255,7 +233,6 @@
             .request-actions{flex-direction:column}
             .doc-card{flex-direction:column;align-items:flex-start;gap:10px}
             .profile-card{padding:16px}
-            .news-publish-grid{grid-template-columns:1fr}
             .mobile-menu-btn{display:flex !important}
             .mobile-nav{display:none;position:fixed;inset:0;top:72px;background:rgba(3,7,18,0.98);backdrop-filter:blur(20px);z-index:99;flex-direction:column;padding:20px;gap:8px;border-top:1px solid var(--border)}
             .mobile-nav.open{display:flex}
@@ -365,6 +342,7 @@
     <div style="margin-bottom:12px"><div class="section-title" style="font-size:20px">Статус разделов</div></div>
     <div id="status-board-list" style="display:grid;gap:10px"></div>
   </div>
+  <div id="main-poll-block" class="profile-card" style="display:none;margin-bottom:24px"></div>
   <div class="stats">
     <div class="stat-card"><div class="stat-num">14</div><div class="stat-label">Фракций</div></div>
     <div class="stat-card"><div class="stat-num">--/-</div><div class="stat-label">Онлайн</div></div>
@@ -419,29 +397,6 @@
     </div>
     <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:3px;color:#fff;margin-bottom:20px">Состав Администрации</div>
     <div id="team-list" style="display:grid;gap:14px"><div class="loading-text" style="opacity:0.5">Загрузка состава администрации...</div></div>
-  </div>
-  <div class="faction-category" id="main-news-section" data-flag-service="news">
-    <div style="margin-bottom:20px"><div class="section-title">Новости Сервера</div><div class="section-sub">Официальные объявления, патчи и события</div></div>
-    <div id="admin-news-panel" style="display:none" class="news-publish-panel">
-      <div style="color:var(--cyan);font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;margin-bottom:16px">🛠️ Опубликовать новость</div>
-      <div class="news-publish-grid">
-        <input type="text" id="news-title" placeholder="Заголовок новости" class="form-input">
-        <select id="news-tag" class="form-input" onchange="handleNewsTagChange(this)">
-          <option value="Важно">🔴 Важно</option><option value="Обновление">⚙️ Обновление</option>
-          <option value="Мероприятие">🎉 Мероприятие</option><option value="Свой Вариант">✏️ Свой Вариант</option>
-        </select>
-      </div>
-      <div id="news-custom-tag-row" style="display:none;margin-bottom:12px"><input type="text" id="news-custom-tag" placeholder="Название тега..." class="form-input"></div>
-      <textarea id="news-text" placeholder="Текст новости..." class="form-input" style="margin-bottom:12px;min-height:120px"></textarea>
-      <div style="margin-bottom:12px">
-        <label class="form-label">Изображение</label>
-        <input type="text" id="news-image-url" placeholder="https://..." class="form-input" oninput="previewNewsImage()" style="margin-bottom:8px">
-        <label style="background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:600;padding:8px 16px;border-radius:10px;cursor:pointer;display:inline-flex;align-items:center;gap:8px">📁 Загрузить файл<input type="file" accept="image/*" style="display:none" onchange="handleNewsImageFile(this)"></label>
-        <img id="news-img-preview" class="news-img-preview" alt="">
-      </div>
-      <button class="form-submit" onclick="createNews()">Опубликовать</button>
-    </div>
-    <div class="news-grid" id="news-feed"><div class="loading-text">Загрузка новостей...</div></div>
   </div>
 </div></div>
 <!-- ПОРТАЛ -->
@@ -669,7 +624,6 @@
       <button class="profile-action-btn" onclick="requireAuth(function(){openModal('court')})"><span>⚖️</span> Подать в суд</button>
       <button class="profile-action-btn" onclick="requireAuth(function(){openModal('government')})"><span>📋</span> Обращение в Правительство</button>
       <button class="profile-action-btn" onclick="requireAuth(function(){openModal('lawyer')})"><span>👨‍⚖️</span> К адвокату</button>
-      <button class="profile-action-btn" onclick="goToNewsSection()"><span>📰</span> Новости сервера</button>
       <button class="profile-action-btn" onclick="navigateTo('rules')"><span>📋</span> Правила сервера</button>
       <button class="profile-action-btn" onclick="copyProfileLink()"><span>🔗</span> Скопировать ссылку на профиль</button>
     </div>
@@ -744,7 +698,6 @@
         <div style="font-size:12px;color:var(--cyan);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Главная страница</div>
         <div id="owner-toggle-main-services" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin-bottom:16px">
           <div class="owner-toggle" style="cursor:default;justify-content:space-between"><span>Блок «Команда»</span><select data-flag-service="team" class="form-input" style="width:auto;padding:5px 8px;font-size:12px;margin-left:8px"><option value="on">✅ Включено</option><option value="soon">🚧 Скоро</option><option value="maintenance">🛠️ Техработы</option><option value="off">🚫 Скрыто</option></select></div>
-          <div class="owner-toggle" style="cursor:default;justify-content:space-between"><span>Блок «Новости»</span><select data-flag-service="news" class="form-input" style="width:auto;padding:5px 8px;font-size:12px;margin-left:8px"><option value="on">✅ Включено</option><option value="soon">🚧 Скоро</option><option value="maintenance">🛠️ Техработы</option><option value="off">🚫 Скрыто</option></select></div>
         </div>
         <div style="font-size:12px;color:var(--cyan);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Обращения к администрации</div>
         <div id="owner-toggle-appeal-services" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin-bottom:16px">
@@ -775,6 +728,22 @@
         <div style="color:var(--text);font-size:13px;margin-bottom:14px">Отдельный «большой рубильник» — специально вынесен отдельно от «Экстренного отключения» выше. Полностью закрывает сайт для ВСЕХ обычных посетителей экраном «Техническое обслуживание», независимо от того, что настроено в разделах и услугах выше. Владелец и Заместитель Главного Владельца по-прежнему видят и могут пользоваться сайтом (в том числе чтобы включить всё обратно). Используйте только при реальной аварии.</div>
         <div class="form-group"><label class="form-label">Текст на экране техобслуживания</label><textarea id="maintenance-message" class="form-input" placeholder="Сайт временно на техническом обслуживании. Мы скоро вернёмся!"></textarea></div>
         <button class="form-submit" id="maintenance-toggle-btn" style="background:linear-gradient(135deg,#b91c1c,#ef4444);border-color:#ef4444" onclick="toggleMaintenanceMode()">🚨 Включить полную остановку сайта</button>
+      </div>
+      <div class="profile-card">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:#fff;margin-bottom:4px">🗳️ Опросник на Главной</div>
+        <div style="color:var(--text);font-size:13px;margin-bottom:14px">Полностью в ваших руках: меняйте вопрос и варианты ответа, смотрите живой счёт голосов у каждого варианта и сбрасывайте результаты в любой момент — без обращения за правками.</div>
+        <label class="owner-toggle" style="margin-bottom:12px;max-width:340px"><input type="checkbox" id="poll-active"> ✅ Показывать опрос на Главной</label>
+        <div class="form-group"><label class="form-label">Вопрос</label><input type="text" id="poll-question" class="form-input" placeholder="Например: Какое обновление добавить следующим?"></div>
+        <div style="font-size:12px;color:var(--cyan);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Варианты ответа</div>
+        <div id="poll-options-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px"></div>
+        <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+          <input type="text" id="poll-new-option" class="form-input" placeholder="Текст нового варианта ответа" style="flex:1;min-width:180px">
+          <button type="button" class="form-submit" style="width:auto;padding:10px 18px;white-space:nowrap;margin-bottom:0" onclick="addPollOptionRow()">➕ Добавить вариант</button>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="form-submit" style="width:auto;padding:10px 20px;margin-bottom:0" onclick="savePoll()">💾 Сохранить опрос</button>
+          <button type="button" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.4);color:#f87171;padding:10px 20px;border-radius:10px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-weight:700" onclick="resetPollVotes()">🔄 Сбросить все голоса</button>
+        </div>
       </div>
     </div>
     <div id="admin-banner-panel" style="display:none">
