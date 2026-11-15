@@ -494,6 +494,24 @@ body.ah-on #owner-panel>.sep,body.ah-on #owner-panel>.owner-panel-banner,body.ah
   .portal-nav .portal-nav-btn{width:auto}
   .portal-nav .rd-help{display:none}
 }
+
+/* ===== НОВОСТИ ===== */
+#news-composer{margin-bottom:20px}
+#news-composer .nc-grid{display:grid;grid-template-columns:1fr 200px;gap:10px;margin-bottom:10px}
+#news-composer label{display:block;font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--text);text-transform:uppercase;margin:0 0 5px}
+#news-composer input,#news-composer select,#news-composer textarea{width:100%;padding:11px 13px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:#fff;font-family:'Rajdhani',sans-serif;font-size:15px}
+#news-composer textarea{min-height:130px;resize:vertical;margin-bottom:10px}
+#news-composer .nc-row{margin-bottom:10px}
+#news-composer .nc-badge{display:inline-block;font-size:12px;font-weight:700;letter-spacing:1px;padding:4px 12px;border-radius:99px;background:color-mix(in srgb,var(--cyan) 14%,transparent);color:var(--cyan);margin-bottom:12px}
+.nw-card{border-radius:22px;overflow:hidden;margin-bottom:16px;background:var(--rd-glass),var(--card);border:1px solid rgba(255,255,255,.08)}
+.nw-card img{display:block;width:100%;max-height:300px;object-fit:cover}
+.nw-body{padding:20px 22px}
+.nw-card .tg{display:inline-block;font-size:11px;font-weight:700;letter-spacing:1px;padding:3px 10px;border-radius:99px;background:color-mix(in srgb,var(--cyan) 14%,transparent);color:var(--cyan);margin-bottom:10px}
+.nw-card h3{font-size:24px;color:#fff;margin-bottom:8px;font-family:'Rajdhani',sans-serif}
+.nw-card .tx{color:#cbd5e1;font-size:15px;line-height:1.6;white-space:pre-wrap;word-break:break-word}
+.nw-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:14px;color:#64748b;font-size:12px}
+.nw-del{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);color:#f87171;border-radius:10px;padding:6px 12px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-weight:700}
+@media (max-width:640px){#news-composer .nc-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -564,7 +582,8 @@ body.ah-on #owner-panel>.sep,body.ah-on #owner-panel>.owner-panel-banner,body.ah
       <button class="nav-btn active" id="nav-main" onclick="navigateTo('main')"><span class="nav-btn-ic">🏠</span>Главная</button>
       <button class="nav-btn" id="nav-portal" data-flag-tab="portal" onclick="navigateTo('portal')"><span class="nav-btn-ic">🏛️</span>Портал</button>
       <button class="nav-btn" id="nav-rules" data-flag-tab="rules" onclick="navigateTo('rules')"><span class="nav-btn-ic">📋</span>Правила</button>
-      <button class="nav-btn" id="nav-profile" onclick="navigateTo('profile')"><span class="nav-btn-ic">👤</span>Профиль<span class="notify-dot" id="profile-notify-dot" style="display:none"></span><span class="notify-dot" id="profile-discord-missing-dot" style="display:none;background:#f87171" title="Не заполнены данные Discord"></span></button>
+      <button class="nav-btn" id="nav-news" data-flag-tab="news" onclick="navigateTo('news')"><span class="nav-btn-ic">📰</span>Новости</button>
+        <button class="nav-btn" id="nav-profile" onclick="navigateTo('profile')"><span class="nav-btn-ic">👤</span>Профиль<span class="notify-dot" id="profile-notify-dot" style="display:none"></span><span class="notify-dot" id="profile-discord-missing-dot" style="display:none;background:#f87171" title="Не заполнены данные Discord"></span></button>
     </div>
     <div style="display:flex;align-items:center;gap:10px">
       <div class="auth-zone" id="auth-zone"><button class="btn-primary" onclick="openModal('auth')">Войти</button></div>
@@ -576,7 +595,8 @@ body.ah-on #owner-panel>.sep,body.ah-on #owner-panel>.owner-panel-banner,body.ah
   <button class="mobile-nav-btn active" id="mnav-main" onclick="navigateTo('main');closeMobileMenu()">🏠 Главная</button>
   <button class="mobile-nav-btn" id="mnav-portal" data-flag-tab="portal" onclick="navigateTo('portal');closeMobileMenu()">🏛️ Портал</button>
   <button class="mobile-nav-btn" id="mnav-rules" data-flag-tab="rules" onclick="navigateTo('rules');closeMobileMenu()">📋 Правила</button>
-  <button class="mobile-nav-btn" id="mnav-profile" onclick="navigateTo('profile');closeMobileMenu()">👤 Профиль<span class="notify-dot" id="profile-notify-dot-m" style="display:none"></span><span class="notify-dot" id="profile-discord-missing-dot-m" style="display:none;background:#f87171"></span></button>
+  <button class="mobile-nav-btn" id="mnav-news" data-flag-tab="news" onclick="navigateTo('news');closeMobileMenu()">📰 Новости</button>
+    <button class="mobile-nav-btn" id="mnav-profile" onclick="navigateTo('profile');closeMobileMenu()">👤 Профиль<span class="notify-dot" id="profile-notify-dot-m" style="display:none"></span><span class="notify-dot" id="profile-discord-missing-dot-m" style="display:none;background:#f87171"></span></button>
 </div>
 
 <!-- ГЛАВНАЯ -->
@@ -1073,6 +1093,21 @@ body.ah-on #owner-panel>.sep,body.ah-on #owner-panel>.owner-panel-banner,body.ah
   </div>
 </div></div>
 <!-- ПРАВИЛА -->
+<div class="tab" id="tab-news"><div class="container">
+    <div style="margin-bottom:20px"><div class="section-title">Новости</div><div class="section-sub">События города и объявления администрации</div></div>
+    <div id="news-composer" class="profile-card" style="display:none">
+        <div class="nc-badge">✍️ У вас есть право публиковать новости</div>
+        <div class="nc-grid">
+            <div><label>Заголовок</label><input id="nc-title" maxlength="120" placeholder="О чём новость?"></div>
+            <div><label>Тег</label><select id="nc-tag"><option>Объявление</option><option>Обновление</option><option>Событие</option><option>Фракции</option><option>Другое</option></select></div>
+        </div>
+        <div class="nc-row" id="nc-custom-wrap" style="display:none"><label>Свой тег</label><input id="nc-custom" maxlength="24" placeholder="Например: Выборы"></div>
+        <label>Текст</label><textarea id="nc-text" maxlength="4000" placeholder="Текст новости…"></textarea>
+        <div class="nc-row"><label>Картинка (ссылка, необязательно)</label><input id="nc-img" placeholder="https://…"></div>
+        <button class="btn-primary" id="nc-send">📢 Опубликовать</button>
+    </div>
+    <div id="news-feed"><div style="text-align:center;color:#64748b;padding:40px">Загрузка…</div></div>
+</div></div>
 <div class="tab" id="tab-rules"><div class="container" style="max-width:900px">
   <div style="margin-bottom:24px"><div class="section-title">Правила Сервера</div><div class="section-sub">Обязательно к прочтению — незнание не освобождает от ответственности</div></div>
   <div class="portal-nav" style="margin-bottom:28px">
@@ -1467,7 +1502,7 @@ body.ah-on #owner-panel>.sep,body.ah-on #owner-panel>.owner-panel-banner,body.ah
       var s = document.createElement('div'); s.id = 'rd-steps'; s.className = 'rd-block';
       s.innerHTML = '<div class="rd-h">Как начать</div><div class="rd-steps"><div class="rd-step"><em>01</em><b>Создай аккаунт</b><span>Регистрация по Discord-юзернейму занимает минуту.</span></div><div class="rd-step"><em>02</em><b>Оформи паспорт</b><span>Это твой документ жителя города, без него дальше никак.</span></div><div class="rd-step"><em>03</em><b>Выбери путь</b><span>Вступай во фракцию, открой бизнес или живи как гражданин.</span></div></div>';
       stats.parentNode.insertBefore(s, stats.nextSibling);
-      var n = document.createElement('div'); n.id = 'rd-news'; n.className = 'rd-block'; n.style.display = 'none'; n.innerHTML = '<div class="rd-h">Новости</div><div class="rd-news"></div>';
+      var n = document.createElement('div'); n.id = 'rd-news'; n.className = 'rd-block'; n.style.display = 'none'; n.innerHTML = '<div class="rd-h">Новости <button class="ah-chip" style="margin-left:auto" onclick="navigateTo(\'news\')">Все новости →</button></div><div class="rd-news"></div>';
       s.parentNode.insertBefore(n, s.nextSibling);
       var f = document.createElement('div'); f.id = 'rd-faq'; f.className = 'rd-block rd-faq';
       f.innerHTML = '<div class="rd-h">Частые вопросы</div><details><summary>Как вступить во фракцию?</summary><p>Открой Портал → «Вступить во фракцию», выбери организацию и заполни заявление. После одобрения роль в Discord выдастся автоматически.</p></details><details><summary>Где смотреть статус заявки?</summary><p>В Портале, раздел «Мои документы», а также в Профиле во вкладке «Обзор»: там виден счётчик заявок.</p></details><details><summary>Забыл пароль, что делать?</summary><p>Напиши администрации в Discord: пароль сбросят и выдадут временный, который потом можно сменить в Профиле → «Настройки».</p></details><details><summary>Почему не приходит роль в Discord?</summary><p>Проверь, что в Профиле указан правильный Discord-юзернейм и ты состоишь на сервере.</p></details>';
@@ -1580,6 +1615,71 @@ body.ah-on #owner-panel>.sep,body.ah-on #owner-panel>.owner-panel-banner,body.ah
   function tick() { try { live(); directory(); order(); help(); } catch (e) {} }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', tick); else tick();
   setInterval(tick, 1200);
+})();
+
+/* ===== НОВОСТИ: вкладка, лента, публикация (Владелец, Зам. Владельца, ГТРК) ===== */
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  try { if (VALID_TABS.indexOf('news') < 0) VALID_TABS.push('news'); delete LEGACY_TAB_REDIRECTS.news; } catch (e) {}
+  if (/^#news/.test(location.hash)) { try { switchTab('news', false); } catch (e) {} }
+
+  function canPost(u) { return !!u && (u.role === 'Главный Владелец' || u.role === 'Заместитель Главного Владельца' || u.faction === 'ГТРК'); }
+  var loadedAt = 0, loading = false;
+
+  function render(rows) {
+    var feed = $('news-feed'); if (!feed) return;
+    var can = canPost(window.currentUser);
+    if (!rows.length) { feed.innerHTML = '<div class="empty" style="text-align:center;color:#64748b;padding:40px">Пока новостей нет' + (can ? ' — опубликуйте первую!' : '.') + '</div>'; return; }
+    feed.innerHTML = rows.map(function (r) {
+      var t = r.custom_tag || r.tag || 'Новость', d = r.created_at ? new Date(r.created_at).toLocaleString('ru-RU', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+      var img = r.image_url && /^https?:\/\//i.test(r.image_url) ? '<img src="' + esc(r.image_url) + '" alt="" loading="lazy" onerror="this.remove()">' : '';
+      return '<div class="nw-card">' + img + '<div class="nw-body"><span class="tg">' + esc(t) + '</span><h3>' + esc(r.title) + '</h3><div class="tx">' + esc(r.text) + '</div><div class="nw-foot"><span>✍️ ' + esc(r.author || 'Администрация') + (d ? ' · ' + d : '') + '</span>' + (can ? '<button class="nw-del" data-id="' + esc(r.id) + '">🗑 Удалить</button>' : '') + '</div></div></div>';
+    }).join('');
+  }
+
+  function load() {
+    if (loading || typeof db !== 'function') return;
+    loading = true; loadedAt = Date.now();
+    db('news?order=created_at.desc&limit=50').then(render).catch(function () { var f = $('news-feed'); if (f) f.innerHTML = '<div style="text-align:center;color:#f87171;padding:30px">Не удалось загрузить новости</div>'; }).then(function () { loading = false; });
+  }
+
+  async function publish() {
+    var title = $('nc-title').value.trim(), text = $('nc-text').value.trim(), sel = $('nc-tag').value, custom = $('nc-custom').value.trim(), img = $('nc-img').value.trim();
+    if (!title || !text) return notify('Заполните заголовок и текст', false);
+    if (img && !/^https?:\/\//i.test(img)) return notify('Ссылка на картинку должна начинаться с http(s)://', false);
+    var btn = $('nc-send'); btn.disabled = true;
+    try {
+      await callSiteApi('createNews', { title: title, tag: sel, custom_tag: sel === 'Другое' ? custom : '', text: text, image_url: img });
+      ['nc-title', 'nc-text', 'nc-custom', 'nc-img'].forEach(function (i) { $(i).value = ''; });
+      notify('Новость опубликована', true); load();
+    } catch (e) { notify('Не удалось: ' + (e.message || 'ошибка'), false); }
+    btn.disabled = false;
+  }
+
+  function init() {
+    var tab = $('tab-news'); if (!tab || tab.dataset.i) return; tab.dataset.i = '1';
+    $('nc-send').onclick = publish;
+    $('nc-tag').onchange = function () { $('nc-custom-wrap').style.display = this.value === 'Другое' ? '' : 'none'; };
+    $('news-feed').addEventListener('click', async function (e) {
+      var b = e.target.closest('.nw-del'); if (!b || !confirm('Удалить эту новость?')) return;
+      try { await callSiteApi('deleteNews', { id: b.dataset.id }); notify('Новость удалена', true); load(); } catch (er) { notify('Не удалось: ' + (er.message || 'ошибка'), false); }
+    });
+  }
+
+  function tick() {
+    try {
+      init();
+      var tab = $('tab-news'); if (!tab) return;
+      var can = canPost(window.currentUser), comp = $('news-composer');
+      if (comp) comp.style.display = can ? '' : 'none';
+      if (tab.classList.contains('active')) {
+        if (Date.now() - loadedAt > 30000) load();
+        if (tab.dataset.can !== String(can)) { tab.dataset.can = String(can); load(); }
+      }
+    } catch (e) {}
+  }
+  setInterval(tick, 1000);
 })();
 </script>
 </body>
