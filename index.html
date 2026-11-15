@@ -241,6 +241,90 @@
         }
         @media(min-width:769px){.mobile-menu-btn{display:none !important}.mobile-nav{display:none !important}}
     </style>
+<style>
+/* ============================================================================
+   NOVOSIBIRSK RP — РЕДИЗАЙН v1 (слой поверх старых стилей, логику не трогает)
+   Подключается ПОСЛЕ style.css. Цвета берутся из --cyan / --blue, поэтому
+   выбор цвета темы в профиле продолжает работать.
+   ============================================================================ */
+:root{
+  --rd-radius:18px;
+  --rd-glass:linear-gradient(160deg,rgba(255,255,255,.045),rgba(255,255,255,.012));
+  --rd-ease:cubic-bezier(.22,.8,.24,1);
+}
+html{scroll-behavior:smooth}
+::selection{background:color-mix(in srgb,var(--cyan) 35%,transparent);color:#fff}
+*{scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--cyan) 40%,#111) transparent}
+
+/* ── Живой фон: медленные цветные «шары» вместо полосок ── */
+body::after{
+  background:
+    radial-gradient(40vmax 40vmax at 12% 18%,color-mix(in srgb,var(--cyan) 14%,transparent),transparent 70%),
+    radial-gradient(36vmax 36vmax at 88% 12%,color-mix(in srgb,var(--blue) 12%,transparent),transparent 70%),
+    radial-gradient(44vmax 44vmax at 70% 92%,rgba(168,85,247,.10),transparent 70%) !important;
+  background-size:140% 140%;
+  animation:rdAurora 26s ease-in-out infinite alternate;
+}
+@keyframes rdAurora{
+  0%{background-position:0% 0%}
+  100%{background-position:100% 60%}
+}
+
+/* ── Вход на сайт (первая загрузка) ── */
+html.rd-js nav{animation:rdNavIn .7s var(--rd-ease) both}
+html.rd-js .tab.active{animation:rdTabIn .55s var(--rd-ease) both}
+@keyframes rdNavIn{from{opacity:0;transform:translateY(-100%)}to{opacity:1;transform:none}}
+@keyframes rdTabIn{from{opacity:0;transform:translateY(18px) scale(.985);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
+
+/* ── Появление блоков (класс ставит redesign.js) ── */
+html.rd-js .rd-reveal{opacity:0;transform:translateY(16px);transition:opacity .55s var(--rd-ease),transform .55s var(--rd-ease);transition-delay:var(--rd-delay,0s)}
+html.rd-js .rd-reveal.rd-in{opacity:1;transform:none}
+
+/* ── Навигация ── */
+nav{background:rgba(3,7,18,.72)!important;backdrop-filter:blur(22px) saturate(160%)!important;box-shadow:0 8px 30px -12px rgba(0,0,0,.6)}
+.nav-btn{transition:color .25s,background .25s,transform .25s var(--rd-ease),box-shadow .25s!important}
+.nav-btn:hover{transform:translateY(-1px)}
+.nav-btn.active{box-shadow:0 6px 22px -6px color-mix(in srgb,var(--cyan) 55%,transparent)}
+
+/* ── Карточки и блоки: стекло, мягкая рамка, свечение при наведении ── */
+.hero,.faction-card,.profile-card,[class*="card"]:not(.modal-box):not([class*="card-"]){
+  background:var(--rd-glass),var(--card);
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:var(--rd-radius);
+  box-shadow:0 18px 40px -22px rgba(0,0,0,.8),inset 0 1px 0 rgba(255,255,255,.05);
+  transition:transform .35s var(--rd-ease),border-color .3s,box-shadow .35s;
+}
+.faction-card:hover,.profile-card:hover,[class*="card"]:not(.modal-box):not([class*="card-"]):hover{
+  transform:translateY(-4px);
+  border-color:color-mix(in srgb,var(--cyan) 45%,transparent);
+  box-shadow:0 22px 50px -20px color-mix(in srgb,var(--cyan) 35%,#000),inset 0 1px 0 rgba(255,255,255,.08);
+}
+.hero{border-radius:28px}
+.hero h1{text-shadow:0 0 60px color-mix(in srgb,var(--cyan) 30%,transparent)}
+
+/* ── Кнопки ── */
+.btn-primary{position:relative;overflow:hidden;border-radius:12px;transition:transform .25s var(--rd-ease),box-shadow .25s,filter .25s}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 28px -8px color-mix(in srgb,var(--cyan) 60%,transparent);filter:brightness(1.08)}
+.btn-primary:active{transform:translateY(0) scale(.98)}
+.btn-primary::after{content:'';position:absolute;top:0;left:-120%;width:60%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.35),transparent);transform:skewX(-20deg);transition:left .6s}
+.btn-primary:hover::after{left:140%}
+
+/* ── Поля ввода ── */
+.form-input,input[type=text],input[type=password],textarea,select{transition:border-color .25s,box-shadow .25s,background .25s}
+.form-input:focus,input:focus,textarea:focus,select:focus{outline:none;border-color:var(--cyan)!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--cyan) 20%,transparent)}
+
+/* ── Окна ── */
+.modal-overlay{animation:rdFade .25s ease both}
+.modal-box{border-radius:24px;box-shadow:0 40px 90px -30px rgba(0,0,0,.9),0 0 0 1px rgba(255,255,255,.06);animation:rdPop .4s var(--rd-ease) both}
+@keyframes rdFade{from{opacity:0}to{opacity:1}}
+@keyframes rdPop{from{opacity:0;transform:translateY(24px) scale(.96)}to{opacity:1;transform:none}}
+
+/* ── Уважение к настройке «уменьшить анимацию» ── */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+  html.rd-js .rd-reveal{opacity:1;transform:none}
+}
+</style>
 </head>
 <body>
 <!-- НАЧАЛО БАННЕРА «СЕРВЕР ЗАПУЩЕН» (отдельный от баннера обновлений ниже,
@@ -975,5 +1059,44 @@
 </div>
 
 <script src="app.js"></script>
+<script>
+/* NOVOSIBIRSK RP — редизайн v1: плавное появление блоков при открытии вкладок.
+   Логику сайта не меняет. Если скрипт сломается — через 2.5 с всё показывается. */
+(function () {
+  var root = document.documentElement;
+  root.classList.add('rd-js');
+  var SEL = '.hero, .faction-card, .profile-card, [class*="card"]:not(.modal-box), .tab.active > div > *';
+  var io = 'IntersectionObserver' in window ? new IntersectionObserver(function (items) {
+    items.forEach(function (it) {
+      if (it.isIntersecting) { it.target.classList.add('rd-in'); io.unobserve(it.target); }
+    });
+  }, { threshold: 0.08 }) : null;
+
+  function prepare(scope) {
+    var n = 0;
+    (scope || document).querySelectorAll(SEL).forEach(function (el) {
+      if (el.dataset.rd || el.closest('.modal-box, nav')) return;
+      el.dataset.rd = '1';
+      el.classList.add('rd-reveal');
+      el.style.setProperty('--rd-delay', Math.min(n++, 10) * 0.05 + 's');
+      if (io) io.observe(el); else el.classList.add('rd-in');
+    });
+  }
+
+  var timer;
+  function schedule() { clearTimeout(timer); timer = setTimeout(function () { prepare(); }, 30); }
+
+  function start() {
+    prepare();
+    // Блоки, которые сайт рисует позже (Портал, Профиль, правила и т.д.)
+    new MutationObserver(schedule).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+    // Запасной выход: если что-то не показалось — показываем всё
+    setTimeout(function () {
+      document.querySelectorAll('.rd-reveal').forEach(function (e) { e.classList.add('rd-in'); });
+    }, 2500);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
+</script>
 </body>
 </html>
