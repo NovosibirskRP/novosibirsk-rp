@@ -361,48 +361,6 @@ body.ah-on #owner-panel>.sep,body.ah-on #owner-panel>.owner-panel-banner,body.ah
 .portal-card:hover::after{opacity:1;transform:none}
 .rd-hide{display:none!important}
 
-/* ===== РЕДИЗАЙН: ПРОФИЛЬ v2 (панель: слева визитка, справа цифры, действия, настройки) ===== */
-#profile-user:not([style*="none"]){display:grid!important;grid-template-columns:minmax(300px,350px) 1fr 1fr;gap:14px;align-items:start}
-#profile-user>*{grid-column:2/4;order:10;min-width:0}
-#profile-user>.profile-card:first-child{grid-column:1;grid-row:1/span 40;order:0;position:sticky;top:88px;padding:26px 22px;background:linear-gradient(180deg,color-mix(in srgb,var(--cyan) 20%,transparent) 0,transparent 190px),var(--rd-glass),var(--card)}
-#profile-user>.profile-card:first-child>div:first-child{flex-direction:column;align-items:center!important;text-align:center;gap:14px!important}
-.profile-avatar-big{width:116px!important;height:116px!important;border-radius:30px!important;box-shadow:0 0 0 3px var(--dark),0 0 0 5px color-mix(in srgb,var(--cyan) 70%,transparent),0 18px 40px -12px color-mix(in srgb,var(--cyan) 55%,transparent);transition:transform .3s var(--rd-ease)}
-.profile-avatar-big:hover{transform:scale(1.05) rotate(-2deg)}
-#profile-username{font-size:32px!important}
-.profile-row{padding:11px 0!important;border-bottom:1px solid rgba(255,255,255,.06)}
-.profile-row:last-child{border-bottom:none}
-#rd-complete{margin:16px 0 6px;padding:12px 14px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07)}
-#rd-complete .c-top{display:flex;justify-content:space-between;font-size:12px;font-weight:700;letter-spacing:1px;color:var(--text);margin-bottom:8px}
-#rd-complete .c-top b{color:var(--cyan)}
-#rd-complete .c-bar{height:7px;border-radius:9px;background:rgba(255,255,255,.07);overflow:hidden}
-#rd-complete .c-fill{height:100%;width:0;border-radius:9px;background:linear-gradient(90deg,var(--cyan),var(--blue));transition:width .6s var(--rd-ease)}
-#rd-complete .c-hint{font-size:12px;color:var(--text);margin-top:8px}
-/* цифры */
-#profile-user>.profile-stats-grid{order:1;display:grid!important;grid-template-columns:repeat(3,1fr);gap:12px;margin:0!important}
-.profile-stat{padding:18px 14px!important;border-radius:18px!important;text-align:center;background:var(--rd-glass),var(--card)!important;border:1px solid rgba(255,255,255,.07)!important}
-.profile-stat-num{font-family:'Bebas Neue',sans-serif!important;font-size:42px!important;line-height:1;background:linear-gradient(135deg,var(--cyan),var(--blue));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-.profile-stat-label{font-size:12px!important;letter-spacing:1.5px;text-transform:uppercase;margin-top:6px}
-#profile-notifications{order:2}
-/* быстрые действия — плитки */
-#profile-user>.rd-quick{order:3;display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:10px}
-.rd-quick>div:first-child{grid-column:1/-1;margin-bottom:2px!important}
-.rd-quick .profile-action-btn{display:flex!important;align-items:center;gap:10px;margin:0!important;width:auto!important;padding:13px 14px!important;border-radius:14px!important;text-align:left;background:rgba(255,255,255,.035)!important;border:1px solid rgba(255,255,255,.07)!important;transition:all .25s var(--rd-ease)}
-.rd-quick .profile-action-btn:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--cyan) 50%,transparent)!important;background:color-mix(in srgb,var(--cyan) 8%,transparent)!important}
-.rd-quick .profile-action-btn span{font-size:20px}
-/* настройки — рядом */
-#profile-user>.rd-theme{order:4;grid-column:2/3}
-#profile-user>.rd-pass{order:5;grid-column:3/4}
-#profile-user>.rd-logout{order:6;justify-self:end;width:auto!important;margin:0!important;padding:10px 22px!important}
-@media (max-width:1100px){
-  #profile-user:not([style*="none"]){grid-template-columns:minmax(280px,320px) 1fr}
-  #profile-user>*,#profile-user>.rd-theme,#profile-user>.rd-pass{grid-column:2}
-}
-@media (max-width:820px){
-  #profile-user:not([style*="none"]){grid-template-columns:1fr}
-  #profile-user>*,#profile-user>.rd-theme,#profile-user>.rd-pass,#profile-user>.profile-card:first-child{grid-column:1;grid-row:auto;position:static}
-  #profile-user>.profile-stats-grid{grid-template-columns:repeat(3,1fr)}
-}
-
 /* ===== РЕДИЗАЙН: ГЛАВНАЯ ===== */
 #tab-main .hero{padding:104px 48px 96px;border-radius:30px}
 #tab-main .hero h1{font-size:clamp(54px,9vw,112px)}
@@ -422,6 +380,74 @@ body.ah-on #owner-panel>.sep,body.ah-on #owner-panel>.owner-panel-banner,body.ah
 #tab-main .stat-num{font-family:'Bebas Neue',sans-serif;font-size:46px!important;background:linear-gradient(135deg,var(--cyan),var(--blue));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 #tab-main .faction-category .section-title{display:flex;align-items:center;gap:12px}
 #tab-main .faction-category .section-title::before{content:'';width:5px;height:30px;border-radius:4px;background:linear-gradient(180deg,var(--cyan),var(--blue))}
+/* ===== РЕДИЗАЙН: ПРОФИЛЬ v3 (шапка-обложка + вкладки) ===== */
+#profile-user:not([style*="none"]){display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}
+#profile-user>*{grid-column:1/-1;min-width:0}
+#rd-cover{border-radius:26px;overflow:hidden;border:1px solid rgba(255,255,255,.08);background:var(--card)}
+#rd-cover .cv-banner{height:128px;background:radial-gradient(60% 140% at 15% 0%,color-mix(in srgb,var(--cyan) 45%,transparent),transparent 70%),radial-gradient(50% 140% at 90% 100%,rgba(168,85,247,.35),transparent 70%),linear-gradient(135deg,#0b1220,#111827)}
+#rd-cover .cv-body{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;padding:0 26px 22px;margin-top:-54px}
+#rd-cover .cv-id{flex:1;min-width:260px}
+#rd-cover .cv-id>div{margin:0!important;align-items:flex-end!important}
+#rd-cover .profile-stats-grid{display:grid!important;grid-template-columns:repeat(3,96px);gap:8px;margin:0!important}
+#rd-cover .profile-stat{padding:10px 6px!important;border-radius:14px!important;text-align:center;background:rgba(255,255,255,.045)!important;border:1px solid rgba(255,255,255,.08)!important}
+#rd-cover .profile-stat-num{font-family:'Bebas Neue',sans-serif!important;font-size:30px!important;line-height:1;background:linear-gradient(135deg,var(--cyan),var(--blue));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+#rd-cover .profile-stat-label{font-size:10px!important;letter-spacing:1px;text-transform:uppercase;margin-top:4px}
+.profile-avatar-big{width:112px!important;height:112px!important;border-radius:28px!important;box-shadow:0 0 0 4px var(--card),0 0 0 6px color-mix(in srgb,var(--cyan) 70%,transparent),0 18px 40px -12px color-mix(in srgb,var(--cyan) 55%,transparent);transition:transform .3s var(--rd-ease)}
+.profile-avatar-big:hover{transform:scale(1.05) rotate(-2deg)}
+#profile-username{font-size:34px!important}
+#rd-ptabs{display:flex;gap:6px;flex-wrap:wrap;padding:6px;border-radius:16px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06)}
+#rd-ptabs .ah-chip{flex:1;text-align:center;padding:10px 14px;font-size:14px}
+#profile-user[data-active="overview"]>[data-sec]:not([data-sec="overview"]),
+#profile-user[data-active="actions"]>[data-sec]:not([data-sec="actions"]),
+#profile-user[data-active="settings"]>[data-sec]:not([data-sec="settings"]),
+#profile-user[data-active="admin"]>[data-sec]:not([data-sec="admin"]){display:none!important}
+#profile-user>[data-sec="overview"].profile-card{grid-column:1/2}
+#profile-user>#profile-notifications{grid-column:2/3}
+#profile-user>.rd-theme{grid-column:1/2}
+#profile-user>.rd-pass{grid-column:2/3}
+#profile-user>.rd-logout{justify-self:end;width:auto!important;margin:0!important;padding:10px 22px!important}
+.profile-row{padding:11px 0!important;border-bottom:1px solid rgba(255,255,255,.06)}
+.profile-row:last-child{border-bottom:none}
+#rd-complete{margin:6px 0 10px;padding:12px 14px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07)}
+#rd-complete .c-top{display:flex;justify-content:space-between;font-size:12px;font-weight:700;letter-spacing:1px;color:var(--text);margin-bottom:8px}
+#rd-complete .c-top b{color:var(--cyan)}
+#rd-complete .c-bar{height:7px;border-radius:9px;background:rgba(255,255,255,.07);overflow:hidden}
+#rd-complete .c-fill{height:100%;width:0;border-radius:9px;background:linear-gradient(90deg,var(--cyan),var(--blue));transition:width .6s var(--rd-ease)}
+#rd-complete .c-hint{font-size:12px;color:var(--text);margin-top:8px}
+.rd-quick{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+.rd-quick>div:first-child{grid-column:1/-1}
+.rd-quick .profile-action-btn{display:flex!important;align-items:center;gap:10px;margin:0!important;width:auto!important;padding:14px!important;border-radius:14px!important;text-align:left;background:rgba(255,255,255,.035)!important;border:1px solid rgba(255,255,255,.07)!important;transition:all .25s var(--rd-ease)}
+.rd-quick .profile-action-btn:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--cyan) 50%,transparent)!important}
+@media (max-width:760px){
+  #profile-user:not([style*="none"]){grid-template-columns:1fr}
+  #profile-user>*,#profile-user>[data-sec="overview"].profile-card,#profile-user>#profile-notifications,#profile-user>.rd-theme,#profile-user>.rd-pass{grid-column:1}
+  #rd-cover .cv-body{padding:0 16px 18px}
+  #rd-cover .profile-stats-grid{grid-template-columns:repeat(3,1fr);width:100%}
+}
+
+/* ===== ГЛАВНАЯ: шаги, новости, вопросы; ПОРТАЛ: категории ===== */
+.rd-block{margin:0 0 36px}
+.rd-h{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:#fff;margin-bottom:14px;display:flex;align-items:center;gap:12px}
+.rd-h::before{content:'';width:5px;height:28px;border-radius:4px;background:linear-gradient(180deg,var(--cyan),var(--blue))}
+.rd-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.rd-step{position:relative;padding:20px;border-radius:18px;background:var(--rd-glass),var(--card);border:1px solid rgba(255,255,255,.07)}
+.rd-step em{font-style:normal;font-family:'Bebas Neue',sans-serif;font-size:46px;line-height:1;color:color-mix(in srgb,var(--cyan) 70%,transparent)}
+.rd-step b{display:block;font-size:17px;color:#fff;margin:6px 0 4px}
+.rd-step span{color:var(--text);font-size:13px;line-height:1.45}
+.rd-news{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.rd-nw{padding:18px;border-radius:18px;background:var(--rd-glass),var(--card);border:1px solid rgba(255,255,255,.07)}
+.rd-nw .tg{display:inline-block;font-size:11px;font-weight:700;letter-spacing:1px;padding:3px 10px;border-radius:99px;background:color-mix(in srgb,var(--cyan) 14%,transparent);color:var(--cyan);margin-bottom:8px}
+.rd-nw b{display:block;color:#fff;font-size:17px;margin-bottom:6px}
+.rd-nw p{color:var(--text);font-size:13px;line-height:1.5}
+.rd-nw small{display:block;margin-top:10px;color:#64748b;font-size:11px}
+.rd-faq details{border-radius:14px;margin-bottom:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);transition:border-color .25s}
+.rd-faq details[open]{border-color:color-mix(in srgb,var(--cyan) 40%,transparent)}
+.rd-faq summary{cursor:pointer;padding:14px 18px;font-weight:700;color:#fff;list-style:none}
+.rd-faq summary::after{content:'+';float:right;color:var(--cyan)}
+.rd-faq details[open] summary::after{content:'–'}
+.rd-faq details p{padding:0 18px 16px;color:var(--text);font-size:14px;line-height:1.55}
+#rd-pcats{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.rd-hide-cat{display:none!important}
 </style>
 </head>
 <body>
@@ -1286,7 +1312,7 @@ body.ah-on #owner-panel>.sep,body.ah-on #owner-panel>.owner-panel-banner,body.ah
       }
     }
     var u = window.currentUser, html;
-    if (u) html = '<div><div class="w-hi">Привет, ' + esc(u.username) + '!</div><div class="w-sub">' + esc(u.role || 'Пользователь') + (u.faction ? ' · ' + esc(u.faction) : '') + '</div></div><div class="w-btns"><button class="btn-primary" onclick="switchPortal(\'mydocs\')">📄 Мои документы</button><button class="btn-primary" onclick="navigateTo(\'profile\')">👤 Профиль</button></div>';
+    if (u) html = '<div><div class="w-hi">Привет, ' + esc(u.username) + '!</div><div class="w-sub">' + esc(u.role || 'Пользователь') + (u.faction ? ' · ' + esc(u.faction) : '') + (window._rdPend != null ? ' · На рассмотрении: <b style="color:var(--cyan)">' + window._rdPend + '</b>' : '') + '</div></div><div class="w-btns"><button class="btn-primary" onclick="switchPortal(\'mydocs\')">📄 Мои документы</button><button class="btn-primary" onclick="navigateTo(\'profile\')">👤 Профиль</button></div>';
     else html = '<div><div class="w-hi">Городской Портал</div><div class="w-sub">Войдите, чтобы оформлять документы и подавать заявления</div></div><div class="w-btns"><button class="btn-primary" onclick="openModal(\'auth\')">🔑 Войти</button></div>';
     if (w.dataset.h !== html) { w.dataset.h = html; w.innerHTML = html; }
   }
@@ -1341,6 +1367,111 @@ body.ah-on #owner-panel>.sep,body.ah-on #owner-panel>.owner-panel-banner,body.ah
   function tick() { try { tagProfile(); quickStart(); } catch (e) {} }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', tick); else tick();
   setInterval(tick, 1500);
+})();
+
+/* ===== v3: профиль-обложка с вкладками, главная (шаги/новости/FAQ), категории портала ===== */
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+  var store = function (k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) {} };
+
+  /* ---------- ПРОФИЛЬ ---------- */
+  function profileTabs() {
+    var pu = $('profile-user'); if (!pu) return;
+    var card = pu.querySelector(':scope>.profile-card');
+    if (!$('rd-cover') && card && card.firstElementChild && card.querySelector('.profile-avatar-big')) {
+      var cover = document.createElement('div'); cover.id = 'rd-cover';
+      cover.innerHTML = '<div class="cv-banner"></div><div class="cv-body"><div class="cv-id"></div></div>';
+      var body = cover.querySelector('.cv-body');
+      cover.querySelector('.cv-id').appendChild(card.firstElementChild);          // аватар + ник + бейджи (id сохраняются)
+      var st = pu.querySelector(':scope>.profile-stats-grid'); if (st) body.appendChild(st);
+      pu.insertBefore(cover, pu.firstChild);
+      var bar = document.createElement('div'); bar.id = 'rd-ptabs'; pu.insertBefore(bar, cover.nextSibling);
+      pu.dataset.active = store('nrp_ptab') || 'overview';
+    }
+    if (!$('rd-cover')) return;
+    Array.prototype.forEach.call(pu.children, function (c) {
+      if (c.id === 'rd-cover' || c.id === 'rd-ptabs') return;
+      var id = c.id || '', sec = 'overview';
+      if (id === 'owner-panel' || id === 'admin-hub' || id.indexOf('admin-') === 0) sec = 'admin';
+      else if (c.classList.contains('rd-quick')) sec = 'actions';
+      else if (c.classList.contains('rd-theme') || c.classList.contains('rd-pass') || c.classList.contains('rd-logout')) sec = 'settings';
+      if (c.dataset.sec !== sec) c.dataset.sec = sec;
+    });
+    var hub = $('admin-hub'), hasAdmin = !!hub && hub.style.display !== 'none';
+    var tabs = [['overview', '📋 Обзор'], ['actions', '⚡ Действия'], ['settings', '⚙️ Настройки']];
+    if (hasAdmin) tabs.push(['admin', '🛡️ Управление']);
+    if (pu.dataset.active === 'admin' && !hasAdmin) pu.dataset.active = 'overview';
+    var key = tabs.map(function (t) { return t[0]; }).join() + pu.dataset.active, bar2 = $('rd-ptabs');
+    if (bar2 && bar2.dataset.k !== key) {
+      bar2.dataset.k = key; bar2.innerHTML = '';
+      tabs.forEach(function (t) {
+        var b = document.createElement('button'); b.className = 'ah-chip' + (pu.dataset.active === t[0] ? ' on' : ''); b.textContent = t[1];
+        b.onclick = function () { pu.dataset.active = t[0]; store('nrp_ptab', t[0]); profileTabs(); };
+        bar2.appendChild(b);
+      });
+    }
+  }
+
+  /* ---------- ГЛАВНАЯ ---------- */
+  var newsAt = 0;
+  function mainExtras() {
+    var tab = $('tab-main'), cont = tab && tab.querySelector('.container'), stats = cont && cont.querySelector('.stats'); if (!stats) return;
+    if (!$('rd-steps')) {
+      var s = document.createElement('div'); s.id = 'rd-steps'; s.className = 'rd-block';
+      s.innerHTML = '<div class="rd-h">Как начать</div><div class="rd-steps"><div class="rd-step"><em>01</em><b>Создай аккаунт</b><span>Регистрация по Discord-юзернейму занимает минуту.</span></div><div class="rd-step"><em>02</em><b>Оформи паспорт</b><span>Это твой документ жителя города, без него дальше никак.</span></div><div class="rd-step"><em>03</em><b>Выбери путь</b><span>Вступай во фракцию, открой бизнес или живи как гражданин.</span></div></div>';
+      stats.parentNode.insertBefore(s, stats.nextSibling);
+      var n = document.createElement('div'); n.id = 'rd-news'; n.className = 'rd-block'; n.style.display = 'none'; n.innerHTML = '<div class="rd-h">Новости</div><div class="rd-news"></div>';
+      s.parentNode.insertBefore(n, s.nextSibling);
+      var f = document.createElement('div'); f.id = 'rd-faq'; f.className = 'rd-block rd-faq';
+      f.innerHTML = '<div class="rd-h">Частые вопросы</div><details><summary>Как вступить во фракцию?</summary><p>Открой Портал → «Вступить во фракцию», выбери организацию и заполни заявление. После одобрения роль в Discord выдастся автоматически.</p></details><details><summary>Где смотреть статус заявки?</summary><p>В Портале, раздел «Мои документы», а также в Профиле во вкладке «Обзор»: там виден счётчик заявок.</p></details><details><summary>Забыл пароль, что делать?</summary><p>Напиши администрации в Discord: пароль сбросят и выдадут временный, который потом можно сменить в Профиле → «Настройки».</p></details><details><summary>Почему не приходит роль в Discord?</summary><p>Проверь, что в Профиле указан правильный Discord-юзернейм и ты состоишь на сервере.</p></details>';
+      cont.appendChild(f);
+    }
+    if (typeof db === 'function' && Date.now() - newsAt > 180000) {
+      newsAt = Date.now();
+      db('news?order=created_at.desc&limit=3').then(function (rows) {
+        var box = $('rd-news'); if (!box || !rows || !rows.length) return;
+        box.style.display = '';
+        box.querySelector('.rd-news').innerHTML = rows.map(function (r) {
+          var t = r.custom_tag || r.tag || 'Новость', d = r.created_at ? new Date(r.created_at).toLocaleDateString('ru-RU') : '';
+          return '<div class="rd-nw"><span class="tg">' + esc(t) + '</span><b>' + esc(r.title) + '</b><p>' + esc(String(r.text || '').slice(0, 140)) + (String(r.text || '').length > 140 ? '…' : '') + '</p><small>' + esc(r.author || '') + (d ? ' · ' + d : '') + '</small></div>';
+        }).join('');
+      }).catch(function () {});
+    }
+  }
+
+  /* ---------- ПОРТАЛ: категории и счётчик заявок ---------- */
+  var CAT = { passport: 'Документы', medbook: 'Документы', license: 'Документы', 'driving-license': 'Документы', 'faction-join': 'Государство', government: 'Государство', complaint: 'Государство', praise: 'Государство', court: 'Суд', lawyer: 'Суд', home: 'Имущество', credit: 'Имущество', 'opg-mafia': 'Криминал' };
+  var curCat = 'Все', myAt = 0, myId = null;
+  function portalExtras() {
+    var sv = $('portal-services'), grid = sv && sv.querySelector('.portal-grid'); if (!grid) return;
+    if (!$('rd-pcats')) {
+      var bar = document.createElement('div'); bar.id = 'rd-pcats';
+      ['Все', 'Документы', 'Государство', 'Суд', 'Имущество', 'Криминал'].forEach(function (c) {
+        var b = document.createElement('button'); b.className = 'ah-chip' + (c === 'Все' ? ' on' : ''); b.textContent = c;
+        b.onclick = function () { curCat = c; Array.prototype.forEach.call(bar.children, function (x) { x.classList.toggle('on', x === b); }); applyCat(grid); };
+        bar.appendChild(b);
+      });
+      sv.insertBefore(bar, grid);
+    }
+    applyCat(grid);
+    var u = window.currentUser;
+    if (u && typeof db === 'function' && (myId !== u.id || Date.now() - myAt > 60000)) {
+      myId = u.id; myAt = Date.now();
+      db('requests?user_id=eq.' + u.id + '&status=eq.pending&select=id').then(function (r) { window._rdPend = r.length; }).catch(function () {});
+    }
+    if (!u) window._rdPend = null;
+  }
+  function applyCat(grid) {
+    grid.querySelectorAll('.portal-card').forEach(function (c) {
+      var k = c.getAttribute('data-flag-service'), cat = CAT[k] || 'Другое';
+      c.classList.toggle('rd-hide-cat', curCat !== 'Все' && cat !== curCat);
+    });
+  }
+
+  function tick() { try { profileTabs(); mainExtras(); portalExtras(); } catch (e) {} }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', tick); else tick();
+  setInterval(tick, 1200);
 })();
 </script>
 </body>
