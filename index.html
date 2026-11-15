@@ -324,6 +324,22 @@ nav{background:rgba(3,7,18,.72)!important;backdrop-filter:blur(22px) saturate(16
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
   html.rd-js .rd-reveal{opacity:1;transform:none}
 }
+
+/* ===== ЕДИНАЯ ПАНЕЛЬ УПРАВЛЕНИЯ (профиль) ===== */
+.ah-off{display:none!important}
+body.ah-on #owner-panel>.sep,body.ah-on #owner-panel>.owner-panel-banner,body.ah-on #admin-banner-panel>.sep,body.ah-on #admin-server-banner-panel>.sep,body.ah-on #admin-users-panel>.sep,body.ah-on #admin-discord-request-panel>.sep{display:none}
+#admin-hub{margin:8px 0 14px;padding:14px 16px;border-radius:18px;border:1px solid color-mix(in srgb,var(--cyan) 25%,transparent);background:linear-gradient(160deg,color-mix(in srgb,var(--cyan) 7%,transparent),rgba(255,255,255,.015)),var(--card);position:sticky;top:76px;z-index:20;backdrop-filter:blur(14px)}
+.ah-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.ah-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:#fff}
+.ah-stats{display:flex;gap:8px;flex-wrap:wrap}
+.ah-stat{font-size:12px;font-weight:700;letter-spacing:1px;padding:4px 10px;border-radius:99px;background:rgba(255,255,255,.06);color:var(--text)}
+.ah-stat b{color:var(--cyan)}
+.ah-stat.warn b{color:#fbbf24}
+.ah-chips{display:flex;gap:6px;flex-wrap:wrap}
+.ah-chip{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:13px;padding:7px 12px;border-radius:10px;cursor:pointer;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:var(--text);transition:all .2s}
+.ah-chip:hover{color:#fff;border-color:color-mix(in srgb,var(--cyan) 45%,transparent)}
+.ah-chip.on{color:#030712;background:linear-gradient(135deg,var(--cyan),var(--blue));border-color:transparent}
+.ah-search{width:100%;margin:0 0 10px;padding:9px 12px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:#fff;font-family:'Rajdhani',sans-serif;font-size:14px}
 </style>
 </head>
 <body>
@@ -1096,6 +1112,74 @@ nav{background:rgba(3,7,18,.72)!important;backdrop-filter:blur(22px) saturate(16
     }, 2500);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
+
+/* ===== ЕДИНАЯ ПАНЕЛЬ УПРАВЛЕНИЯ: одна полоса вкладок вместо длинной простыни.
+   Существующие блоки не переносятся и не переписываются — только показываются по одному. ===== */
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var OWNER = [['никнейм пользователю', '✏️ Ник'], ['Запросить', '📨 Запрос ника'], ['Состав', '👥 Команда'], ['ОПГ', '💀 ОПГ/Мафия'], ['Экстренное', '🧯 Разделы'], ['Полная остановка', '🚨 Стоп сайта'], ['Опросник', '🗳️ Опрос']];
+  var items = [], active = null, hub, chipsEl, ownerPanel;
+
+  function init() {
+    ownerPanel = $('owner-panel');
+    if (!ownerPanel || $('admin-hub')) return;
+    var simple = [['admin-users-panel', '👥 Игроки'], ['admin-discord-request-panel', '💬 Discord'], ['admin-banner-panel', '🎨 Баннер'], ['admin-server-banner-panel', '🟢 Сервер']];
+    simple.forEach(function (s) { var n = $(s[0]); if (n) items.push({ label: s[1], node: n, owner: false }); });
+    Array.prototype.forEach.call(ownerPanel.children, function (c) {
+      if (!c.classList.contains('profile-card')) return;
+      var t = c.textContent.slice(0, 90), lab = null;
+      OWNER.forEach(function (o) { if (!lab && t.indexOf(o[0]) !== -1) lab = o[1]; });
+      items.push({ label: lab || '⚙️ Ещё', node: c, owner: true });
+    });
+    hub = document.createElement('div'); hub.id = 'admin-hub'; hub.style.display = 'none';
+    hub.innerHTML = '<div class="ah-head"><div class="ah-title">🛡️ Панель управления</div><div class="ah-stats" id="ah-stats"></div></div><div class="ah-chips" id="ah-chips"></div>';
+    ownerPanel.parentNode.insertBefore(hub, items.length && !items[0].owner ? items[0].node : ownerPanel);
+    chipsEl = $('ah-chips');
+    // Поиск по таблице игроков (обновляется при перерисовке таблицы)
+    var up = $('admin-users-panel'), body = $('users-table-body');
+    if (up && body) {
+      var inp = document.createElement('input'); inp.className = 'ah-search'; inp.placeholder = '🔍 Поиск игрока: ник, роль, фракция…';
+      var card = up.querySelector('.profile-card'); if (card) up.insertBefore(inp, card);
+      var filt = function () { var q = inp.value.trim().toLowerCase(); Array.prototype.forEach.call(body.rows, function (r) { r.style.display = !q || r.textContent.toLowerCase().indexOf(q) !== -1 ? '' : 'none'; }); };
+      inp.addEventListener('input', filt); new MutationObserver(filt).observe(body, { childList: true });
+    }
+    var refresh = function () { render(); };
+    items.forEach(function (it) { new MutationObserver(refresh).observe(it.owner ? ownerPanel : it.node, { attributes: true, attributeFilter: ['style'] }); });
+    render(); loadStats(); setInterval(loadStats, 60000);
+  }
+
+  function avail(it) { return (it.owner ? ownerPanel : it.node).style.display !== 'none'; }
+
+  function render() {
+    var list = items.filter(avail);
+    hub.style.display = list.length ? '' : 'none';
+    document.body.classList.toggle('ah-on', list.length > 0);
+    if (!list.length) return;
+    var saved = null; try { saved = localStorage.getItem('nrp_ah_tab'); } catch (e) {}
+    if (!active || list.indexOf(active) < 0) active = list.filter(function (i) { return i.label === saved; })[0] || list[0];
+    chipsEl.innerHTML = '';
+    var reqChip = document.createElement('button'); reqChip.className = 'ah-chip'; reqChip.textContent = '📥 Заявки';
+    reqChip.onclick = function () { window.navigateTo && navigateTo('portal'); window.switchPortal && switchPortal('admin-requests'); };
+    list.forEach(function (it) {
+      var b = document.createElement('button'); b.className = 'ah-chip' + (it === active ? ' on' : ''); b.textContent = it.label;
+      b.onclick = function () { active = it; try { localStorage.setItem('nrp_ah_tab', it.label); } catch (e) {} render(); };
+      chipsEl.appendChild(b);
+    });
+    chipsEl.appendChild(reqChip);
+    var ownerActive = active.owner;
+    items.forEach(function (it) { if (!it.owner) it.node.classList.toggle('ah-off', it !== active); else it.node.classList.toggle('ah-off', it !== active); });
+    ownerPanel.classList.toggle('ah-off', !ownerActive);
+  }
+
+  function loadStats() {
+    if (typeof db !== 'function' || !hub || hub.style.display === 'none') return;
+    Promise.all([db('requests?status=eq.pending&select=id'), db('users?select=id')]).then(function (r) {
+      $('ah-stats').innerHTML = '<span class="ah-stat' + (r[0].length ? ' warn' : '') + '">Заявок в ожидании: <b>' + r[0].length + '</b></span><span class="ah-stat">Игроков: <b>' + r[1].length + '</b></span>';
+    }).catch(function () {});
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();
 </script>
 </body>
