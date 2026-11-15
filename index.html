@@ -87,7 +87,7 @@
         .opg-counter-num{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--cyan);line-height:1}
         .opg-counter-num.red{color:#f87171}
         .opg-counter-label{color:var(--text);font-size:11px;letter-spacing:1px;text-transform:uppercase;margin-top:4px}
-        .modal-overlay{position:fixed;inset:0;z-index:500;background:rgba(3,7,18,0.92);backdrop-filter:blur(12px);display:none;align-items:center;justify-content:center;padding:20px}
+        .modal-overlay{position:fixed;inset:0;z-index:100001;background:rgba(3,7,18,0.92);backdrop-filter:blur(12px);display:none;align-items:center;justify-content:center;padding:20px}
         .modal-overlay.open{display:flex;animation:fadeIn 0.2s ease}
         @keyframes fadeIn{from{opacity:0}to{opacity:1}}
         .fullscreen-cs{position:fixed;inset:0;z-index:600;background:radial-gradient(ellipse 80% 60% at 50% 30%,rgba(0,245,255,0.08) 0%,var(--dark) 70%);display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px}
@@ -259,6 +259,7 @@
     <div style="font-size:60px;margin-bottom:18px">🛠️</div>
     <div style="font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:3px;color:#f87171;margin-bottom:14px">ТЕХНИЧЕСКОЕ ОБСЛУЖИВАНИЕ</div>
     <div id="maintenance-overlay-text" style="color:var(--text);font-size:16px;max-width:520px;line-height:1.5">Сайт временно на техническом обслуживании. Мы скоро вернёмся!</div>
+    <button onclick="openModal('auth')" style="margin-top:28px;background:transparent;border:1px solid rgba(255,255,255,0.15);color:#94a3b8;padding:8px 18px;border-radius:10px;cursor:pointer;font-size:13px">🔑 Вход для администрации</button>
 </div>
 <nav>
 <!-- НАЧАЛО ПРЕМИУМ ИНФОРМАЦИОННОЙ ПАНЕЛИ -->
