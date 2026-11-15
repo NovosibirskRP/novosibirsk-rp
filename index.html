@@ -340,6 +340,47 @@ body.ah-on #owner-panel>.sep,body.ah-on #owner-panel>.owner-panel-banner,body.ah
 .ah-chip:hover{color:#fff;border-color:color-mix(in srgb,var(--cyan) 45%,transparent)}
 .ah-chip.on{color:#030712;background:linear-gradient(135deg,var(--cyan),var(--blue));border-color:transparent}
 .ah-search{width:100%;margin:0 0 10px;padding:9px 12px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:#fff;font-family:'Rajdhani',sans-serif;font-size:14px}
+
+/* ===== РЕДИЗАЙН: ПОРТАЛ ===== */
+#rd-welcome{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:18px 22px;margin-bottom:18px;border-radius:20px;border:1px solid color-mix(in srgb,var(--cyan) 22%,transparent);background:linear-gradient(120deg,color-mix(in srgb,var(--cyan) 12%,transparent),rgba(255,255,255,.02) 60%),var(--card)}
+#rd-welcome .w-hi{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;color:#fff}
+#rd-welcome .w-sub{color:var(--text);font-size:13px;margin-top:2px}
+#rd-welcome .w-btns{display:flex;gap:8px;flex-wrap:wrap}
+.portal-nav{display:flex;gap:6px;padding:6px;margin-bottom:16px;overflow-x:auto;border-radius:16px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06);scrollbar-width:none;position:sticky;top:76px;z-index:15;backdrop-filter:blur(14px)}
+.portal-nav::-webkit-scrollbar{display:none}
+.portal-nav-btn{border-radius:11px!important;white-space:nowrap;transition:all .25s var(--rd-ease)}
+.portal-nav-btn.active{background:linear-gradient(135deg,var(--cyan),var(--blue))!important;color:#030712!important;box-shadow:0 8px 20px -8px color-mix(in srgb,var(--cyan) 60%,transparent)}
+.rd-psearch{width:100%;margin-bottom:14px;padding:12px 16px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);color:#fff;font-family:'Rajdhani',sans-serif;font-size:15px}
+.portal-grid{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.portal-card{position:relative;padding:20px!important;overflow:hidden;cursor:pointer}
+.portal-card .portal-icon{display:inline-flex!important;align-items:center;justify-content:center;width:52px;height:52px;border-radius:15px;font-size:26px;margin-bottom:12px;background:color-mix(in srgb,var(--cyan) 12%,transparent);border:1px solid color-mix(in srgb,var(--cyan) 25%,transparent);transition:transform .35s var(--rd-ease)}
+.portal-card:hover .portal-icon{transform:scale(1.12) rotate(-6deg)}
+.portal-card .portal-title{font-weight:700;font-size:17px;color:#fff;margin-bottom:4px}
+.portal-card .portal-desc{font-size:13px;color:var(--text);line-height:1.45}
+.portal-card::after{content:'→';position:absolute;right:16px;bottom:14px;color:var(--cyan);opacity:0;transform:translateX(-8px);transition:all .3s var(--rd-ease)}
+.portal-card:hover::after{opacity:1;transform:none}
+.rd-hide{display:none!important}
+
+/* ===== РЕДИЗАЙН: ПРОФИЛЬ (2 колонки: слева визитка, справа настройки) ===== */
+#profile-user:not([style*="none"]){display:grid!important;grid-template-columns:minmax(300px,360px) 1fr;gap:16px;align-items:start}
+#profile-user>*{grid-column:2;min-width:0}
+#profile-user>.profile-card:first-child{grid-column:1;grid-row:1/span 40;position:sticky;top:88px;background:linear-gradient(180deg,color-mix(in srgb,var(--cyan) 16%,transparent) 0,transparent 170px),var(--rd-glass),var(--card)}
+#profile-user>.profile-card:first-child>div:first-child{flex-direction:column;align-items:center!important;text-align:center;gap:14px!important}
+.profile-avatar-big{width:112px!important;height:112px!important;border-radius:28px!important;box-shadow:0 0 0 3px var(--dark),0 0 0 5px color-mix(in srgb,var(--cyan) 70%,transparent),0 18px 40px -12px color-mix(in srgb,var(--cyan) 55%,transparent);transition:transform .3s var(--rd-ease)}
+.profile-avatar-big:hover{transform:scale(1.04) rotate(-2deg)}
+#profile-username{font-size:32px!important}
+.profile-row{padding:11px 0!important;border-bottom:1px solid rgba(255,255,255,.06)}
+.profile-row:last-child{border-bottom:none}
+#rd-complete{margin:16px 0 4px;padding:12px 14px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07)}
+#rd-complete .c-top{display:flex;justify-content:space-between;font-size:12px;font-weight:700;letter-spacing:1px;color:var(--text);margin-bottom:8px}
+#rd-complete .c-top b{color:var(--cyan)}
+#rd-complete .c-bar{height:7px;border-radius:9px;background:rgba(255,255,255,.07);overflow:hidden}
+#rd-complete .c-fill{height:100%;width:0;border-radius:9px;background:linear-gradient(90deg,var(--cyan),var(--blue));transition:width .6s var(--rd-ease)}
+#rd-complete .c-hint{font-size:12px;color:var(--text);margin-top:8px}
+@media (max-width:900px){
+  #profile-user:not([style*="none"]){grid-template-columns:1fr}
+  #profile-user>*,#profile-user>.profile-card:first-child{grid-column:1;grid-row:auto;position:static}
+}
 </style>
 </head>
 <body>
@@ -1180,6 +1221,55 @@ body.ah-on #owner-panel>.sep,body.ah-on #owner-panel>.owner-panel-banner,body.ah
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();
+
+/* ===== РЕДИЗАЙН ПОРТАЛА И ПРОФИЛЯ: приветствие, поиск услуг, заполненность профиля ===== */
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+
+  function portal() {
+    var view = $('portal-main-view'); if (!view) return;
+    var nav = view.querySelector('.portal-nav'); if (!nav) return;
+    var w = $('rd-welcome');
+    if (!w) {
+      w = document.createElement('div'); w.id = 'rd-welcome'; view.insertBefore(w, nav);
+      var sv = $('portal-services'), grid = sv && sv.querySelector('.portal-grid');
+      if (grid) {
+        var s = document.createElement('input'); s.className = 'rd-psearch'; s.placeholder = '🔍 Найти услугу: паспорт, права, лицензия…';
+        s.addEventListener('input', function () {
+          var q = s.value.trim().toLowerCase();
+          grid.querySelectorAll('.portal-card').forEach(function (c) { c.classList.toggle('rd-hide', !!q && c.textContent.toLowerCase().indexOf(q) < 0); });
+        });
+        sv.insertBefore(s, grid);
+      }
+    }
+    var u = window.currentUser, html;
+    if (u) html = '<div><div class="w-hi">Привет, ' + esc(u.username) + '!</div><div class="w-sub">' + esc(u.role || 'Пользователь') + (u.faction ? ' · ' + esc(u.faction) : '') + '</div></div><div class="w-btns"><button class="btn-primary" onclick="switchPortal(\'mydocs\')">📄 Мои документы</button><button class="btn-primary" onclick="navigateTo(\'profile\')">👤 Профиль</button></div>';
+    else html = '<div><div class="w-hi">Городской Портал</div><div class="w-sub">Войдите, чтобы оформлять документы и подавать заявления</div></div><div class="w-btns"><button class="btn-primary" onclick="openModal(\'auth\')">🔑 Войти</button></div>';
+    if (w.dataset.h !== html) { w.dataset.h = html; w.innerHTML = html; }
+  }
+
+  function profile() {
+    var pu = $('profile-user'); if (!pu) return;
+    var card = pu.querySelector('.profile-card'); if (!card) return;
+    var box = $('rd-complete');
+    if (!box) { box = document.createElement('div'); box.id = 'rd-complete'; card.insertBefore(box, card.querySelector('.profile-row') || null); }
+    var img = $('profile-avatar-img'), bio = $('profile-bio-input'), ds = $('profile-discord-id');
+    var steps = [
+      [!!(img && img.style.display !== 'none' && img.getAttribute('src')), 'добавьте фото'],
+      [!!(bio && bio.value.trim()), 'расскажите о себе'],
+      [!!(ds && ds.value.trim()), 'укажите Discord']
+    ];
+    var done = steps.filter(function (s) { return s[0]; }).length, pct = Math.round((done + 1) / (steps.length + 1) * 100);
+    var left = steps.filter(function (s) { return !s[0]; }).map(function (s) { return s[1]; });
+    var html = '<div class="c-top"><span>ПРОФИЛЬ ЗАПОЛНЕН</span><b>' + pct + '%</b></div><div class="c-bar"><div class="c-fill" style="width:' + pct + '%"></div></div>' + (left.length ? '<div class="c-hint">Осталось: ' + left.join(', ') + '</div>' : '<div class="c-hint">Всё заполнено 🎉</div>');
+    if (box.dataset.h !== html) { box.dataset.h = html; box.innerHTML = html; }
+  }
+
+  function tick() { try { portal(); profile(); } catch (e) {} }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', tick); else tick();
+  setInterval(tick, 1500);
 })();
 </script>
 </body>
