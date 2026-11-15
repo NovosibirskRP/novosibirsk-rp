@@ -1585,20 +1585,23 @@ select option,select optgroup{background:#0f172a;color:#fff}
       var s = document.createElement('div'); s.id = 'rd-steps'; s.className = 'rd-block';
       s.innerHTML = '<div class="rd-h">Как начать</div><div class="rd-steps"><div class="rd-step"><em>01</em><b>Создай аккаунт</b><span>Регистрация по Discord-юзернейму занимает минуту.</span></div><div class="rd-step"><em>02</em><b>Оформи паспорт</b><span>Это твой документ жителя города, без него дальше никак.</span></div><div class="rd-step"><em>03</em><b>Выбери путь</b><span>Вступай во фракцию, открой бизнес или живи как гражданин.</span></div></div>';
       stats.parentNode.insertBefore(s, stats.nextSibling);
-      var n = document.createElement('div'); n.id = 'rd-news'; n.className = 'rd-block'; n.style.display = 'none'; n.innerHTML = '<div class="rd-h">Новости <button class="ah-chip" style="margin-left:auto" onclick="navigateTo(\'news\')">Все новости →</button></div><div class="rd-news"></div>';
+      var n = document.createElement('div'); n.id = 'rd-news'; n.className = 'rd-block'; n.innerHTML = '<div class="rd-h">Последние новости <button class="ah-chip" style="margin-left:auto" onclick="navigateTo(\'news\')">Все новости →</button><button class="ah-chip" id="rd-news-write" style="display:none" onclick="navigateTo(\'news\')">✍️ Написать</button></div><div class="rd-news"><div class="rd-nw" style="opacity:.6">Загрузка…</div></div>';
       s.parentNode.insertBefore(n, s.nextSibling);
       var f = document.createElement('div'); f.id = 'rd-faq'; f.className = 'rd-block rd-faq';
       f.innerHTML = '<div class="rd-h">Частые вопросы</div><details><summary>Как вступить во фракцию?</summary><p>Открой Портал → «Вступить во фракцию», выбери организацию и заполни заявление. После одобрения роль в Discord выдастся автоматически.</p></details><details><summary>Где смотреть статус заявки?</summary><p>В Портале, раздел «Мои документы», а также в Профиле во вкладке «Обзор»: там виден счётчик заявок.</p></details><details><summary>Забыл пароль, что делать?</summary><p>Напиши администрации в Discord: пароль сбросят и выдадут временный, который потом можно сменить в Профиле → «Настройки».</p></details><details><summary>Почему не приходит роль в Discord?</summary><p>Проверь, что в Профиле указан правильный Discord-юзернейм и ты состоишь на сервере.</p></details>';
       cont.appendChild(f);
     }
-    if (typeof db === 'function' && Date.now() - newsAt > 180000) {
+    var wb = $('rd-news-write'), cu = window.currentUser;
+    if (wb) wb.style.display = cu && (cu.role === 'Главный Владелец' || cu.role === 'Заместитель Главного Владельца' || cu.faction === 'ГТРК') ? '' : 'none';
+    if (typeof db === 'function' && Date.now() - newsAt > 30000) {
       newsAt = Date.now();
       db('news?order=created_at.desc&limit=3').then(function (rows) {
-        var box = $('rd-news'); if (!box || !rows || !rows.length) return;
+        var box = $('rd-news'); if (!box || !rows) return;
         box.style.display = '';
+        if (!rows.length) { box.querySelector('.rd-news').innerHTML = '<div class="rd-nw" style="opacity:.7">Пока новостей нет. Скоро здесь появятся свежие объявления.</div>'; return; }
         box.querySelector('.rd-news').innerHTML = rows.map(function (r) {
           var t = r.custom_tag || r.tag || 'Новость', d = r.created_at ? new Date(r.created_at).toLocaleDateString('ru-RU') : '';
-          return '<div class="rd-nw"><span class="tg">' + esc(t) + '</span><b>' + esc(r.title) + '</b><p>' + esc(String(r.text || '').slice(0, 140)) + (String(r.text || '').length > 140 ? '…' : '') + '</p><small>' + esc(r.author || '') + (d ? ' · ' + d : '') + '</small></div>';
+          return '<div class="rd-nw" style="cursor:pointer" onclick="navigateTo(\'news\')"><span class="tg">' + esc(t) + '</span><b>' + esc(r.title) + '</b><p>' + esc(String(r.text || '').slice(0, 140)) + (String(r.text || '').length > 140 ? '…' : '') + '</p><small>' + esc(r.author || '') + (d ? ' · ' + d : '') + '</small></div>';
         }).join('');
       }).catch(function () {});
     }
@@ -1681,10 +1684,11 @@ select option,select optgroup{background:#0f172a;color:#fff}
   }
 
   function order() {
-    var cont = document.querySelector('#tab-main .container'), faq = $('rd-faq'), st = $('rd-steps'), nw = $('rd-news');
-    if (!cont || !faq || !st || !nw || cont.dataset.ord) return;
+    var cont = document.querySelector('#tab-main .container'), faq = $('rd-faq'), st = $('rd-steps'), nw = $('rd-news'), qs = $('rd-quick-start');
+    if (!cont || !faq || !st || !nw || !qs || cont.dataset.ord) return;
     cont.dataset.ord = '1';
-    cont.appendChild(nw); cont.appendChild(st); cont.appendChild(faq);  // фракции выше, справочные блоки ниже
+    qs.parentNode.insertBefore(nw, qs.nextSibling);  // новости — сразу под быстрым стартом
+    cont.appendChild(st); cont.appendChild(faq);      // «Как начать» и вопросы — в самом низу  // фракции выше, справочные блоки ниже
   }
 
   function help() {
