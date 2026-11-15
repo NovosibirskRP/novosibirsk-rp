@@ -520,6 +520,55 @@ body.ah-on #owner-panel>.sep,body.ah-on #owner-panel>.owner-panel-banner,body.ah
 /* Выпадающие списки: тёмные, текст читается */
 select{color-scheme:dark}
 select option,select optgroup{background:#0f172a;color:#fff}
+
+/* ===== ЧАТЫ ===== */
+.chat-app{display:grid;grid-template-columns:330px minmax(0,1fr);height:74vh;min-height:480px;border-radius:22px;overflow:hidden;border:1px solid rgba(255,255,255,.08);background:var(--card)}
+.chat-side{display:flex;flex-direction:column;border-right:1px solid rgba(255,255,255,.07);min-height:0}
+.cs-head{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;font-size:17px;color:#fff}
+.cs-head button,.cr-head button{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:#fff;border-radius:10px;width:34px;height:34px;cursor:pointer;margin-left:6px;font-size:15px}
+.cs-head button:hover,.cr-head button:hover{border-color:var(--cyan)}
+#chat-newbox{padding:0 12px 12px;border-bottom:1px solid rgba(255,255,255,.07)}
+#chat-newbox input{width:100%;margin-bottom:6px;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:#fff;font-family:'Rajdhani',sans-serif;font-size:14px}
+.cn-r{padding:8px 10px;border-radius:9px;cursor:pointer;color:#fff;font-size:14px}
+.cn-r:hover{background:color-mix(in srgb,var(--cyan) 12%,transparent)}
+.cn-r small{color:var(--text);margin-left:6px}
+#cn-picked{display:flex;flex-wrap:wrap;gap:5px}
+.cn-chip{padding:3px 9px;border-radius:99px;font-size:12px;background:color-mix(in srgb,var(--cyan) 18%,transparent);color:var(--cyan);cursor:pointer}
+#chat-list{overflow-y:auto;flex:1}
+.ci{display:flex;gap:11px;padding:11px 14px;cursor:pointer;transition:background .2s;border-left:3px solid transparent}
+.ci:hover{background:rgba(255,255,255,.04)}
+.ci.on{background:color-mix(in srgb,var(--cyan) 10%,transparent);border-left-color:var(--cyan)}
+.ci-av{flex:0 0 44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;color:#030712;background:linear-gradient(135deg,var(--cyan),var(--blue))}
+.ci-b{flex:1;min-width:0}
+.ci-t{display:flex;justify-content:space-between;gap:8px;color:#fff;font-weight:700;font-size:15px}
+.ci-t span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ci-t small{color:#64748b;font-weight:400;font-size:11px;flex:0 0 auto}
+.ci-l{display:flex;justify-content:space-between;gap:8px;color:var(--text);font-size:13px}
+.ci-l span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ci-u{flex:0 0 auto;min-width:20px;height:20px;padding:0 6px;border-radius:99px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;color:#030712;background:var(--cyan)}
+.chat-main{display:flex;flex-direction:column;min-height:0;min-width:0}
+#chat-empty{margin:auto;text-align:center;color:#64748b;font-size:15px;line-height:2}
+#chat-room{display:flex;flex-direction:column;height:100%;min-height:0}
+.cr-head{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.07)}
+.cr-t{flex:1;min-width:0;color:#fff}
+.cr-t small{display:block;color:var(--text);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#cr-back{display:none}
+#chat-msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:6px}
+.cm{max-width:72%;padding:8px 12px;border-radius:16px;background:rgba(255,255,255,.07);color:#e5e7eb;font-size:15px;line-height:1.45;white-space:pre-wrap;word-break:break-word;align-self:flex-start;border-bottom-left-radius:5px}
+.cm.mine{align-self:flex-end;background:linear-gradient(135deg,color-mix(in srgb,var(--cyan) 70%,#000),color-mix(in srgb,var(--blue) 70%,#000));color:#fff;border-bottom-left-radius:16px;border-bottom-right-radius:5px}
+.cm b{display:block;font-size:12px;color:var(--cyan);margin-bottom:2px}
+.cm i{display:block;font-style:normal;font-size:10px;opacity:.55;text-align:right;margin-top:2px}
+.cr-input{display:flex;gap:8px;padding:12px;border-top:1px solid rgba(255,255,255,.07)}
+.cr-input textarea{flex:1;resize:none;max-height:120px;padding:11px 14px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#fff;font-family:'Rajdhani',sans-serif;font-size:15px}
+.cr-input .btn-primary{padding:0 18px;font-size:18px}
+@media (max-width:760px){
+  .chat-app{grid-template-columns:1fr;height:78vh}
+  .chat-app .chat-main{display:none}
+  .chat-app.in-room .chat-side{display:none}
+  .chat-app.in-room .chat-main{display:flex}
+  #cr-back{display:inline-block}
+  .cm{max-width:86%}
+}
 </style>
 </head>
 <body>
@@ -591,6 +640,7 @@ select option,select optgroup{background:#0f172a;color:#fff}
       <button class="nav-btn" id="nav-portal" data-flag-tab="portal" onclick="navigateTo('portal')"><span class="nav-btn-ic">🏛️</span>Портал</button>
       <button class="nav-btn" id="nav-rules" data-flag-tab="rules" onclick="navigateTo('rules')"><span class="nav-btn-ic">📋</span>Правила</button>
       <button class="nav-btn" id="nav-news" data-flag-tab="news" onclick="navigateTo('news')"><span class="nav-btn-ic">📰</span>Новости</button>
+        <button class="nav-btn" id="nav-chat" onclick="navigateTo('chat')"><span class="nav-btn-ic">💬</span>Чаты<span class="notify-dot" id="chat-dot" style="display:none"></span></button>
         <button class="nav-btn" id="nav-profile" onclick="navigateTo('profile')"><span class="nav-btn-ic">👤</span>Профиль<span class="notify-dot" id="profile-notify-dot" style="display:none"></span><span class="notify-dot" id="profile-discord-missing-dot" style="display:none;background:#f87171" title="Не заполнены данные Discord"></span></button>
     </div>
     <div style="display:flex;align-items:center;gap:10px">
@@ -604,6 +654,7 @@ select option,select optgroup{background:#0f172a;color:#fff}
   <button class="mobile-nav-btn" id="mnav-portal" data-flag-tab="portal" onclick="navigateTo('portal');closeMobileMenu()">🏛️ Портал</button>
   <button class="mobile-nav-btn" id="mnav-rules" data-flag-tab="rules" onclick="navigateTo('rules');closeMobileMenu()">📋 Правила</button>
   <button class="mobile-nav-btn" id="mnav-news" data-flag-tab="news" onclick="navigateTo('news');closeMobileMenu()">📰 Новости</button>
+    <button class="mobile-nav-btn" id="mnav-chat" onclick="navigateTo('chat');closeMobileMenu()">💬 Чаты</button>
     <button class="mobile-nav-btn" id="mnav-profile" onclick="navigateTo('profile');closeMobileMenu()">👤 Профиль<span class="notify-dot" id="profile-notify-dot-m" style="display:none"></span><span class="notify-dot" id="profile-discord-missing-dot-m" style="display:none;background:#f87171"></span></button>
 </div>
 
@@ -1115,6 +1166,30 @@ select option,select optgroup{background:#0f172a;color:#fff}
         <button class="btn-primary" id="nc-send">📢 Опубликовать</button>
     </div>
     <div id="news-feed"><div style="text-align:center;color:#64748b;padding:40px">Загрузка…</div></div>
+</div></div>
+<div class="tab" id="tab-chat"><div class="container" style="max-width:1100px">
+    <div style="margin-bottom:18px"><div class="section-title">Чаты</div><div class="section-sub">Личные сообщения и группы</div></div>
+    <div id="chat-guest" class="profile-card" style="display:none;text-align:center">🔒 Войдите в аккаунт, чтобы пользоваться чатами<br><button class="btn-primary" style="margin-top:12px" onclick="openModal('auth')">Войти</button></div>
+    <div id="chat-app" class="chat-app" style="display:none">
+        <aside class="chat-side">
+            <div class="cs-head"><b>Чаты</b><span><button id="cs-dm" title="Личное сообщение">✉️</button><button id="cs-group" title="Новая группа">👥</button></span></div>
+            <div id="chat-newbox" style="display:none">
+                <input id="cn-title" placeholder="Название группы" maxlength="40" style="display:none">
+                <input id="cn-user" placeholder="🔍 Ник игрока…" autocomplete="off">
+                <div id="cn-res"></div><div id="cn-picked"></div>
+                <button id="cn-go" class="btn-primary" style="display:none;width:100%;margin-top:8px">Создать группу</button>
+            </div>
+            <div id="chat-list"></div>
+        </aside>
+        <section class="chat-main">
+            <div id="chat-empty">💬<br>Выберите чат слева или начните новый</div>
+            <div id="chat-room" style="display:none">
+                <div class="cr-head"><button id="cr-back">←</button><div class="cr-t"><b id="cr-title"></b><small id="cr-sub"></small></div><span><button id="cr-add" title="Добавить в группу">➕</button><button id="cr-leave" title="Выйти">🚪</button></span></div>
+                <div id="chat-msgs"></div>
+                <div class="cr-input"><textarea id="chat-text" rows="1" maxlength="2000" placeholder="Сообщение…"></textarea><button id="chat-send" class="btn-primary">➤</button></div>
+            </div>
+        </section>
+    </div>
 </div></div>
 <div class="tab" id="tab-rules"><div class="container" style="max-width:900px">
   <div style="margin-bottom:24px"><div class="section-title">Правила Сервера</div><div class="section-sub">Обязательно к прочтению — незнание не освобождает от ответственности</div></div>
@@ -1688,6 +1763,146 @@ select option,select optgroup{background:#0f172a;color:#fff}
     } catch (e) {}
   }
   setInterval(tick, 1000);
+})();
+
+/* ===== ЧАТЫ: личные и группы (через функцию site-chat) ===== */
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  try { if (VALID_TABS.indexOf('chat') < 0) VALID_TABS.push('chat'); } catch (e) {}
+  if (/^#chat/.test(location.hash)) { try { switchTab('chat', false); } catch (e) {} }
+
+  var cur = null, lastId = 0, chats = [], n = 0, mode = 'dm', picked = [], busyM = false, busyL = false, ready = false, searchT;
+
+  async function api(action, payload) {
+    var res = await fetch(SUPABASE_URL + '/functions/v1/site-chat', { method: 'POST', headers: H, body: JSON.stringify(Object.assign({ action: action, token: window._siteToken }, payload || {})) });
+    var d = await res.json().catch(function () { return {}; });
+    if (!res.ok) throw new Error(d.error || ('Ошибка (' + res.status + ')'));
+    return d;
+  }
+  var fail = function (e) { notify(e.message || 'Ошибка', false); };
+  function fmt(at) {
+    var d = new Date(at), now = new Date();
+    return d.toDateString() === now.toDateString() ? d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) : d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' });
+  }
+
+  function renderList() {
+    var box = $('chat-list'), q = '';
+    if (!chats.length) { box.innerHTML = '<div style="padding:30px 16px;text-align:center;color:#64748b;font-size:14px">Чатов пока нет.<br>Нажмите ✉️ или 👥, чтобы начать.</div>'; return; }
+    box.innerHTML = chats.map(function (c) {
+      var pre = c.last ? (c.type === 'group' ? esc(c.last.from) + ': ' : '') + esc(c.last.text) : 'Нет сообщений';
+      return '<div class="ci' + (c.id === cur ? ' on' : '') + '" data-id="' + c.id + '"><div class="ci-av">' + (c.type === 'group' ? '👥' : esc((c.title || '?')[0].toUpperCase())) + '</div><div class="ci-b"><div class="ci-t"><span>' + esc(c.title) + '</span><small>' + (c.last ? fmt(c.last.at) : '') + '</small></div><div class="ci-l"><span>' + pre + '</span>' + (c.unread ? '<span class="ci-u">' + (c.unread > 99 ? '99+' : c.unread) + '</span>' : '') + '</div></div></div>';
+    }).join('');
+  }
+
+  async function loadList() {
+    if (busyL) return; busyL = true;
+    try {
+      var d = await api('list'); chats = d.chats;
+      var dot = $('chat-dot'); if (dot) dot.style.display = d.unread ? '' : 'none';
+      renderList();
+    } catch (e) {}
+    busyL = false;
+  }
+
+  function setRoomUi(on) {
+    $('chat-room').style.display = on ? 'flex' : 'none';
+    $('chat-empty').style.display = on ? 'none' : '';
+    $('chat-app').classList.toggle('in-room', on);
+  }
+
+  function addMsgs(list) {
+    var box = $('chat-msgs'), near = box.scrollHeight - box.scrollTop - box.clientHeight < 120, group = (chats.filter(function (c) { return c.id === cur; })[0] || {}).type === 'group';
+    list.forEach(function (m) {
+      var el = document.createElement('div'); el.className = 'cm' + (m.mine ? ' mine' : '');
+      el.innerHTML = (group && !m.mine ? '<b>' + esc(m.from) + '</b>' : '') + esc(m.text) + '<i>' + new Date(m.at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) + '</i>';
+      box.appendChild(el); lastId = Math.max(lastId, m.id);
+    });
+    if (near || !box.dataset.s) { box.scrollTop = box.scrollHeight; box.dataset.s = '1'; }
+  }
+
+  async function loadMsgs(first) {
+    if (busyM || !cur) return; busyM = true; var id = cur;
+    try {
+      var d = await api('messages', { chatId: id, after: first ? 0 : lastId });
+      if (id !== cur) { busyM = false; return; }
+      if (first) { $('chat-msgs').innerHTML = ''; delete $('chat-msgs').dataset.s; lastId = 0; $('cr-sub').textContent = d.members.map(function (m) { return m.name; }).join(', '); }
+      if (d.messages.length) { addMsgs(d.messages); loadList(); }
+    } catch (e) { if (first) fail(e); }
+    busyM = false;
+  }
+
+  function openChat(id) {
+    cur = id; var c = chats.filter(function (x) { return x.id === id; })[0] || {};
+    $('cr-title').textContent = c.title || 'Чат';
+    $('cr-add').style.display = c.type === 'group' ? '' : 'none';
+    setRoomUi(true); renderList(); loadMsgs(true); $('chat-text').focus();
+  }
+
+  async function send() {
+    var t = $('chat-text'), text = t.value.trim(); if (!text || !cur) return;
+    t.value = ''; t.style.height = '';
+    try { await api('send', { chatId: cur, text: text }); loadMsgs(); } catch (e) { t.value = text; fail(e); }
+  }
+
+  function resetNew() { $('chat-newbox').style.display = 'none'; $('cn-user').value = ''; $('cn-title').value = ''; $('cn-res').innerHTML = ''; picked = []; $('cn-picked').innerHTML = ''; }
+  function openNew(m) {
+    var box = $('chat-newbox'); if (box.style.display !== 'none' && mode === m) return resetNew();
+    mode = m; resetNew(); box.style.display = '';
+    $('cn-title').style.display = m === 'group' ? '' : 'none'; $('cn-go').style.display = m === 'group' ? '' : 'none';
+    $('cn-user').placeholder = m === 'group' ? '🔍 Добавить участника…' : '🔍 Ник игрока…'; $('cn-user').focus();
+  }
+  function renderPicked() { $('cn-picked').innerHTML = picked.map(function (p) { return '<span class="cn-chip" data-n="' + esc(p) + '">' + esc(p) + ' ✕</span>'; }).join(''); }
+
+  async function startDm(name) { try { var d = await api('createDm', { username: name }); resetNew(); await loadList(); openChat(d.chatId); } catch (e) { fail(e); } }
+
+  function init() {
+    if (ready || !$('tab-chat')) return; ready = true;
+    $('cs-dm').onclick = function () { openNew('dm'); };
+    $('cs-group').onclick = function () { openNew('group'); };
+    $('chat-list').onclick = function (e) { var c = e.target.closest('.ci'); if (c) openChat(Number(c.dataset.id)); };
+    $('cr-back').onclick = function () { cur = null; setRoomUi(false); renderList(); };
+    $('chat-send').onclick = send;
+    $('chat-text').addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } });
+    $('chat-text').addEventListener('input', function () { this.style.height = 'auto'; this.style.height = Math.min(this.scrollHeight, 120) + 'px'; });
+    $('cn-user').addEventListener('input', function () {
+      clearTimeout(searchT); var q = this.value.trim(), res = $('cn-res');
+      if (!q) { res.innerHTML = ''; return; }
+      searchT = setTimeout(async function () {
+        try { var d = await api('search', { q: q }); res.innerHTML = d.users.map(function (u) { return '<div class="cn-r" data-n="' + esc(u.username) + '">' + esc(u.username) + '<small>' + esc(u.faction || u.role || '') + '</small></div>'; }).join('') || '<div class="cn-r" style="opacity:.6;cursor:default">Не найдено</div>'; } catch (e) {}
+      }, 250);
+    });
+    $('cn-res').onclick = function (e) {
+      var r = e.target.closest('.cn-r[data-n]'); if (!r) return; var nm = r.dataset.n;
+      if (mode === 'dm') return startDm(nm);
+      if (picked.indexOf(nm) < 0) picked.push(nm); renderPicked(); $('cn-user').value = ''; $('cn-res').innerHTML = '';
+    };
+    $('cn-picked').onclick = function (e) { var c = e.target.closest('.cn-chip'); if (!c) return; picked = picked.filter(function (p) { return p !== c.dataset.n; }); renderPicked(); };
+    $('cn-go').onclick = async function () {
+      try { var d = await api('createGroup', { title: $('cn-title').value, usernames: picked }); resetNew(); await loadList(); openChat(d.chatId); } catch (e) { fail(e); }
+    };
+    $('cr-add').onclick = async function () {
+      var nm = prompt('Ник игрока, которого добавить в группу:'); if (!nm) return;
+      try { await api('addMember', { chatId: cur, username: nm }); notify('Участник добавлен', true); loadMsgs(true); } catch (e) { fail(e); }
+    };
+    $('cr-leave').onclick = async function () {
+      if (!confirm('Выйти из этого чата?')) return;
+      try { await api('leave', { chatId: cur }); cur = null; setRoomUi(false); loadList(); } catch (e) { fail(e); }
+    };
+  }
+
+  function tick() {
+    try {
+      init();
+      var user = window.currentUser, tab = $('tab-chat'); if (!tab) return;
+      $('chat-guest').style.display = user ? 'none' : ''; $('chat-app').style.display = user ? '' : 'none';
+      if (!user || !window._siteToken) { var d = $('chat-dot'); if (d) d.style.display = 'none'; cur = null; chats = []; return; }
+      var active = tab.classList.contains('active');
+      if (active) { if (cur) loadMsgs(); if (n % 2 === 0) loadList(); } else if (n % 8 === 0) loadList();
+      n++;
+    } catch (e) {}
+  }
+  setInterval(tick, 2500);
 })();
 </script>
 </body>
