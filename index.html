@@ -448,6 +448,52 @@ body.ah-on #owner-panel>.sep,body.ah-on #owner-panel>.owner-panel-banner,body.ah
 .rd-faq details p{padding:0 18px 16px;color:var(--text);font-size:14px;line-height:1.55}
 #rd-pcats{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
 .rd-hide-cat{display:none!important}
+
+/* ===== ПОЛНЫЙ РЕДИЗАЙН: ГЛАВНАЯ v2 ===== */
+#tab-main .hero{position:relative;overflow:hidden;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,.75fr);gap:36px;align-items:center;text-align:left;padding:72px 56px}
+#tab-main .hero-bg,#tab-main .hero-grid{position:absolute!important;inset:0}
+#tab-main .hero p{margin-left:0;max-width:560px}
+#tab-main .hero-btns{justify-content:flex-start}
+#tab-main .stats{display:none!important}
+#rd-live{position:relative;z-index:2;padding:22px;border-radius:24px;background:linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,.015)),rgba(8,12,24,.7);border:1px solid rgba(255,255,255,.1);backdrop-filter:blur(18px);box-shadow:0 30px 60px -30px #000}
+#rd-live .lv-h{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;letter-spacing:2px;color:var(--text);text-transform:uppercase;margin-bottom:16px}
+#rd-live .lv-h i{width:9px;height:9px;border-radius:50%;background:#22c55e;box-shadow:0 0 10px #22c55e;animation:serverLiveDotPulse 1.4s ease-in-out infinite}
+#rd-live .lv-g{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#rd-live .lv-t{padding:14px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07)}
+#rd-live .lv-t:first-child{grid-column:1/-1}
+#rd-live .lv-n{font-family:'Bebas Neue',sans-serif;font-size:40px;line-height:1;background:linear-gradient(135deg,var(--cyan),var(--blue));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+#rd-live .lv-l{font-size:12px;letter-spacing:1px;color:var(--text);margin-top:4px}
+#rd-live .lv-b{display:block;margin-top:12px;text-align:center;padding:12px;border-radius:14px;font-weight:700;letter-spacing:1px;color:#030712;background:linear-gradient(135deg,var(--cyan),var(--blue));text-decoration:none;transition:transform .25s var(--rd-ease)}
+#rd-live .lv-b:hover{transform:translateY(-2px)}
+#rd-quick-start{margin:18px 0 34px}
+#rd-fdir{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:0 0 20px;padding:12px;border-radius:18px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07)}
+#rd-fdir input{flex:1;min-width:200px;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);color:#fff;font-family:'Rajdhani',sans-serif;font-size:15px}
+.factions-grid{grid-template-columns:repeat(auto-fill,minmax(270px,1fr))!important}
+.faction-card{overflow:hidden}
+.faction-card::before{content:'';position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,var(--cyan),var(--blue));opacity:0;transition:opacity .3s}
+.faction-card:hover::before{opacity:1}
+@media (max-width:900px){#tab-main .hero{grid-template-columns:1fr;padding:44px 22px;gap:24px}}
+
+/* ===== ПОЛНЫЙ РЕДИЗАЙН: ПОРТАЛ v2 (меню слева, контент справа) ===== */
+#portal-main-view:not([style*="none"]){display:grid!important;grid-template-columns:230px minmax(0,1fr);gap:18px;align-items:start}
+#portal-main-view>*{grid-column:2;min-width:0}
+#portal-main-view>:first-child,#portal-main-view>#rd-welcome{grid-column:1/-1}
+#portal-main-view>.portal-nav{grid-column:1;grid-row:3/span 30;flex-direction:column;overflow:visible;position:sticky;top:88px;margin:0;padding:10px;gap:4px;border-radius:20px}
+.portal-nav .portal-nav-btn{width:100%;text-align:left;padding:12px 14px!important;font-size:15px}
+.portal-nav .rd-help{display:block;margin-top:8px;padding:12px 14px;border-radius:12px;text-decoration:none;font-weight:700;font-size:14px;color:var(--text);border:1px dashed rgba(255,255,255,.15);transition:all .25s}
+.portal-nav .rd-help:hover{color:#fff;border-color:var(--cyan)}
+.portal-card{display:grid!important;grid-template-columns:56px 1fr;grid-template-areas:"i t" "i d";column-gap:14px;row-gap:2px;align-items:center}
+.portal-card .portal-icon{grid-area:i;margin:0!important}
+.portal-card .portal-title{grid-area:t;margin:0!important;align-self:end}
+.portal-card .portal-desc{grid-area:d;align-self:start}
+.portal-grid{grid-template-columns:repeat(auto-fill,minmax(300px,1fr))!important}
+@media (max-width:860px){
+  #portal-main-view:not([style*="none"]){grid-template-columns:1fr}
+  #portal-main-view>*,#portal-main-view>.portal-nav{grid-column:1;grid-row:auto}
+  #portal-main-view>.portal-nav{flex-direction:row;overflow-x:auto;position:static}
+  .portal-nav .portal-nav-btn{width:auto}
+  .portal-nav .rd-help{display:none}
+}
 </style>
 </head>
 <body>
@@ -1470,6 +1516,68 @@ body.ah-on #owner-panel>.sep,body.ah-on #owner-panel>.owner-panel-banner,body.ah
   }
 
   function tick() { try { profileTabs(); mainExtras(); portalExtras(); } catch (e) {} }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', tick); else tick();
+  setInterval(tick, 1200);
+})();
+
+/* ===== ПОЛНЫЙ РЕДИЗАЙН: живая панель в шапке, каталог фракций, порядок блоков, помощь в портале ===== */
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var txt = function (id) { var e = $(id); return e ? e.textContent.trim() : '--'; };
+  var DISCORD = 'https://discord.gg/rp9btukQV5';
+  var cat = 'Все', q = '';
+
+  function live() {
+    var hero = document.querySelector('#tab-main .hero'); if (!hero) return;
+    var box = $('rd-live');
+    if (!box) { box = document.createElement('div'); box.id = 'rd-live'; hero.appendChild(box); }
+    var html = '<div class="lv-h"><i></i>Город сейчас</div><div class="lv-g"><div class="lv-t"><div class="lv-n">' + txt('stat-discord-online') + '</div><div class="lv-l">🟢 ОНЛАЙН В DISCORD</div></div><div class="lv-t"><div class="lv-n">' + txt('stat-discord-members') + '</div><div class="lv-l">УЧАСТНИКОВ</div></div><div class="lv-t"><div class="lv-n">14</div><div class="lv-l">ФРАКЦИЙ</div></div></div><a class="lv-b" href="' + DISCORD + '" target="_blank" rel="noopener">ПРИСОЕДИНИТЬСЯ</a>';
+    if (box.dataset.h !== html) { box.dataset.h = html; box.innerHTML = html; }
+  }
+
+  function applyDir() {
+    document.querySelectorAll('#tab-main .faction-category').forEach(function (c) {
+      var title = (c.querySelector('.section-title') || {}).textContent || '', any = false;
+      c.querySelectorAll('.faction-card').forEach(function (f) {
+        var ok = !q || f.textContent.toLowerCase().indexOf(q) >= 0;
+        f.classList.toggle('rd-hide-cat', !ok); if (ok) any = true;
+      });
+      c.classList.toggle('rd-hide-cat', !(any && (cat === 'Все' || title.trim() === cat)));
+    });
+  }
+
+  function directory() {
+    var cats = document.querySelectorAll('#tab-main .faction-category'); if (!cats.length) return;
+    if (!$('rd-fdir')) {
+      var bar = document.createElement('div'); bar.id = 'rd-fdir';
+      var inp = document.createElement('input'); inp.placeholder = '🔍 Найти фракцию…';
+      inp.addEventListener('input', function () { q = inp.value.trim().toLowerCase(); applyDir(); });
+      bar.appendChild(inp);
+      ['Все'].concat(Array.prototype.map.call(cats, function (c) { return (c.querySelector('.section-title') || {}).textContent.trim(); })).forEach(function (name) {
+        var b = document.createElement('button'); b.className = 'ah-chip' + (name === 'Все' ? ' on' : ''); b.textContent = name;
+        b.onclick = function () { cat = name; Array.prototype.forEach.call(bar.querySelectorAll('.ah-chip'), function (x) { x.classList.toggle('on', x === b); }); applyDir(); };
+        bar.appendChild(b);
+      });
+      cats[0].parentNode.insertBefore(bar, cats[0]);
+    }
+  }
+
+  function order() {
+    var cont = document.querySelector('#tab-main .container'), faq = $('rd-faq'), st = $('rd-steps'), nw = $('rd-news');
+    if (!cont || !faq || !st || !nw || cont.dataset.ord) return;
+    cont.dataset.ord = '1';
+    cont.appendChild(nw); cont.appendChild(st); cont.appendChild(faq);  // фракции выше, справочные блоки ниже
+  }
+
+  function help() {
+    var nav = document.querySelector('#portal-main-view .portal-nav');
+    if (nav && !nav.querySelector('.rd-help')) {
+      var a = document.createElement('a'); a.className = 'rd-help'; a.href = DISCORD; a.target = '_blank'; a.rel = 'noopener'; a.textContent = '💬 Нужна помощь? Discord';
+      nav.appendChild(a);
+    }
+  }
+
+  function tick() { try { live(); directory(); order(); help(); } catch (e) {} }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', tick); else tick();
   setInterval(tick, 1200);
 })();
