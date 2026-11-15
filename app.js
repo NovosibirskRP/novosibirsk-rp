@@ -88,6 +88,16 @@ async function callSiteApi(action, payload = {}) {
         body: JSON.stringify({ action, token: window._siteToken, ...payload })
     });
     const data = await res.json().catch(() => ({}));
+    if (res.status === 401 && window._siteToken) {
+        // Сессия протухла (7 дней) или удалена — выходим «тихо», чтобы не оставаться
+        // в состоянии «выглядит как владелец, но права не работают».
+        localStorage.removeItem('nrp_user');
+        localStorage.removeItem('nrp_token');
+        window.currentUser = null;
+        window._siteToken = null;
+        try { updateAuthZone(); } catch (e) {}
+        try { openModal('auth'); } catch (e) {}
+    }
     if (!res.ok) throw new Error(data.error || `Ошибка (${res.status})`);
     return data;
 }
@@ -1808,10 +1818,15 @@ window.saveOwnerSettings = async function() {
     // Сохраняем tabs/services/registration_open и т.д., но не затираем банер/техобслуживание,
     // которые могли быть сохранены отдельно (баннер — из своей панели, техобслуживание — своей кнопкой)
     const flags = Object.assign({}, window.siteFlags, { tabs, services, registration_open, login_enabled, webhooks_enabled, customToggles, statusMessages });
-    window.siteFlags = flags;
+    const prevFlags = window.siteFlags;
     try {
         await callSiteApi('saveOwnerSettings', { flags });
-    } catch(e) { console.warn('saveOwnerSettings error', e); notify('Не удалось сохранить настройки: ' + (e.message||'неизвестная ошибка'), false); }
+        window.siteFlags = flags;
+    } catch(e) {
+        window.siteFlags = prevFlags;
+        console.warn('saveOwnerSettings error', e);
+        return notify('Не удалось сохранить настройки: ' + (e.message||'неизвестная ошибка'), false);
+    }
     applySiteFlags();
     renderMaintenanceOverlay();
     renderStatusBoard();
@@ -1832,11 +1847,19 @@ window.toggleMaintenanceMode = async function() {
     }
     const message = document.getElementById('maintenance-message')?.value.trim() || DEFAULT_SITE_FLAGS.maintenance.message;
     const maintenance = { active: turningOn, message };
+    const prevFlags = window.siteFlags;
     const flags = Object.assign({}, window.siteFlags, { maintenance });
-    window.siteFlags = flags;
     try {
         await callSiteApi('saveOwnerSettings', { flags });
-    } catch(e) { console.warn('toggleMaintenanceMode error', e); notify('Не удалось сохранить: ' + (e.message||'неизвестная ошибка'), false); }
+        window.siteFlags = flags; // применяем только после успешного сохранения
+    } catch(e) {
+        window.siteFlags = prevFlags;
+        console.warn('toggleMaintenanceMode error', e);
+        notify('Не удалось сохранить: ' + (e.message||'неизвестная ошибка'), false);
+        renderMaintenanceOverlay();
+        fillMaintenanceAdminForm();
+        return;
+    }
     renderMaintenanceOverlay();
     fillMaintenanceAdminForm();
     notify(turningOn ? 'Сайт полностью остановлен для посетителей (техобслуживание)' : 'Сайт снова доступен всем посетителям');
