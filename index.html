@@ -479,7 +479,7 @@ body.ah-on #owner-panel>.sep,body.ah-on #owner-panel>.owner-panel-banner,body.ah
 #portal-main-view>*{grid-column:2;min-width:0}
 #portal-main-view>:first-child,#portal-main-view>#rd-welcome{grid-column:1/-1}
 #portal-main-view>.portal-nav{grid-column:1;grid-row:3/span 30;flex-direction:column;overflow:visible;position:sticky;top:88px;margin:0;padding:10px;gap:4px;border-radius:20px}
-.portal-nav .portal-nav-btn{width:100%;text-align:left;padding:12px 14px!important;font-size:15px}
+#portal-main-view>.portal-nav .portal-nav-btn{width:100%;text-align:left;padding:12px 14px!important;font-size:15px}
 .portal-nav .rd-help{display:block;margin-top:8px;padding:12px 14px;border-radius:12px;text-decoration:none;font-weight:700;font-size:14px;color:var(--text);border:1px dashed rgba(255,255,255,.15);transition:all .25s}
 .portal-nav .rd-help:hover{color:#fff;border-color:var(--cyan)}
 .portal-card{display:grid!important;grid-template-columns:56px 1fr;grid-template-areas:"i t" "i d";column-gap:14px;row-gap:2px;align-items:center}
@@ -491,7 +491,7 @@ body.ah-on #owner-panel>.sep,body.ah-on #owner-panel>.owner-panel-banner,body.ah
   #portal-main-view:not([style*="none"]){grid-template-columns:1fr}
   #portal-main-view>*,#portal-main-view>.portal-nav{grid-column:1;grid-row:auto}
   #portal-main-view>.portal-nav{flex-direction:row;overflow-x:auto;position:static}
-  .portal-nav .portal-nav-btn{width:auto}
+  #portal-main-view>.portal-nav .portal-nav-btn{width:auto}
   .portal-nav .rd-help{display:none}
 }
 
@@ -512,6 +512,14 @@ body.ah-on #owner-panel>.sep,body.ah-on #owner-panel>.owner-panel-banner,body.ah
 .nw-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:14px;color:#64748b;font-size:12px}
 .nw-del{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);color:#f87171;border-radius:10px;padding:6px 12px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-weight:700}
 @media (max-width:640px){#news-composer .nc-grid{grid-template-columns:1fr}}
+
+/* ===== ИСПРАВЛЕНИЯ ===== */
+/* Правила: меню разделов — обычная горизонтальная панель, без закрепления поверх формы */
+#tab-rules .portal-nav{position:static!important;flex-wrap:wrap;overflow:visible;backdrop-filter:none;z-index:auto;margin-bottom:24px}
+#tab-rules .portal-nav-btn{flex:0 0 auto;width:auto}
+/* Выпадающие списки: тёмные, текст читается */
+select{color-scheme:dark}
+select option,select optgroup{background:#0f172a;color:#fff}
 </style>
 </head>
 <body>
